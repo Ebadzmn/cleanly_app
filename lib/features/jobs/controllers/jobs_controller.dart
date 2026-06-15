@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/api_config.dart';
 import '../../../../services/localization_service.dart';
+import '../../../../services/network_caller.dart';
 import '../models/appointment_model.dart';
 
 class JobsController extends GetxController with GetSingleTickerProviderStateMixin {
@@ -34,8 +35,8 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
   var isPendingLoading = false.obs;
   var pendingError = RxnString();
 
-  var acceptingAppointmentId = RxnInt();
-  var cancellingAppointmentId = RxnInt();
+  var acceptingAppointmentId = RxnString();
+  var cancellingAppointmentId = RxnString();
 
   @override
   void onInit() {
@@ -87,23 +88,17 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
       }
 
       final Uri url = Uri.parse(
-        ApiConfig.buildUrlWithParams("/appointments/available", {
+        ApiConfig.buildUrlWithParams("/api/jobs/active", {
           "_t": DateTime.now().millisecondsSinceEpoch.toString(),
         }),
       );
 
-      final http.Response response = await http.get(
-        url,
-        headers: {
-          "Authorization": "Bearer $token",
-          "Accept": "application/json",
-        },
-      );
+      final response = await NetworkCaller.get(url);
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> decodedBody = json.decode(response.body) as Map<String, dynamic>;
+      if (response.isSuccess) {
+        final Map<String, dynamic>? decodedBody = response.data as Map<String, dynamic>?;
         
-        if (decodedBody.containsKey("data")) {
+        if (decodedBody != null && decodedBody.containsKey("data")) {
           final List<dynamic>? rawData = decodedBody["data"] as List<dynamic>?;
           if (rawData != null) {
             activeAppointments.value = rawData
@@ -113,7 +108,7 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
           }
         }
       } else {
-        activeError.value = "Failed to fetch active appointments.";
+        activeError.value = response.message ?? "Failed to fetch active appointments.";
       }
     } catch (e) {
       activeError.value = "An error occurred while fetching data.";
@@ -135,26 +130,24 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
     }
 
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String? token = prefs.getString("token");
-
-      if (token == null || token.isEmpty) return;
+      String statusParam = "all";
+      if (tab == "accepted") statusParam = "Accepted";
+      if (tab == "pending") statusParam = "Pending";
+      if (tab == "rejected") statusParam = "Rejected";
 
       final Uri url = Uri.parse(
-        ApiConfig.buildUrlWithParams("/appointments/jobs", {"tab": tab}),
+        ApiConfig.buildUrlWithParams("/api/jobs/cleaner", {
+          "status": statusParam,
+          "page": "1",
+          "limit": "100",
+        }),
       );
 
-      final http.Response response = await http.get(
-        url,
-        headers: {
-          "Authorization": "Bearer $token",
-          "Accept": "application/json",
-        },
-      );
+      final response = await NetworkCaller.get(url);
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> decodedBody = json.decode(response.body) as Map<String, dynamic>;
-        final List<dynamic>? rawData = decodedBody["data"] as List<dynamic>?;
+      if (response.isSuccess) {
+        final Map<String, dynamic>? decodedBody = response.data as Map<String, dynamic>?;
+        final List<dynamic>? rawData = decodedBody?["data"] as List<dynamic>?;
         
         final fetchedAppointments = rawData == null
             ? <Appointment>[]
@@ -182,69 +175,63 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
     }
   }
 
-  Future<void> acceptAppointment(int appointmentId) async {
+  Future<void> acceptAppointment(String appointmentId) async {
     acceptingAppointmentId.value = appointmentId;
 
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String? token = prefs.getString("token");
-      if (token == null) return;
+      final Uri url = Uri.parse(ApiConfig.buildUrl("/api/jobs/$appointmentId/accept"));
+      
+      final response = await NetworkCaller.post(url);
 
-      final Uri url = Uri.parse(ApiConfig.buildUrl("/appointments/jobs/accept"));
-      final http.MultipartRequest request = http.MultipartRequest("POST", url);
-      request.headers["Authorization"] = "Bearer $token";
-      request.headers["Accept"] = "application/json";
-      request.fields["appointment_id"] = appointmentId.toString();
-
-      final http.StreamedResponse response = await request.send();
-      final String responseBody = await response.stream.bytesToString();
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> decodedBody = json.decode(responseBody) as Map<String, dynamic>;
-        if (decodedBody["success"] == true) {
-          Get.snackbar("Success", LocalizationService().translate("jobs.appointmentAccepted") ?? "Appointment accepted.");
+      if (response.isSuccess) {
+        final data = response.data;
+        if (data != null && data["success"] == true) {
+          Get.snackbar("Success", LocalizationService().translate("jobs.appointmentAccepted") ?? "Appointment accepted.",
+              backgroundColor: Colors.green, colorText: Colors.white);
           _fetchAvailableAppointments();
           _fetchTabAppointments("accepted");
         } else {
-          Get.snackbar("Error", decodedBody["message"] ?? "Failed to accept.");
+          Get.snackbar("Error", data?["message"] ?? "Failed to accept.",
+              backgroundColor: Colors.red, colorText: Colors.white);
         }
+      } else {
+        Get.snackbar("Error", response.message ?? "Could not accept appointment.",
+            backgroundColor: Colors.red, colorText: Colors.white);
       }
     } catch (e) {
-      Get.snackbar("Error", "Could not accept appointment.");
+      Get.snackbar("Error", "Could not accept appointment.",
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       acceptingAppointmentId.value = null;
     }
   }
 
-  Future<void> cancelAppointment(int appointmentId) async {
+  Future<void> cancelAppointment(String appointmentId) async {
     cancellingAppointmentId.value = appointmentId;
 
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String? token = prefs.getString("token");
-      if (token == null) return;
+      final Uri url = Uri.parse(ApiConfig.buildUrl("/api/jobs/$appointmentId/reject"));
+      
+      final response = await NetworkCaller.post(url);
 
-      final Uri url = Uri.parse(ApiConfig.buildUrl("/appointments/jobs/cancel"));
-      final http.MultipartRequest request = http.MultipartRequest("POST", url);
-      request.headers["Authorization"] = "Bearer $token";
-      request.headers["Accept"] = "application/json";
-      request.fields["appointment_id"] = appointmentId.toString();
-
-      final http.StreamedResponse response = await request.send();
-      final String responseBody = await response.stream.bytesToString();
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> decodedBody = json.decode(responseBody) as Map<String, dynamic>;
-        if (decodedBody["success"] == true) {
-          Get.snackbar("Success", LocalizationService().translate("jobs.appointmentCancelled") ?? "Appointment cancelled.");
-          _fetchTabAppointments("accepted");
-          _fetchTabAppointments("pending");
+      if (response.isSuccess) {
+        final data = response.data;
+        if (data != null && data["success"] == true) {
+          Get.snackbar("Success", LocalizationService().translate("jobs.appointmentCancelled") ?? "Appointment rejected.",
+              backgroundColor: Colors.green, colorText: Colors.white);
+          _fetchAvailableAppointments();
+          _fetchTabAppointments("rejected");
         } else {
-          Get.snackbar("Error", decodedBody["message"] ?? "Failed to cancel.");
+          Get.snackbar("Error", data?["message"] ?? "Failed to reject.",
+              backgroundColor: Colors.red, colorText: Colors.white);
         }
+      } else {
+        Get.snackbar("Error", response.message ?? "Could not reject appointment.",
+            backgroundColor: Colors.red, colorText: Colors.white);
       }
     } catch (e) {
-      Get.snackbar("Error", "Could not cancel appointment.");
+      Get.snackbar("Error", "Could not reject appointment.",
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       cancellingAppointmentId.value = null;
     }

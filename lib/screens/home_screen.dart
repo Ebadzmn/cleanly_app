@@ -1,3 +1,6 @@
+import 'package:get/get.dart';
+import '../features/home/domain/models/appointment_models.dart';
+import '../features/home/presentation/controllers/home_controller.dart';
 import "dart:convert";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
@@ -9,234 +12,8 @@ import "event_detail_screen.dart";
 import '../features/jobs/pages/jobs_page.dart';
 import "notification_screen.dart";
 import '../features/more/pages/more_page.dart';
+import '../services/network_caller.dart';
 import "package:http/http.dart" as http;
-
-class CleanerRequest {
-  final String? avatar;
-
-  CleanerRequest({this.avatar});
-
-  factory CleanerRequest.fromJson(Map<String, dynamic> json) {
-    return CleanerRequest(avatar: json["avatar"]?.toString());
-  }
-}
-
-class Customer {
-  final int id;
-  final String? title;
-  final String? name;
-  final String? firstName;
-  final String? lastName;
-  final String? company;
-  final String? preferredPaymentMethod;
-  final String? marketingSource;
-  final String? phoneNumber;
-  final String? email;
-  final bool sendAutomatedEmails;
-  final String? address;
-  final String? customerNotes;
-  final int? bedrooms;
-  final int? squareFootage;
-  final int? bathrooms;
-  final int? kitchen;
-  final int? pets;
-  final String? preferredCleaners;
-  final String? alarmGateCode;
-  final String? lat;
-  final String? lng;
-  final String? fullName;
-
-  Customer({
-    required this.id,
-    this.title,
-    this.name,
-    this.firstName,
-    this.lastName,
-    this.company,
-    this.preferredPaymentMethod,
-    this.marketingSource,
-    this.phoneNumber,
-    this.email,
-    required this.sendAutomatedEmails,
-    this.address,
-    this.customerNotes,
-    this.bedrooms,
-    this.squareFootage,
-    this.bathrooms,
-    this.kitchen,
-    this.pets,
-    this.preferredCleaners,
-    this.alarmGateCode,
-    this.lat,
-    this.lng,
-    this.fullName,
-  });
-
-  factory Customer.fromJson(Map<String, dynamic> json) {
-    return Customer(
-      id: json["id"] as int? ?? 0,
-      title: json["title"]?.toString(),
-      name: json["name"]?.toString(),
-      firstName: json["first_name"]?.toString(),
-      lastName: json["last_name"]?.toString(),
-      company: json["company"]?.toString(),
-      preferredPaymentMethod: json["preferred_payment_method"]?.toString(),
-      marketingSource: json["marketing_source"]?.toString(),
-      phoneNumber: json["phone_number"]?.toString(),
-      email: json["email"]?.toString(),
-      sendAutomatedEmails: json["send_automated_emails"] as bool? ?? false,
-      address: json["address"]?.toString(),
-      customerNotes: json["customer_notes"]?.toString(),
-      bedrooms: json["bedrooms"] as int?,
-      squareFootage: json["square_footage"] as int?,
-      bathrooms: json["bathrooms"] as int?,
-      kitchen: json["kitchen"] as int?,
-      pets: json["pets"] as int?,
-      preferredCleaners: json["preferred_cleaners"]?.toString(),
-      alarmGateCode: json["alarm_gate_code"]?.toString(),
-      lat: json["lat"]?.toString(),
-      lng: json["lng"]?.toString(),
-      fullName: json["full_name"]?.toString(),
-    );
-  }
-}
-
-class Occurrence {
-  final int id;
-  final String date;
-  final String startTime;
-  final String endTime;
-  final String status;
-
-  Occurrence({
-    required this.id,
-    required this.date,
-    required this.startTime,
-    required this.endTime,
-    required this.status,
-  });
-
-  factory Occurrence.fromJson(Map<String, dynamic> json) {
-    return Occurrence(
-      id: json["id"] as int? ?? 0,
-      date: json["date"]?.toString() ?? "",
-      startTime: json["start_time"]?.toString() ?? "",
-      endTime: json["end_time"]?.toString() ?? "",
-      status: json["status"]?.toString() ?? "",
-    );
-  }
-}
-
-class Appointment {
-  final int occurrenceId;
-  final int appointmentId;
-  final String type;
-  final String status;
-  final String date;
-  final String startTime;
-  final String endTime;
-  final Customer customer;
-  final String? notesCleaner;
-  final String? notesAdmin;
-  final String grossProfit;
-  final String? description;
-  final String fees;
-  final List<CleanerRequest> cleanerRequests;
-  final List<Occurrence> allOccurrences;
-
-  Appointment({
-    required this.occurrenceId,
-    required this.appointmentId,
-    required this.type,
-    required this.status,
-    required this.date,
-    required this.startTime,
-    required this.endTime,
-    required this.customer,
-    this.notesCleaner,
-    this.notesAdmin,
-    required this.grossProfit,
-    this.description,
-    required this.fees,
-    required this.cleanerRequests,
-    required this.allOccurrences,
-  });
-
-  factory Appointment.fromJson(Map<String, dynamic> json) {
-    return Appointment(
-      occurrenceId: json["occurrence_id"] as int? ?? 0,
-      appointmentId: json["appointment_id"] as int? ?? 0,
-      type: json["type"]?.toString() ?? "",
-      status: json["status"]?.toString() ?? "",
-      date: json["date"]?.toString() ?? "",
-      startTime: json["start_time"]?.toString() ?? "",
-      endTime: json["end_time"]?.toString() ?? "",
-      customer: Customer.fromJson(
-        json["customer"] as Map<String, dynamic>? ?? {},
-      ),
-      notesCleaner: json["notes_cleaner"]?.toString(),
-      notesAdmin: json["notes_admin"]?.toString(),
-      grossProfit: json["gross_profit"]?.toString() ?? "0.00",
-      description: json["description"]?.toString(),
-      fees: json["fees"]?.toString() ?? "0.00",
-      cleanerRequests: (json["cleaner_requests"] as List<dynamic>? ?? [])
-          .map(
-            (item) =>
-                CleanerRequest.fromJson(item as Map<String, dynamic>? ?? {}),
-          )
-          .toList(),
-      allOccurrences: (json["all_occurrences"] as List<dynamic>? ?? [])
-          .map(
-            (item) => Occurrence.fromJson(item as Map<String, dynamic>? ?? {}),
-          )
-          .toList(),
-    );
-  }
-}
-
-class UpcomingDate {
-  final String date;
-  final List<dynamic> data;
-
-  UpcomingDate({required this.date, required this.data});
-
-  factory UpcomingDate.fromJson(Map<String, dynamic> json) {
-    return UpcomingDate(
-      date: json["date"]?.toString() ?? "",
-      data: json["data"] as List<dynamic>? ?? [],
-    );
-  }
-}
-
-class AppointmentsResponse {
-  final String selectedDate;
-  final List<Appointment> todayAppointments;
-  final List<UpcomingDate> upcoming;
-
-  AppointmentsResponse({
-    required this.selectedDate,
-    required this.todayAppointments,
-    required this.upcoming,
-  });
-
-  factory AppointmentsResponse.fromJson(Map<String, dynamic> json) {
-    return AppointmentsResponse(
-      selectedDate: json["selected_date"]?.toString() ?? "",
-      todayAppointments: (json["today_appointments"] as List<dynamic>? ?? [])
-          .map(
-            (item) => Appointment.fromJson(item as Map<String, dynamic>? ?? {}),
-          )
-          .toList(),
-      upcoming: (json["upcoming"] as List<dynamic>? ?? [])
-          .map(
-            (item) =>
-                UpcomingDate.fromJson(item as Map<String, dynamic>? ?? {}),
-          )
-          .toList(),
-    );
-  }
-}
-
 class HomeScreen extends StatefulWidget {
   final String? token;
 
@@ -247,6 +24,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  final HomeController _homeController = Get.put(HomeController());
+
   DateTime selectedDate = DateTime.now();
   int selectedTabIndex = 0;
   DateTime today = DateTime.now();
@@ -490,178 +269,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _fetchAppointments({bool isRefresh = false}) async {
-    if (isRefresh) {
-      setState(() {
-        _isRefreshing = true;
-      });
-    } else {
-      setState(() {
-        _isLoadingAppointments = true;
-      });
-    }
-
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString("token");
-
-      if (token == null || token.isEmpty) {
-        debugPrint("No authentication token found for appointments");
-        if (mounted) {
-          setState(() {
-            if (isRefresh) {
-              _isRefreshing = false;
-            } else {
-              _isLoadingAppointments = false;
-            }
-          });
-        }
-        return;
-      }
-
-      final String formattedDate =
-          "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}";
-
-      final Uri url = Uri.parse(
-        ApiConfig.buildUrlWithParams("/appointments/cleaner", {
-          "date": formattedDate,
-        }),
-      );
-
-      debugPrint("Fetching appointments for date: $formattedDate");
-      debugPrint("Appointments API URL: $url");
-
-      final response = await http.get(
-        url,
-        headers: {
-          "Authorization": "Bearer $token",
-          "Accept": "application/json",
-        },
-      );
-
-      debugPrint("Appointments API Response status: ${response.statusCode}");
-      debugPrint("Appointments API Response body: ${response.body}");
-
-      if (response.statusCode == 200) {
-        if (response.headers["content-type"]?.contains("application/json") ==
-            true) {
-          try {
-            final data = json.decode(response.body) as Map<String, dynamic>;
-            final AppointmentsResponse appointmentsResponse =
-                AppointmentsResponse.fromJson(data);
-
-            if (mounted) {
-              setState(() {
-                _appointmentsData = appointmentsResponse;
-                if (isRefresh) {
-                  _isRefreshing = false;
-                } else {
-                  _isLoadingAppointments = false;
-                }
-              });
-
-              if (!isRefresh && !_hasInitializedDate) {
-                DateTime? dateWithAppointments;
-
-                if (appointmentsResponse.todayAppointments.isNotEmpty) {
-                  _hasInitializedDate = true;
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _scrollToSelectedDate(instant: true);
-                  });
-                } else {
-                  bool foundAppointmentInUpcoming = false;
-                  if (appointmentsResponse.upcoming.isNotEmpty) {
-                    for (final upcoming in appointmentsResponse.upcoming) {
-                      if (upcoming.data.isNotEmpty) {
-                        try {
-                          dateWithAppointments = DateTime.parse(upcoming.date);
-                          foundAppointmentInUpcoming = true;
-                          break;
-                        } catch (e) {
-                          debugPrint("Error parsing upcoming date: $e");
-                        }
-                      }
-                    }
-                  }
-
-                  if (foundAppointmentInUpcoming &&
-                      dateWithAppointments != null) {
-                    setState(() {
-                      selectedDate = dateWithAppointments!;
-                      _hasInitializedDate = true;
-                    });
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _scrollToSelectedDate(instant: true);
-                    });
-                    _fetchAppointments();
-                  } else {
-                    debugPrint(
-                      "No appointments found - selecting today's date by default",
-                    );
-                    setState(() {
-                      selectedDate = DateTime(
-                        today.year,
-                        today.month,
-                        today.day,
-                      );
-                      _hasInitializedDate = true;
-                    });
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _scrollToSelectedDate(instant: true);
-                    });
-                  }
-                }
-              }
-            }
-          } catch (e) {
-            debugPrint("Error parsing appointments JSON response: $e");
-            if (mounted) {
-              setState(() {
-                if (isRefresh) {
-                  _isRefreshing = false;
-                } else {
-                  _isLoadingAppointments = false;
-                }
-              });
-            }
-          }
-        } else {
-          debugPrint("Response is not JSON");
-          if (mounted) {
-            setState(() {
-              if (isRefresh) {
-                _isRefreshing = false;
-              } else {
-                _isLoadingAppointments = false;
-              }
-            });
-          }
-        }
-      } else {
-        debugPrint(
-          "Failed to fetch appointments. Status: ${response.statusCode}",
-        );
-        if (mounted) {
-          setState(() {
-            if (isRefresh) {
-              _isRefreshing = false;
-            } else {
-              _isLoadingAppointments = false;
-            }
-          });
-        }
-      }
-    } catch (e, stack) {
-      debugPrint("Error fetching appointments: $e");
-      debugPrint("Stack trace: $stack");
-      if (mounted) {
-        setState(() {
-          if (isRefresh) {
-            _isRefreshing = false;
-          } else {
-            _isLoadingAppointments = false;
-          }
-        });
-      }
+    await _homeController.fetchAppointments(isRefresh: isRefresh);
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -669,6 +279,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     setState(() {
       selectedDate = DateTime(today.year, today.month, today.day);
     });
+    _homeController.selectDate(selectedDate);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToToday();
@@ -1232,7 +843,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       // Events Section
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: _isLoadingAppointments && !_isRefreshing
+                        child: _homeController.isLoading.value && !_homeController.isRefreshing.value
                             ? Container(
                                 height: 100,
                                 alignment: Alignment.center,
@@ -1339,6 +950,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             setState(() {
               selectedDate = DateTime(now.year, now.month, day);
             });
+            _homeController.selectDate(selectedDate);
             _fetchAppointments();
           },
           child: Container(
@@ -1391,25 +1003,72 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Column(children: rows);
   }
 
-  Widget _buildUpNextCard(Appointment appointment) {
-    String formatTime(String timeStr) {
-      try {
-        final parts = timeStr.split(":");
-        if (parts.length >= 2) {
-          final hour = int.parse(parts[0]);
-          final minute = int.parse(parts[1]);
-          final period = hour >= 12 ? "PM" : "AM";
-          final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-          return "$displayHour:${minute.toString().padLeft(2, "0")} $period";
-        }
-      } catch (e) {}
-      return timeStr;
+  Widget _buildCustomerDetails(Customer customer) {
+    Widget buildRow(String label, String? value) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 2),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "$label: ",
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                value ?? "null",
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1E2638),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
     }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        buildRow("Title", customer.title),
+        buildRow("Name", customer.name),
+      ],
+    );
+  }
+
+  Widget _buildUpNextCard(Appointment appointment) {
+      String formatTime(String timeStr) {
+    try {
+      if (timeStr.toUpperCase().contains("AM") || timeStr.toUpperCase().contains("PM")) {
+        return timeStr;
+      }
+      final parts = timeStr.split(":");
+      if (parts.length >= 2) {
+        final hour = int.parse(parts[0]);
+        final minuteStr = parts[1].replaceAll(RegExp(r'[^0-9]'), '');
+        final minute = int.parse(minuteStr);
+        final period = hour >= 12 ? "PM" : "AM";
+        final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+        return "$displayHour:${minute.toString().padLeft(2, "0")} $period";
+      }
+    } catch (e) {}
+    return timeStr;
+  }
 
     final String timeRange =
         "${formatTime(appointment.startTime)} - ${formatTime(appointment.endTime)}";
     final String customerName =
-        appointment.customer.fullName ?? appointment.customer.name ?? "N/A";
+        "Title: ${appointment.customer.title ?? 'null'}\n"
+        "Name: ${appointment.customer.name ?? 'null'}\n"
+        "First Name: ${appointment.customer.firstName ?? 'null'}\n"
+        "Last Name: ${appointment.customer.lastName ?? 'null'}";
     final String address =
         appointment.customer.address ?? "Address not available";
     final String type = appointment.type.isNotEmpty
@@ -1452,15 +1111,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: Text(
-                            type,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF1E2638),
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          child: SizedBox.shrink(),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -1531,14 +1182,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  customerName,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xFF1E2638),
-                                  ),
-                                ),
+                                _buildCustomerDetails(appointment.customer),
                                 Text(
                                   address,
                                   style: const TextStyle(
@@ -1795,7 +1439,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFF2F4F7), width: 1),
       ),
       child: IntrinsicHeight(
@@ -1803,31 +1447,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              width: 4,
+              width: 5,
               decoration: BoxDecoration(
                 color: borderColor,
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
                 ),
               ),
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          dateStr,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF1E2638),
-                          ),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_today_outlined,
+                              size: 20,
+                              color: Color(0xFF90702F),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              dateStr,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E2638),
+                              ),
+                            ),
+                          ],
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -1839,11 +1493,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            tagText,
+                            tagText.toUpperCase(),
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 10,
                               color: tagTextColor,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -1853,37 +1507,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     if (appointments.isEmpty)
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 30),
+                        padding: const EdgeInsets.symmetric(vertical: 20),
                         decoration: BoxDecoration(
-                          border: Border.all(
-                            color: const Color(0xFFF9FAFB),
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(22),
+                          color: const Color(0xFFF4F6F8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF4F7F9),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.calendar_today_outlined,
-                                color: Color(0xFF7A869A),
-                                size: 20,
-                              ),
+                        child: const Center(
+                          child: Text(
+                            "No appointments booked",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF7A869A),
                             ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              "No appointments booked",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF7A869A),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       )
                     else
@@ -1909,9 +1545,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final List<Widget> sections = [];
 
     Appointment? upNextAppointment;
-    if (_appointmentsData != null &&
-        _appointmentsData!.todayAppointments.isNotEmpty) {
-      upNextAppointment = _appointmentsData!.todayAppointments.first;
+    if (_homeController.todayAppointments.isNotEmpty) {
+      upNextAppointment = _homeController.todayAppointments.first;
     }
 
     sections.add(
@@ -1938,7 +1573,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     sections.add(
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: const [
+        children: [
           Text(
             "UPCOMING AGENDA",
             style: TextStyle(
@@ -1948,12 +1583,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               letterSpacing: 1.2,
             ),
           ),
-          Text(
-            "View Month",
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF90702F),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                 // Clear selection to view all
+                 _homeController.clearDateSelection();
+              });
+            },
+            child: const Text(
+              "View All",
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF90702F),
+              ),
             ),
           ),
         ],
@@ -1961,69 +1604,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
     sections.add(const SizedBox(height: 16));
 
-    if (_appointmentsData != null &&
-        _appointmentsData!.todayAppointments.isNotEmpty) {
-      sections.add(
-        _buildAgendaDayCard(
-          selectedDate,
-          "No updates",
-          const Color(0xFFE5F6FA),
-          const Color(0xFF4A8B99),
-          const Color(0xFF73C0D6),
-          _appointmentsData!.todayAppointments,
-        ),
-      );
+    final upcomingList = _homeController.filteredUpcoming;
+    
+    if (upcomingList.isEmpty) {
+        sections.add(_buildNoAppointmentsCard());
     } else {
-      sections.add(
-        _buildAgendaDayCard(
-          selectedDate,
-          "No updates",
-          const Color(0xFFE5F6FA),
-          const Color(0xFF4A8B99),
-          const Color(0xFF73C0D6),
-          [],
-        ),
-      );
-    }
-
-    if (_appointmentsData != null && _appointmentsData!.upcoming.isNotEmpty) {
-      for (int i = 0; i < _appointmentsData!.upcoming.length && i < 3; i++) {
-        final upcoming = _appointmentsData!.upcoming[i];
-        try {
-          final DateTime upcomingDate = DateTime.parse(upcoming.date);
-          sections.add(
-            _buildAgendaDayCard(
-              upcomingDate,
-              "Upcoming",
-              const Color(0xFFF9F0D6),
-              const Color(0xFF90702F),
-              const Color(0xFFF6C844),
-              [],
-            ),
-          );
-        } catch (e) {}
-      }
-    } else {
-      sections.add(
-        _buildAgendaDayCard(
-          selectedDate.add(const Duration(days: 1)),
-          "Upcoming",
-          const Color(0xFFF9F0D6),
-          const Color(0xFF90702F),
-          const Color(0xFFF6C844),
-          [],
-        ),
-      );
-      sections.add(
-        _buildAgendaDayCard(
-          selectedDate.add(const Duration(days: 2)),
-          "Upcoming",
-          const Color(0xFFF4F7F9),
-          const Color(0xFF7A869A),
-          const Color(0xFFE0E0E0),
-          [],
-        ),
-      );
+        for (final group in upcomingList) {
+          try {
+            final DateTime upcomingDate = DateTime.parse(group.date);
+            sections.add(
+              _buildAgendaDayCard(
+                upcomingDate,
+                "Upcoming",
+                const Color(0xFFF9F0D6),
+                const Color(0xFF90702F),
+                const Color(0xFFF6C844),
+                group.data,
+              ),
+            );
+          } catch (e) {}
+        }
     }
 
     sections.add(const SizedBox(height: 20));
@@ -2031,26 +1631,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildAppointmentCard(Appointment appointment) {
-    String formatTime(String timeStr) {
-      try {
-        final parts = timeStr.split(":");
-        if (parts.length >= 2) {
-          final hour = int.parse(parts[0]);
-          final minute = int.parse(parts[1]);
-          final period = hour >= 12 ? "PM" : "AM";
-          final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-          return "$displayHour:${minute.toString().padLeft(2, "0")} $period";
-        }
-      } catch (e) {
-        debugPrint("Error formatting time: $e");
+      String formatTime(String timeStr) {
+    try {
+      if (timeStr.toUpperCase().contains("AM") || timeStr.toUpperCase().contains("PM")) {
+        return timeStr;
       }
-      return timeStr;
-    }
+      final parts = timeStr.split(":");
+      if (parts.length >= 2) {
+        final hour = int.parse(parts[0]);
+        final minuteStr = parts[1].replaceAll(RegExp(r'[^0-9]'), '');
+        final minute = int.parse(minuteStr);
+        final period = hour >= 12 ? "PM" : "AM";
+        final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+        return "$displayHour:${minute.toString().padLeft(2, "0")} $period";
+      }
+    } catch (e) {}
+    return timeStr;
+  }
 
     final String startTimeFormatted = formatTime(appointment.startTime);
     final String endTimeFormatted = formatTime(appointment.endTime);
     final String customerName =
-        appointment.customer.fullName ?? appointment.customer.name ?? "N/A";
+        "Title: ${appointment.customer.title ?? 'null'}\n"
+        "Name: ${appointment.customer.name ?? 'null'}\n"
+        "First Name: ${appointment.customer.firstName ?? 'null'}\n"
+        "Last Name: ${appointment.customer.lastName ?? 'null'}";
     final String address =
         appointment.customer.address ?? "Address not available";
     final String type = appointment.type.isNotEmpty
@@ -2153,50 +1758,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Text(
-                          customerName,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF1E2638),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: _buildCustomerDetails(appointment.customer),
                       ),
                       const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: statusBgColor,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          statusText,
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
-                            color: statusTextColor,
+                      if (statusText != "SCHEDULED")
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusBgColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            statusText,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color: statusTextColor,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    type,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF4A8B99),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
+
                   Row(
                     children: [
                       const Icon(

@@ -4,8 +4,8 @@ import "package:flutter/material.dart";
 
 import "../config/api_config.dart";
 import "../services/localization_service.dart";
+import "../services/network_caller.dart";
 import "../features/login/pages/login_page.dart";
-import "package:http/http.dart" as http;
 
 class ResetPassword extends StatefulWidget {
   final String email;
@@ -61,22 +61,26 @@ class _ResetPasswordState extends State<ResetPassword> {
     final url = Uri.parse(ApiConfig.buildUrl('/reset-password'));
 
     try {
-      final response = await http.post(
+      final response = await NetworkCaller.post(
         url,
-        body: {
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: json.encode({
           "email": widget.email,
           "password": _passwordController.text,
           "confirm_password": _confirmPasswordController.text,
-        },
+        }),
       );
 
-      final data = json.decode(response.body);
+      final data = response.data;
       debugPrint("Reset Password Response: $data");
 
-      if (response.statusCode == 200) {
+      if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(data['message'] ?? "Password reset successful"),
+            content: Text(data?['message'] ?? "Password reset successful"),
           ),
         );
 
@@ -86,7 +90,7 @@ class _ResetPasswordState extends State<ResetPassword> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? "Reset password failed")),
+          SnackBar(content: Text(response.message ?? "Reset password failed")),
         );
       }
     } catch (e) {

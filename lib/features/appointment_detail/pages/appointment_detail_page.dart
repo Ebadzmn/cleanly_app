@@ -12,7 +12,7 @@ class AppointmentDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int appointmentId = appointmentData["appointment_id"] as int? ?? 0;
+    final String appointmentId = appointmentData["appointment_id"]?.toString() ?? appointmentData["id"]?.toString() ?? "0";
 
     // Inject the controller directly here so we pass the dynamic data
     final AppointmentDetailController controller = Get.put(

@@ -23,7 +23,7 @@ class EventDetailCleanerRequest {
 }
 
 class EventDetailCustomer {
-  final int id;
+  final String id;
   final String? title;
   final String? name;
   final String? firstName;
@@ -75,7 +75,7 @@ class EventDetailCustomer {
 
   factory EventDetailCustomer.fromJson(Map<String, dynamic> json) {
     return EventDetailCustomer(
-      id: json["id"] as int? ?? 0,
+      id: json["id"]?.toString() ?? "",
       title: json["title"]?.toString(),
       name: json["name"]?.toString(),
       firstName: json["first_name"]?.toString(),
@@ -103,7 +103,7 @@ class EventDetailCustomer {
 }
 
 class EventDetailOccurrence {
-  final int id;
+  final String id;
   final String date;
   final String startTime;
   final String endTime;
@@ -119,7 +119,7 @@ class EventDetailOccurrence {
 
   factory EventDetailOccurrence.fromJson(Map<String, dynamic> json) {
     return EventDetailOccurrence(
-      id: json["id"] as int? ?? 0,
+      id: json["id"]?.toString() ?? "",
       date: json["date"]?.toString() ?? "",
       startTime: json["start_time"]?.toString() ?? "",
       endTime: json["end_time"]?.toString() ?? "",
@@ -129,8 +129,8 @@ class EventDetailOccurrence {
 }
 
 class EventDetailData {
-  final int occurrenceId;
-  final int appointmentId;
+  final String occurrenceId;
+  final String appointmentId;
   final String type;
   final String status;
   final String date;
@@ -165,8 +165,8 @@ class EventDetailData {
 
   factory EventDetailData.fromJson(Map<String, dynamic> json) {
     return EventDetailData(
-      occurrenceId: json["occurrence_id"] as int? ?? 0,
-      appointmentId: json["appointment_id"] as int? ?? 0,
+      occurrenceId: json["occurrence_id"]?.toString() ?? "",
+      appointmentId: json["appointment_id"]?.toString() ?? json["id"]?.toString() ?? "",
       type: json["type"]?.toString() ?? "",
       status: json["status"]?.toString() ?? "",
       date: json["date"]?.toString() ?? "",
@@ -199,7 +199,7 @@ class EventDetailData {
 }
 
 class EventDetailScreen extends StatefulWidget {
-  final int occurrenceId;
+  final String occurrenceId;
 
   const EventDetailScreen({required this.occurrenceId, super.key});
 

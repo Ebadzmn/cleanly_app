@@ -8,7 +8,7 @@ import "package:shared_preferences/shared_preferences.dart";
 
 import "../config/api_config.dart";
 import "../services/localization_service.dart";
-import "package:http/http.dart" as http;
+import "../services/network_caller.dart";
 
 class ForgetPasswordScreen extends StatefulWidget {
   const ForgetPasswordScreen({super.key});
@@ -399,25 +399,29 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
     final url = Uri.parse(ApiConfig.buildUrl('/forgot-password'));
 
     try {
-      final response = await http.post(
+      final response = await NetworkCaller.post(
         url,
-        body: {"email": _emailController.text.trim()},
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: json.encode({"email": _emailController.text.trim()}),
       );
 
-      final data = json.decode(response.body);
+      final data = response.data;
       log('Forgot Password Response: $data');
 
-      if (response.statusCode == 200) {
+      if (response.isSuccess) {
         SharedPreferences prefs = await SharedPreferences.getInstance();
 
-        if (data['user'] != null && data['user']['phone'] != null) {
+        if (data != null && data['user'] != null && data['user']['phone'] != null) {
           await prefs.setString('phone', data['user']['phone']);
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              data["message"] ??
+              data?["message"] ??
                   LocalizationService().translate("forgotPassword.otpSent"),
             ),
           ),
@@ -428,15 +432,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
           _showOTPFields = true;
         });
       } else {
-        String errorMessage = data['message'] ?? 'Failed to send OTP.';
-        if (data.containsKey('errors')) {
-          final errors = data['errors'] as Map<String, dynamic>;
-          errorMessage = errors.values
-              .expand((e) => e)
-              .map((e) => e.toString())
-              .join('\n');
-        }
-
+        String errorMessage = response.message ?? data?['message'] ?? 'Failed to send OTP.';
+        
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(errorMessage)));
@@ -484,17 +481,21 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
     final url = Uri.parse(ApiConfig.buildUrl('/verify-code'));
 
     try {
-      final response = await http.post(
+      final response = await NetworkCaller.post(
         url,
-        body: {"email": _emailController.text.trim(), "code": otp},
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: json.encode({"email": _emailController.text.trim(), "code": otp}),
       );
 
-      final data = json.decode(response.body);
+      final data = response.data;
       debugPrint("Verify Code Response: $data");
 
-      if (response.statusCode == 200) {
+      if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? "Code verified")),
+          SnackBar(content: Text(data?['message'] ?? "Code verified")),
         );
 
         Navigator.push(
@@ -506,7 +507,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['error'] ?? "Verification failed")),
+          SnackBar(content: Text(response.message ?? data?['error'] ?? "Verification failed")),
         );
       }
     } catch (e) {

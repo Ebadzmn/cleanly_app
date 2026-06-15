@@ -1,5 +1,6 @@
 class ApiConfig {
-  static const String baseUrl = "https://cleanly.devdioxide.com/api";
+  // static const String baseUrl = "https://cleanly.devdioxide.com/api";
+  static const String baseUrl = "http://10.10.7.102:5000";
 
   static const String previousBaseUrl = "";
   static String buildUrl(String endpoint) {
@@ -17,8 +18,9 @@ class ApiConfig {
     return uri.replace(queryParameters: queryParams).toString();
   }
 
-  static const String googleMapsApiKey = "AIzaSyA9SQetjbchWmEJVV1uKsl4Q_gQID3FGBQ";
-  
+  static const String googleMapsApiKey =
+      "AIzaSyA9SQetjbchWmEJVV1uKsl4Q_gQID3FGBQ";
+
   static String? buildStreetViewUrl(
     String? lat,
     String? lng, {
@@ -35,7 +37,7 @@ class ApiConfig {
     try {
       final double latValue = double.parse(lat);
       final double lngValue = double.parse(lng);
-      
+
       return "https://maps.googleapis.com/maps/api/streetview?size=${width}x${height}&location=$latValue,$lngValue&key=$googleMapsApiKey&fov=$fov&heading=$heading&pitch=$pitch";
     } catch (e) {
       return null;

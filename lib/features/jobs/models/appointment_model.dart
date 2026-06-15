@@ -1,5 +1,5 @@
 class AppointmentOccurrence {
-  final int id;
+  final String id;
   final String date;
   final String startTime;
   final String endTime;
@@ -16,7 +16,7 @@ class AppointmentOccurrence {
   });
 
   factory AppointmentOccurrence.fromJson(Map<String, dynamic> json) {
-    final int parsedId = (json["id"] as num?)?.toInt() ?? 0;
+    final String parsedId = json["id"]?.toString() ?? "0";
     return AppointmentOccurrence(
       id: parsedId,
       date: json["date"]?.toString() ?? "",
@@ -29,7 +29,7 @@ class AppointmentOccurrence {
 }
 
 class Appointment {
-  final int appointmentId;
+  final String appointmentId;
   final String type;
   final String description;
   final String pay;
@@ -54,7 +54,7 @@ class Appointment {
   });
 
   factory Appointment.fromJson(Map<String, dynamic> json) {
-    final int parsedId = (json["appointment_id"] as num?)?.toInt() ?? 0;
+    final String parsedId = json["id"]?.toString() ?? json["appointment_id"]?.toString() ?? "0";
     final List<dynamic>? rawOccurrences =
         json["all_occurrences"] as List<dynamic>?;
     final List<AppointmentOccurrence> parsedOccurrences = rawOccurrences == null
@@ -64,17 +64,25 @@ class Appointment {
               .map(AppointmentOccurrence.fromJson)
               .toList();
 
+    String customerName = json["name"]?.toString() ?? "";
+    if (customerName.isEmpty && json["customer"] != null) {
+      final customer = json["customer"];
+      final firstName = customer["firstName"]?.toString() ?? "";
+      final lastName = customer["lastName"]?.toString() ?? "";
+      customerName = "$firstName $lastName".trim();
+    }
+
     return Appointment(
       appointmentId: parsedId,
-      type: json["type"]?.toString() ?? "",
+      type: json["title"]?.toString() ?? json["type"]?.toString() ?? "",
       description: json["description"]?.toString() ?? "",
-      pay: json["cleaner_pay"]?.toString() ?? "0.00",
+      pay: json["price"]?.toString() ?? json["cleaner_pay"]?.toString() ?? "0.00",
       address: json["address"]?.toString() ?? "",
       date: json["date"]?.toString() ?? "",
-      startTime: json["start_time"]?.toString() ?? "",
-      endTime: json["end_time"]?.toString() ?? "",
+      startTime: json["startTime"]?.toString() ?? json["start_time"]?.toString() ?? "",
+      endTime: json["endTime"]?.toString() ?? json["end_time"]?.toString() ?? "",
       occurrences: parsedOccurrences,
-      customerName: json["name"]?.toString() ?? "",
+      customerName: customerName,
     );
   }
 }

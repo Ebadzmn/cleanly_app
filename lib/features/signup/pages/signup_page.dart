@@ -152,6 +152,23 @@ class SignupPage extends StatelessWidget {
           isRequired: true,
         ),
         const SizedBox(height: 20),
+        _buildTextField(
+          controller: controller.usernameController,
+          label: LocalizationService().translate("signup.username") ?? "Username",
+          hint: LocalizationService().translate("signup.usernamePlaceholder") ?? "john_doe",
+          icon: Icons.alternate_email,
+          isRequired: true,
+        ),
+        const SizedBox(height: 20),
+        _buildTextField(
+          controller: controller.phoneController,
+          label: "Phone",
+          hint: LocalizationService().translate("signup.phonePlaceholder") ?? "+1234567890",
+          icon: Icons.phone_outlined,
+          keyboardType: TextInputType.phone,
+          isRequired: true,
+        ),
+        const SizedBox(height: 20),
         _buildPasswordField(
           controller: controller.passwordController,
           label: LocalizationService().translate("signup.password") ?? "Password",

@@ -27,15 +27,11 @@ void main() async {
   
   await LocalizationService().initialize();
 
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? token = prefs.getString("token");
-
-  runApp(MyApp(token: token));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
-  final String? token;
-  const MyApp({super.key, required this.token});
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();

@@ -25,7 +25,7 @@ class AppointmentOccurrenceDetail {
 }
 
 class AppointmentDetailData {
-  final int appointmentId;
+  final String appointmentId;
   final String type;
   final String description;
   final String fees;
@@ -68,8 +68,8 @@ class AppointmentDetailData {
   });
 
   factory AppointmentDetailData.fromJson(Map<String, dynamic> json) {
-    final List<dynamic>? rawOccurrences =
-        json["all_occurrences"] as List<dynamic>?;
+    final String parsedId = json["appointment_id"]?.toString() ?? json["id"]?.toString() ?? "0";
+    final List<dynamic>? rawOccurrences = json["all_occurrences"] as List<dynamic>?;
     final List<AppointmentOccurrenceDetail> occurrences = rawOccurrences == null
         ? <AppointmentOccurrenceDetail>[]
         : rawOccurrences
@@ -78,13 +78,13 @@ class AppointmentDetailData {
               .toList();
 
     return AppointmentDetailData(
-      appointmentId: (json["appointment_id"] as num?)?.toInt() ?? 0,
+      appointmentId: parsedId,
       type: json["type"]?.toString() ?? "",
       description: json["description"]?.toString() ?? "",
       fees: json["fees"]?.toString() ?? "0.00",
       grossProfit: json["gross_profit"]?.toString() ?? "0.00",
       netProfit: json["net_profit"]?.toString() ?? "0.00",
-      cleanerPay: json["cleaner_pay"]?.toString() ?? "",
+      cleanerPay: json["price"]?.toString() ?? json["cleaner_pay"]?.toString() ?? "",
       gateWayFee: json["gateway_fee"]?.toString() ?? "",
       address: json["address"]?.toString() ?? "",
       name: json["name"]?.toString() ?? "",
@@ -92,8 +92,8 @@ class AppointmentDetailData {
       firstName: json["first_name"]?.toString() ?? "",
       lastName: json["last_name"]?.toString() ?? "",
       date: json["date"]?.toString() ?? "",
-      startTime: json["start_time"]?.toString() ?? "",
-      endTime: json["end_time"]?.toString() ?? "",
+      startTime: json["startTime"]?.toString() ?? json["start_time"]?.toString() ?? "",
+      endTime: json["endTime"]?.toString() ?? json["end_time"]?.toString() ?? "",
       notesCleaner: json["notes_cleaner"]?.toString(),
       notesAdmin: json["notes_admin"]?.toString(),
       allOccurrences: occurrences,

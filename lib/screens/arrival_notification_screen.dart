@@ -2,14 +2,14 @@ import "dart:convert";
 import "dart:io";
 import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
-import "package:http/http.dart" as http;
 import "package:url_launcher/url_launcher.dart";
 import "../config/api_config.dart";
 import "../services/localization_service.dart";
+import "../services/network_caller.dart";
 import "event_detail_screen.dart";
 
 class ArrivalNotificationScreen extends StatefulWidget {
-  final int occurrenceId;
+  final String occurrenceId;
   final int cleanerId;
   final String currentStatus;
 
@@ -96,22 +96,13 @@ class _ArrivalNotificationScreenState extends State<ArrivalNotificationScreen> {
       );
       debugPrint("Event Detail API URL: $url");
 
-      final response = await http.get(
-        url,
-        headers: {
-          "Authorization": "Bearer $token",
-          "Accept": "application/json",
-        },
-      );
+      final response = await NetworkCaller.get(url);
 
-      debugPrint("Event Detail API Response status: ${response.statusCode}");
-      debugPrint("Event Detail API Response body: ${response.body}");
+      debugPrint("Event Detail API Response isSuccess: ${response.isSuccess}");
 
-      if (response.statusCode == 200) {
-        if (response.headers["content-type"]?.contains("application/json") ==
-            true) {
+      if (response.isSuccess) {
           try {
-            final data = json.decode(response.body) as Map<String, dynamic>;
+            final data = response.data as Map<String, dynamic>;
             final bool success = data["success"] as bool? ?? false;
 
             if (success && data.containsKey("data")) {
@@ -142,17 +133,9 @@ class _ArrivalNotificationScreenState extends State<ArrivalNotificationScreen> {
               });
             }
           }
-        } else {
-          debugPrint("Response is not JSON");
-          if (mounted) {
-            setState(() {
-              _isLoadingEventDetail = false;
-            });
-          }
-        }
       } else {
         debugPrint(
-          "Failed to fetch event detail. Status: ${response.statusCode}",
+          "Failed to fetch event detail. Message: ${response.message}",
         );
         if (mounted) {
           setState(() {
@@ -183,22 +166,13 @@ class _ArrivalNotificationScreenState extends State<ArrivalNotificationScreen> {
 
       final url = Uri.parse(ApiConfig.buildUrl("/user"));
 
-      final response = await http.get(
-        url,
-        headers: {
-          "Authorization": "Bearer $token",
-          "Accept": "application/json",
-        },
-      );
+      final response = await NetworkCaller.get(url);
 
-      debugPrint("User API Response status: ${response.statusCode}");
-      debugPrint("User API Response body: ${response.body}");
+      debugPrint("User API Response isSuccess: ${response.isSuccess}");
 
-      if (response.statusCode == 200) {
-        if (response.headers["content-type"]?.contains("application/json") ==
-            true) {
+      if (response.isSuccess) {
           try {
-            final data = json.decode(response.body) as Map<String, dynamic>;
+            final data = response.data as Map<String, dynamic>;
             debugPrint("User API Parsed data: $data");
 
             if (mounted) {
@@ -209,9 +183,8 @@ class _ArrivalNotificationScreenState extends State<ArrivalNotificationScreen> {
           } catch (e) {
             debugPrint("Error parsing user JSON response: $e");
           }
-        }
       } else {
-        debugPrint("Failed to fetch user data. Status: ${response.statusCode}");
+        debugPrint("Failed to fetch user data. Message: ${response.message}");
       }
     } catch (e, stack) {
       debugPrint("Error fetching user data: $e");
@@ -777,13 +750,8 @@ class _ArrivalNotificationScreenState extends State<ArrivalNotificationScreen> {
       debugPrint("Status Update API URL: $url");
       debugPrint("Parameters: occurrence_id=${widget.occurrenceId}, cleaner_id=${widget.cleanerId}, status=on_my_way, eta=$eta, notes=${messageController.text}");
 
-      final response = await http.post(
+      final response = await NetworkCaller.post(
         url,
-        headers: {
-          "Authorization": "Bearer $token",
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-        },
         body: json.encode({
           "occurrence_id": widget.occurrenceId,
           "cleaner_id": widget.cleanerId,
@@ -793,12 +761,11 @@ class _ArrivalNotificationScreenState extends State<ArrivalNotificationScreen> {
         }),
       );
 
-      debugPrint("Status Update API Response status: ${response.statusCode}");
-      debugPrint("Status Update API Response body: ${response.body}");
+      debugPrint("Status Update API Response isSuccess: ${response.isSuccess}");
 
-      if (response.statusCode == 200) {
+      if (response.isSuccess) {
         try {
-          final responseData = json.decode(response.body) as Map<String, dynamic>;
+          final responseData = response.data as Map<String, dynamic>;
           final bool success = responseData["success"] as bool? ?? false;
           final String message = responseData["message"]?.toString() ?? "Status updated successfully";
 
@@ -838,17 +805,21 @@ class _ArrivalNotificationScreenState extends State<ArrivalNotificationScreen> {
           }
         }
       } else {
-        debugPrint("Failed to update status. Status: ${response.statusCode}");
+        debugPrint("Failed to update status. Message: ${response.message}");
         String errorMessage = "Failed to update status. Please try again.";
         bool hasNotesError = false;
         try {
-          final responseData = json.decode(response.body) as Map<String, dynamic>;
-          errorMessage = responseData["message"]?.toString() ?? errorMessage;
-          
-          final Map<String, dynamic>? errors = responseData["errors"] as Map<String, dynamic>?;
-          hasNotesError = errors != null && errors.containsKey("notes");
-          final bool messageContainsNotes = errorMessage.toLowerCase().contains("notes");
-          hasNotesError = hasNotesError || messageContainsNotes;
+          final responseData = response.data as Map<String, dynamic>?;
+          if (responseData != null) {
+            errorMessage = responseData["message"]?.toString() ?? errorMessage;
+            
+            final Map<String, dynamic>? errors = responseData["errors"] as Map<String, dynamic>?;
+            hasNotesError = errors != null && errors.containsKey("notes");
+            final bool messageContainsNotes = errorMessage.toLowerCase().contains("notes");
+            hasNotesError = hasNotesError || messageContainsNotes;
+          } else {
+            errorMessage = response.message ?? errorMessage;
+          }
         } catch (e) {
           debugPrint("Error parsing error response: $e");
         }

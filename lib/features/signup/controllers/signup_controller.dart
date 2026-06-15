@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/api_config.dart';
 import '../../../../services/localization_service.dart';
+import '../../../../services/network_caller.dart';
 import '../../login/pages/login_page.dart';
 
 class SignupController extends GetxController {
@@ -13,6 +13,8 @@ class SignupController extends GetxController {
   final TextEditingController reEnterPasswordController = TextEditingController();
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
 
   var obscurePassword = true.obs;
   var obscureReEnterPassword = true.obs;
@@ -25,6 +27,8 @@ class SignupController extends GetxController {
     reEnterPasswordController.dispose();
     firstNameController.dispose();
     lastNameController.dispose();
+    usernameController.dispose();
+    phoneController.dispose();
     super.onClose();
   }
 
@@ -47,7 +51,9 @@ class SignupController extends GetxController {
         passwordController.text.isEmpty ||
         reEnterPasswordController.text.isEmpty ||
         firstNameController.text.isEmpty ||
-        lastNameController.text.isEmpty) {
+        lastNameController.text.isEmpty ||
+        usernameController.text.isEmpty ||
+        phoneController.text.isEmpty) {
       Get.snackbar(
         LocalizationService().translate("common.error") ?? "Error",
         LocalizationService().translate("login.fillAllFields") ?? "Please fill all fields",
@@ -79,35 +85,25 @@ class SignupController extends GetxController {
 
   Future<void> _registerUser() async {
     isLoading.value = true;
-    final url = Uri.parse(ApiConfig.buildUrl("/register"));
+    final url = Uri.parse(ApiConfig.buildUrl("/api/auth/register"));
 
     try {
-      final response = await http.post(
+      final response = await NetworkCaller.post(
         url,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "Accept": "application/json",
-        },
-        body: {
+        body: json.encode({
+          "firstName": firstNameController.text.trim(),
+          "lastName": lastNameController.text.trim(),
           "email": emailController.text.trim(),
           "password": passwordController.text,
-          "confirm_password": reEnterPasswordController.text,
-          "first_name": firstNameController.text.trim(),
-          "last_name": lastNameController.text.trim(),
-        },
+          "role": "CLEANER",
+          "phone": phoneController.text.trim(),
+          "username": usernameController.text.trim(),
+        }),
       );
 
-      debugPrint("Response status: ${response.statusCode}");
-      debugPrint("Response body: ${response.body}");
-
-      if (response.headers["content-type"]?.contains("application/json") != true) {
-        throw Exception("Server returned non-JSON response. Status: ${response.statusCode}.");
-      }
-
-      final data = json.decode(response.body) as Map<String, dynamic>;
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (data.containsKey("token") && data.containsKey("user")) {
+      if (response.isSuccess) {
+        final data = response.data;
+        if (data != null && data.containsKey("token") && data.containsKey("user")) {
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.setString("token", data["token"] as String);
           await prefs.setInt("id", data["user"]["id"] as int);
@@ -125,31 +121,15 @@ class SignupController extends GetxController {
         } else {
           Get.snackbar(
             LocalizationService().translate("common.success") ?? "Success",
-            data["message"]?.toString() ?? "Registration successful! Please check your email.",
+            data?["message"]?.toString() ?? "Registration successful! Please check your email.",
             snackPosition: SnackPosition.BOTTOM,
           );
           Get.offAll(() => const LoginPage());
         }
-      } else if (data.containsKey("errors")) {
-        String messageList;
-        if (data["errors"] is Map<String, dynamic>) {
-          final errors = data["errors"] as Map<String, dynamic>;
-          messageList = errors.values.expand((e) => e as List<dynamic>).map((e) => e.toString()).join("\n");
-        } else if (data["errors"] is List) {
-          final errors = data["errors"] as List<dynamic>;
-          messageList = errors.map((e) => e.toString()).join("\n");
-        } else {
-          messageList = data["errors"].toString();
-        }
-        Get.snackbar(
-          LocalizationService().translate("common.error") ?? "Error",
-          messageList,
-          snackPosition: SnackPosition.BOTTOM,
-        );
       } else {
         Get.snackbar(
           LocalizationService().translate("common.error") ?? "Error",
-          data["message"]?.toString() ?? "Registration failed. Please try again.",
+          response.message ?? LocalizationService().translate("signup.registrationFailed") ?? "Registration failed. Please try again.",
           snackPosition: SnackPosition.BOTTOM,
         );
       }

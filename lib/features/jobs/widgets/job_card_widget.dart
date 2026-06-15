@@ -104,21 +104,27 @@ class JobCardWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.cleaning_services_outlined, color: const Color(0xFF266185), size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    (jobData["type"] == "recurring" ? "RECURRING CLEANING" : "DEEP CLEANING").toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF266185),
-                      letterSpacing: 0.5,
+              Flexible(
+                child: Row(
+                  children: [
+                    const Icon(Icons.cleaning_services_outlined, color: Color(0xFF266185), size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        (jobData["type"] == "recurring" ? "RECURRING CLEANING" : "DEEP CLEANING").toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF266185),
+                          letterSpacing: 0.5,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
@@ -138,19 +144,49 @@ class JobCardWidget extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            jobData["name"],
+            jobData["type"].toString().isNotEmpty ? jobData["type"] : "Service Appointment",
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Color(0xFF1F2937),
             ),
           ),
+          if (jobData["description"] != null && jobData["description"].toString().isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              jobData["description"],
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF6B7280),
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(Icons.person_outline, size: 16, color: Color(0xFF6B7280)),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  jobData["name"],
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF4B5563),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           Row(
             children: [
-              _buildIconText(Icons.calendar_today_outlined, jobData["date"]),
-              const SizedBox(width: 24),
-              _buildIconText(Icons.access_time_outlined, jobData["time"]),
+              Expanded(child: _buildIconText(Icons.calendar_today_outlined, jobData["date"])),
+              const SizedBox(width: 12),
+              Expanded(child: _buildIconText(Icons.access_time_outlined, jobData["time"])),
             ],
           ),
           const SizedBox(height: 12),
@@ -183,32 +219,66 @@ class JobCardWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: () {
-                final int? appointmentId = jobData["appointment_id"] as int?;
-                if (appointmentId != null) {
-                  Get.find<JobsController>().acceptAppointment(appointmentId);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF4C535),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final String? appointmentId = jobData["appointment_id"]?.toString();
+                      if (appointmentId != null) {
+                        Get.find<JobsController>().cancelAppointment(appointmentId);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFEE2E2),
+                      foregroundColor: const Color(0xFF991B1B),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      LocalizationService().translate("jobs.rejectJob") ?? "Reject",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
-                elevation: 0,
               ),
-              child: Text(
-                LocalizationService().translate("jobs.acceptJob") ?? "Accept Job",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF5A4D3D),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final String? appointmentId = jobData["appointment_id"]?.toString();
+                      if (appointmentId != null) {
+                        Get.find<JobsController>().acceptAppointment(appointmentId);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF4C535),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      LocalizationService().translate("jobs.acceptJob") ?? "Accept",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF5A4D3D),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
           const SizedBox(height: 12),
           Center(
@@ -273,14 +343,55 @@ class JobCardWidget extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        jobData["name"],
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F2937),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              jobData["type"].toString().isNotEmpty ? jobData["type"] : "Service Appointment",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1F2937),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (jobData["description"] != null && jobData["description"].toString().isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                jobData["description"],
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF6B7280),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(Icons.person_outline, size: 14, color: Color(0xFF6B7280)),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    jobData["name"],
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF4B5563),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         jobData["cleaner_pay"] != null && jobData["cleaner_pay"].toString().isNotEmpty 
                             ? "\$${jobData["cleaner_pay"]}" 

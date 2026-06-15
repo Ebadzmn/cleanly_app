@@ -1,17 +1,18 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../config/api_config.dart';
 import '../../../screens/home_screen.dart';
 import '../../../services/localization_service.dart';
 import '../../../services/notification_service.dart';
+import '../../../services/network_caller.dart';
 
 class LoginController extends GetxController {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  
+
   final RxBool isLoading = false.obs;
   final RxBool rememberMe = false.obs;
   final RxBool obscurePassword = true.obs;
@@ -88,7 +89,8 @@ class LoginController extends GetxController {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       Get.snackbar(
         LocalizationService().translate("common.error") ?? "Error",
-        LocalizationService().translate("login.fillAllFields") ?? "Fill all fields",
+        LocalizationService().translate("login.fillAllFields") ??
+            "Fill all fields",
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
@@ -97,83 +99,75 @@ class LoginController extends GetxController {
     }
 
     isLoading.value = true;
-    final url = Uri.parse(ApiConfig.buildUrl('/login'));
+    final url = Uri.parse(ApiConfig.buildUrl('api/auth/login'));
 
     try {
       String deviceToken = NotificationService().fcmToken ?? "";
       debugPrint("Device Token: $deviceToken");
 
-      final response = await http.post(
+      final response = await NetworkCaller.post(
         url,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json',
-        },
-        body: {
+        body: json.encode({
           "email": emailController.text.trim(),
           "password": passwordController.text,
-          "device_token": deviceToken,
-        },
+          "deviceToken": deviceToken,
+        }),
       );
 
-      debugPrint('Response status: ${response.statusCode}');
-      debugPrint('Response body: ${response.body}');
+      if (response.isSuccess) {
+        final data = response.data;
+        if (data != null && data['success'] == true) {
+          final responseData = data['data'];
+          final token = responseData['token'];
+          final user = responseData['user'];
 
-      if (response.headers['content-type']?.contains('application/json') != true) {
-        throw Exception(
-          'Server returned non-JSON response. Status: ${response.statusCode}. Body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...',
-        );
-      }
+          // Securely store token
+          const secureStorage = FlutterSecureStorage();
+          await secureStorage.write(key: 'auth_token', value: token);
 
-      final data = json.decode(response.body);
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString('token', token); // Needed for backwards compatibility
+          await prefs.setString('id', user['id'].toString());
+          await prefs.setString('role', (user['role'] ?? "").toString());
+          await prefs.setString('phone', (user['phone'] ?? "").toString());
+          await prefs.setString('email', (user['email'] ?? "").toString());
+          await prefs.setString('name', (user['name'] ?? "").toString());
+          await prefs.setString('device_token', deviceToken);
 
-      if (response.statusCode == 200 && data.containsKey('token')) {
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', data['token'] as String);
-        await prefs.setInt('id', data['user']['id'] as int);
-        await prefs.setString('role', (data['user']['role'] ?? "").toString());
-        await prefs.setString('phone', (data['user']['phone'] ?? "").toString());
-        await prefs.setString('device_token', deviceToken);
-        await prefs.setString('isBusiness', (data['user']["is_business"] ?? "").toString());
+          if (rememberMe.value) {
+            await _saveCredentials();
+          } else {
+            await _removeCredentials();
+          }
 
-        if (rememberMe.value) {
-          await _saveCredentials();
+          Get.offAll(() => HomeScreen(token: token));
+
+          Get.snackbar(
+            LocalizationService().translate("common.success") ?? "Success",
+            data['message'] ??
+                LocalizationService().translate("login.loginSuccessful") ??
+                "Login Successful",
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
         } else {
-          await _removeCredentials();
+          Get.snackbar(
+            LocalizationService().translate("common.error") ?? "Error",
+            data?["message"] ??
+                LocalizationService().translate("login.loginFailed") ??
+                "Login Failed",
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.redAccent,
+            colorText: Colors.white,
+          );
         }
-
-        Get.offAll(() => HomeScreen(token: data['token']));
-
-        Get.snackbar(
-          LocalizationService().translate("common.success") ?? "Success",
-          LocalizationService().translate("login.loginSuccessful") ?? "Login Successful",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-      } else if (data.containsKey('errors')) {
-        String messageList;
-        if (data['errors'] is Map<String, dynamic>) {
-          final errors = data['errors'] as Map<String, dynamic>;
-          messageList = errors.values.expand((e) => e).map((e) => e.toString()).join('\n');
-        } else if (data['errors'] is List) {
-          final errors = data['errors'] as List<dynamic>;
-          messageList = errors.map((e) => e.toString()).join('\n');
-        } else {
-          messageList = data['errors'].toString();
-        }
-
-        Get.snackbar(
-          LocalizationService().translate("common.error") ?? "Error",
-          messageList,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
       } else {
         Get.snackbar(
           LocalizationService().translate("common.error") ?? "Error",
-          data["message"] ?? LocalizationService().translate("login.loginFailed") ?? "Login Failed",
+          response.message ??
+              LocalizationService().translate("login.loginFailed") ??
+              "Login Failed",
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.redAccent,
           colorText: Colors.white,
@@ -184,7 +178,7 @@ class LoginController extends GetxController {
       debugPrint("stack: $stack");
       Get.snackbar(
         LocalizationService().translate("common.error") ?? "Error",
-        LocalizationService().translate("login.unexpectedError") ?? "Unexpected error",
+        e.toString(),
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
