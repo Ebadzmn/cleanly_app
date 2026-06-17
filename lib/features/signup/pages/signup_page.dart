@@ -5,12 +5,32 @@ import '../../../../services/localization_service.dart';
 import '../../login/pages/login_page.dart';
 import '../controllers/signup_controller.dart';
 
-class SignupPage extends StatelessWidget {
+class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
 
   @override
+  State<SignupPage> createState() => _SignupPageState();
+}
+
+class _SignupPageState extends State<SignupPage> {
+  late final SignupController controller;
+  late final String controllerTag;
+
+  @override
+  void initState() {
+    super.initState();
+    controllerTag = UniqueKey().toString();
+    controller = Get.put(SignupController(), tag: controllerTag);
+  }
+
+  @override
+  void dispose() {
+    Get.delete<SignupController>(tag: controllerTag, force: true);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final SignupController controller = Get.put(SignupController());
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -33,35 +53,28 @@ class SignupPage extends StatelessWidget {
         child: SafeArea(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: size.height - MediaQuery.of(context).padding.top,
-              ),
-              child: IntrinsicHeight(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 40),
-                      _buildHeader(),
-                      const SizedBox(height: 30),
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.60),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: _buildForm(controller),
-                      ),
-                      const SizedBox(height: 24),
-                      _buildTermsAndConditions(),
-                      const Spacer(),
-                      _buildLoginLink(),
-                      const SizedBox(height: 40),
-                    ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 40),
+                  _buildHeader(),
+                  const SizedBox(height: 30),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.60),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: _buildForm(controller),
                   ),
-                ),
+                  const SizedBox(height: 24),
+                  _buildTermsAndConditions(),
+                  const SizedBox(height: 24),
+                  _buildLoginLink(),
+                  const SizedBox(height: 40),
+                ],
               ),
             ),
           ),
@@ -105,7 +118,8 @@ class SignupPage extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          LocalizationService().translate("signup.title") ?? "Create your account",
+          LocalizationService().translate("signup.title") ??
+              "Create your account",
           style: const TextStyle(
             fontSize: 16,
             color: Color(0xFF6B7280),
@@ -124,8 +138,14 @@ class SignupPage extends StatelessWidget {
             Expanded(
               child: _buildTextField(
                 controller: controller.firstNameController,
-                label: LocalizationService().translate("signup.firstName") ?? "First Name",
-                hint: LocalizationService().translate("signup.firstNamePlaceholder") ?? "John",
+                label:
+                    LocalizationService().translate("signup.firstName") ??
+                    "First Name",
+                hint:
+                    LocalizationService().translate(
+                      "signup.firstNamePlaceholder",
+                    ) ??
+                    "John",
                 icon: Icons.person_outline,
                 isRequired: true,
               ),
@@ -134,8 +154,14 @@ class SignupPage extends StatelessWidget {
             Expanded(
               child: _buildTextField(
                 controller: controller.lastNameController,
-                label: LocalizationService().translate("signup.lastName") ?? "Last Name",
-                hint: LocalizationService().translate("signup.lastNamePlaceholder") ?? "Doe",
+                label:
+                    LocalizationService().translate("signup.lastName") ??
+                    "Last Name",
+                hint:
+                    LocalizationService().translate(
+                      "signup.lastNamePlaceholder",
+                    ) ??
+                    "Doe",
                 icon: Icons.person_outline,
                 isRequired: true,
               ),
@@ -145,8 +171,12 @@ class SignupPage extends StatelessWidget {
         const SizedBox(height: 20),
         _buildTextField(
           controller: controller.emailController,
-          label: LocalizationService().translate("signup.email") ?? "Email Address",
-          hint: LocalizationService().translate("signup.emailPlaceholder") ?? "name@company.com",
+          label:
+              LocalizationService().translate("signup.email") ??
+              "Email Address",
+          hint:
+              LocalizationService().translate("signup.emailPlaceholder") ??
+              "name@company.com",
           icon: Icons.mail_outline,
           keyboardType: TextInputType.emailAddress,
           isRequired: true,
@@ -154,8 +184,8 @@ class SignupPage extends StatelessWidget {
         const SizedBox(height: 20),
         _buildTextField(
           controller: controller.usernameController,
-          label: LocalizationService().translate("signup.username") ?? "Username",
-          hint: LocalizationService().translate("signup.usernamePlaceholder") ?? "john_doe",
+          label: LocalizationService().translate("Username") ?? "Username",
+          hint: LocalizationService().translate("Username") ?? "john_doe",
           icon: Icons.alternate_email,
           isRequired: true,
         ),
@@ -163,7 +193,8 @@ class SignupPage extends StatelessWidget {
         _buildTextField(
           controller: controller.phoneController,
           label: "Phone",
-          hint: LocalizationService().translate("signup.phonePlaceholder") ?? "+1234567890",
+          hint:
+              LocalizationService().translate("Phone Number") ?? "+1234567890",
           icon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
           isRequired: true,
@@ -171,7 +202,8 @@ class SignupPage extends StatelessWidget {
         const SizedBox(height: 20),
         _buildPasswordField(
           controller: controller.passwordController,
-          label: LocalizationService().translate("signup.password") ?? "Password",
+          label:
+              LocalizationService().translate("signup.password") ?? "Password",
           hint: "••••••••",
           obscureText: controller.obscurePassword,
           onToggleVisibility: controller.togglePasswordVisibility,
@@ -180,7 +212,9 @@ class SignupPage extends StatelessWidget {
         const SizedBox(height: 20),
         _buildPasswordField(
           controller: controller.reEnterPasswordController,
-          label: LocalizationService().translate("signup.reEnterPassword") ?? "Confirm Password",
+          label:
+              LocalizationService().translate("signup.reEnterPassword") ??
+              "Confirm Password",
           hint: "••••••••",
           obscureText: controller.obscureReEnterPassword,
           onToggleVisibility: controller.toggleReEnterPasswordVisibility,
@@ -236,10 +270,16 @@ class SignupPage extends StatelessWidget {
             style: const TextStyle(fontSize: 16, color: Color(0xFF5A4D3D)),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: const TextStyle(color: Color(0xFFA19C93), fontSize: 15),
+              hintStyle: const TextStyle(
+                color: Color(0xFFA19C93),
+                fontSize: 15,
+              ),
               prefixIcon: Icon(icon, color: const Color(0xFFA19C93), size: 22),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
             ),
           ),
         ),
@@ -292,18 +332,31 @@ class SignupPage extends StatelessWidget {
               style: const TextStyle(fontSize: 16, color: Color(0xFF5A4D3D)),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: const TextStyle(color: Color(0xFFA19C93), fontSize: 24, letterSpacing: 4),
-                prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFA19C93), size: 22),
+                hintStyle: const TextStyle(
+                  color: Color(0xFFA19C93),
+                  fontSize: 24,
+                  letterSpacing: 4,
+                ),
+                prefixIcon: const Icon(
+                  Icons.lock_outline,
+                  color: Color(0xFFA19C93),
+                  size: 22,
+                ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    obscureText.value ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    obscureText.value
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
                     color: const Color(0xFFA19C93),
                     size: 22,
                   ),
                   onPressed: onToggleVisibility,
                 ),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
               ),
             ),
           ),
@@ -322,11 +375,15 @@ class SignupPage extends StatelessWidget {
           color: const Color(0xFFF4C535),
         ),
         child: ElevatedButton(
-          onPressed: controller.isLoading.value ? null : controller.handleGetStarted,
+          onPressed: controller.isLoading.value
+              ? null
+              : controller.handleGetStarted,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           child: controller.isLoading.value
               ? const SizedBox(
@@ -334,14 +391,17 @@ class SignupPage extends StatelessWidget {
                   width: 24,
                   child: CircularProgressIndicator(
                     strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5A4D3D)),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF5A4D3D),
+                    ),
                   ),
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      LocalizationService().translate("signup.getStarted") ?? "Get Started",
+                      LocalizationService().translate("signup.getStarted") ??
+                          "Get Started",
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -350,7 +410,11 @@ class SignupPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward, color: Color(0xFF5A4D3D), size: 20),
+                    const Icon(
+                      Icons.arrow_forward,
+                      color: Color(0xFF5A4D3D),
+                      size: 20,
+                    ),
                   ],
                 ),
         ),
@@ -360,7 +424,8 @@ class SignupPage extends StatelessWidget {
 
   Widget _buildTermsAndConditions() {
     return Text(
-      LocalizationService().translate("signup.termsAndConditions") ?? "By signing up you agree to our Terms and Conditions",
+      LocalizationService().translate("signup.termsAndConditions") ??
+          "By signing up you agree to our Terms and Conditions",
       textAlign: TextAlign.center,
       style: const TextStyle(
         fontSize: 12,
@@ -378,15 +443,20 @@ class SignupPage extends StatelessWidget {
           style: const TextStyle(fontSize: 15, color: Color(0xFF5A4D3D)),
           children: [
             TextSpan(
-              text: LocalizationService().translate("signup.alreadyHaveAnAccount") ?? "Already have an account? ",
+              text:
+                  LocalizationService().translate(
+                    "signup.alreadyHaveAnAccount",
+                  ) ??
+                  "Already have an account? ",
             ),
             TextSpan(
-              text: LocalizationService().translate("signup.signIn") ?? "Sign In",
+              text:
+                  LocalizationService().translate("signup.signIn") ?? "Sign In",
               style: const TextStyle(
                 color: Color(0xFF266185),
                 fontWeight: FontWeight.bold,
               ),
-              recognizer: TapGestureRecognizer()..onTap = () => Get.to(() => const LoginPage()),
+              recognizer: TapGestureRecognizer()..onTap = () => Get.back(),
             ),
           ],
         ),

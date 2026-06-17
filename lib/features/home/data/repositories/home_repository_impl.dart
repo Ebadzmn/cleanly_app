@@ -8,7 +8,7 @@ class HomeRepositoryImpl implements HomeRepository {
   HomeRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<AppointmentsResponse> getCleanerAppointments() async {
-    return await remoteDataSource.fetchCleanerAppointments();
+  Future<AppointmentsResponse> getCleanerAppointments([DateTime? date]) async {
+    return await remoteDataSource.fetchCleanerAppointments(date);
   }
 }

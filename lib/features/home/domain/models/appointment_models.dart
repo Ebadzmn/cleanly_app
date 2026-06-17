@@ -154,7 +154,7 @@ class Appointment {
   factory Appointment.fromJson(Map<String, dynamic> json) {
     return Appointment(
       occurrenceId: json["occurrence_id"]?.toString() ?? "",
-      appointmentId: json["appointment_id"]?.toString() ?? json["id"]?.toString() ?? "0",
+      appointmentId: json["appointment_id"]?.toString() ?? json["id"]?.toString() ?? "",
       type: json["title"]?.toString() ?? json["type"]?.toString() ?? "",
       status: json["status"]?.toString() ?? "",
       date: json["date"]?.toString() ?? "",
@@ -204,20 +204,29 @@ class UpcomingDate {
 
 class AppointmentsResponse {
   final List<UpcomingDate> upcoming;
+  final List<Appointment> todayAppointments;
   final bool success;
   final String message;
+  final String? selectedDate;
 
   AppointmentsResponse({
     required this.upcoming,
+    required this.todayAppointments,
     required this.success,
     required this.message,
+    this.selectedDate,
   });
 
   factory AppointmentsResponse.fromJson(Map<String, dynamic> json) {
+    final data = json["data"] ?? {};
     return AppointmentsResponse(
       success: json["success"] as bool? ?? false,
       message: json["message"]?.toString() ?? "",
-      upcoming: (json["data"]?["upcoming"] as List<dynamic>? ?? [])
+      selectedDate: data["selected_date"]?.toString(),
+      todayAppointments: (data["today_appointments"] as List<dynamic>? ?? [])
+          .map((item) => Appointment.fromJson(item as Map<String, dynamic>? ?? {}))
+          .toList(),
+      upcoming: (data["upcoming"] as List<dynamic>? ?? [])
           .map(
             (item) => UpcomingDate.fromJson(item as Map<String, dynamic>? ?? {}),
           )

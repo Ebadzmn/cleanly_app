@@ -1,5 +1,5 @@
 import '../models/appointment_models.dart';
 
 abstract class HomeRepository {
-  Future<AppointmentsResponse> getCleanerAppointments();
+  Future<AppointmentsResponse> getCleanerAppointments([DateTime? date]);
 }

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../services/localization_service.dart';
 import '../controllers/appointment_detail_controller.dart';
 import '../models/appointment_detail_model.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AppointmentDetailPage extends StatelessWidget {
   final Map<String, dynamic> appointmentData;
@@ -128,13 +129,15 @@ class AppointmentDetailPage extends StatelessWidget {
                   status,
                 ),
                 const SizedBox(height: 12),
+                _buildContactCard(detail.email, detail.phoneNumber),
+                const SizedBox(height: 12),
                 _buildScheduleCard(detail),
                 const SizedBox(height: 12),
                 _buildServiceDetailsCard(detail),
                 const SizedBox(height: 12),
                 _buildLocationCard(detail),
                 const SizedBox(height: 12),
-                _buildNotesCard(detail.description),
+                _buildJobInfoCard(detail.title, detail.description),
                 const SizedBox(height: 24),
               ],
             ),
@@ -200,6 +203,82 @@ class AppointmentDetailPage extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactCard(String email, String phone) {
+    if (email.isEmpty && phone.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.contact_mail_outlined,
+                color: Color(0xFF8B6C13),
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                "CONTACT INFO",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF8B6C13),
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (email.isNotEmpty)
+            Row(
+              children: [
+                const Icon(Icons.email_outlined, color: Color(0xFF6B7280), size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    email,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF1F2937),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          if (email.isNotEmpty && phone.isNotEmpty) const SizedBox(height: 12),
+          if (phone.isNotEmpty)
+            Row(
+              children: [
+                const Icon(Icons.phone_outlined, color: Color(0xFF6B7280), size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    phone,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF1F2937),
+                    ),
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -483,7 +562,19 @@ class AppointmentDetailPage extends StatelessWidget {
                   width: double.infinity,
                   height: 40,
                   child: OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: () async {
+                      final lat = detail.lat;
+                      final lng = detail.lng;
+                      Uri uri;
+                      if (lat.isNotEmpty && lng.isNotEmpty && lat != "0" && lng != "0" && lat != "0.0" && lng != "0.0") {
+                        uri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng");
+                      } else {
+                        uri = Uri.parse("https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(detail.address)}");
+                      }
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
                     icon: const Icon(Icons.map_outlined, size: 18),
                     label: const Text("Open in Maps"),
                     style: OutlinedButton.styleFrom(
@@ -503,8 +594,8 @@ class AppointmentDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildNotesCard(String description) {
-    if (description.isEmpty) return const SizedBox.shrink();
+  Widget _buildJobInfoCard(String title, String description) {
+    if (title.isEmpty && description.isEmpty) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -530,7 +621,7 @@ class AppointmentDetailPage extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               const Text(
-                "CUSTOMER NOTES",
+                "JOB INFO",
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -541,15 +632,26 @@ class AppointmentDetailPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            '"$description"',
-            style: const TextStyle(
-              fontSize: 14,
-              fontStyle: FontStyle.italic,
-              color: Color(0xFF4B5563),
-              height: 1.4,
+          if (title.isNotEmpty) ...[
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1F2937),
+              ),
             ),
-          ),
+            const SizedBox(height: 8),
+          ],
+          if (description.isNotEmpty)
+            Text(
+              description,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF4B5563),
+                height: 1.4,
+              ),
+            ),
         ],
       ),
     );

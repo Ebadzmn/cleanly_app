@@ -3,9 +3,15 @@ import '../../../../services/network_caller.dart';
 import '../../../../config/api_config.dart';
 
 class HomeRemoteDataSource {
-  Future<AppointmentsResponse> fetchCleanerAppointments() async {
+  Future<AppointmentsResponse> fetchCleanerAppointments([DateTime? date]) async {
+    Map<String, String> queryParams = {};
+    if (date != null) {
+      final dateStr = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      queryParams["date"] = dateStr;
+    }
+    
     final Uri url = Uri.parse(
-      ApiConfig.buildUrlWithParams("/api/appointments/cleaner", {}),
+      ApiConfig.buildUrlWithParams("/api/appointments/cleaner", queryParams),
     );
 
     final response = await NetworkCaller.get(url);

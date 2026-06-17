@@ -1,5 +1,5 @@
 class AppointmentOccurrenceDetail {
-  final int id;
+  final String id;
   final String date;
   final String startTime;
   final String endTime;
@@ -15,7 +15,7 @@ class AppointmentOccurrenceDetail {
 
   factory AppointmentOccurrenceDetail.fromJson(Map<String, dynamic> json) {
     return AppointmentOccurrenceDetail(
-      id: (json["id"] as num?)?.toInt() ?? 0,
+      id: json["id"]?.toString() ?? "",
       date: json["date"]?.toString() ?? "",
       startTime: json["start_time"]?.toString() ?? "",
       endTime: json["end_time"]?.toString() ?? "",
@@ -43,6 +43,10 @@ class AppointmentDetailData {
   final String endTime;
   final String? notesCleaner;
   final String? notesAdmin;
+  final String lat;
+  final String lng;
+  final String email;
+  final String phoneNumber;
   final List<AppointmentOccurrenceDetail> allOccurrences;
 
   const AppointmentDetailData({
@@ -64,11 +68,15 @@ class AppointmentDetailData {
     required this.endTime,
     this.notesCleaner,
     this.notesAdmin,
+    required this.lat,
+    required this.lng,
+    required this.email,
+    required this.phoneNumber,
     required this.allOccurrences,
   });
 
   factory AppointmentDetailData.fromJson(Map<String, dynamic> json) {
-    final String parsedId = json["appointment_id"]?.toString() ?? json["id"]?.toString() ?? "0";
+    final String parsedId = json["appointment_id"]?.toString() ?? json["id"]?.toString() ?? "";
     final List<dynamic>? rawOccurrences = json["all_occurrences"] as List<dynamic>?;
     final List<AppointmentOccurrenceDetail> occurrences = rawOccurrences == null
         ? <AppointmentOccurrenceDetail>[]
@@ -76,6 +84,30 @@ class AppointmentDetailData {
               .whereType<Map<String, dynamic>>()
               .map(AppointmentOccurrenceDetail.fromJson)
               .toList();
+
+    String parsedEmail = json["email"]?.toString() ?? json["customer_email"]?.toString() ?? json["user_email"]?.toString() ?? json["client_email"]?.toString() ?? "";
+    String parsedPhone = json["phone"]?.toString() ?? json["phone_number"]?.toString() ?? json["customer_phone"]?.toString() ?? json["mobile"]?.toString() ?? json["contact_number"]?.toString() ?? json["client_phone"]?.toString() ?? "";
+
+    if (parsedEmail.isEmpty && json["customer"] != null) {
+      parsedEmail = json["customer"]["email"]?.toString() ?? "";
+    }
+    if (parsedPhone.isEmpty && json["customer"] != null) {
+      parsedPhone = json["customer"]["phone"]?.toString() ?? json["customer"]["phone_number"]?.toString() ?? json["customer"]["mobile"]?.toString() ?? json["customer"]["contact_number"]?.toString() ?? "";
+    }
+
+    if (parsedEmail.isEmpty && json["user"] != null) {
+      parsedEmail = json["user"]["email"]?.toString() ?? "";
+    }
+    if (parsedPhone.isEmpty && json["user"] != null) {
+      parsedPhone = json["user"]["phone"]?.toString() ?? json["user"]["phone_number"]?.toString() ?? json["user"]["mobile"]?.toString() ?? json["user"]["contact_number"]?.toString() ?? "";
+    }
+    
+    if (parsedEmail.isEmpty && json["client"] != null) {
+      parsedEmail = json["client"]["email"]?.toString() ?? "";
+    }
+    if (parsedPhone.isEmpty && json["client"] != null) {
+      parsedPhone = json["client"]["phone"]?.toString() ?? json["client"]["phone_number"]?.toString() ?? json["client"]["mobile"]?.toString() ?? json["client"]["contact_number"]?.toString() ?? "";
+    }
 
     return AppointmentDetailData(
       appointmentId: parsedId,
@@ -94,6 +126,10 @@ class AppointmentDetailData {
       date: json["date"]?.toString() ?? "",
       startTime: json["startTime"]?.toString() ?? json["start_time"]?.toString() ?? "",
       endTime: json["endTime"]?.toString() ?? json["end_time"]?.toString() ?? "",
+      lat: json["lat"]?.toString() ?? json["latitude"]?.toString() ?? "",
+      lng: json["lng"]?.toString() ?? json["longitude"]?.toString() ?? "",
+      email: parsedEmail,
+      phoneNumber: parsedPhone,
       notesCleaner: json["notes_cleaner"]?.toString(),
       notesAdmin: json["notes_admin"]?.toString(),
       allOccurrences: occurrences,

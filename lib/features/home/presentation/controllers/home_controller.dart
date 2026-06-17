@@ -48,20 +48,11 @@ class HomeController extends GetxController {
     isError.value = false;
 
     try {
-      final response = await getAppointmentsUseCase.call();
+      final response = await getAppointmentsUseCase.call(selectedDate.value);
       appointmentsData.value = response;
 
-      // Extract today's appointments if needed by UI
-      final now = DateTime.now();
-      final todayStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-      
-      List<Appointment> todayList = [];
-      for (var group in response.upcoming) {
-        if (group.date == todayStr) {
-          todayList.addAll(group.data);
-        }
-      }
-      todayAppointments.value = todayList;
+      // The API now returns today_appointments directly
+      todayAppointments.value = response.todayAppointments;
 
       _applyFilter();
     } catch (e) {
@@ -83,14 +74,18 @@ class HomeController extends GetxController {
       filteredUpcoming.value = appointmentsData.value!.upcoming;
     } else {
       // Filter by selected date
-      final selectedDateStr = "${selectedDate.value!.year}-${selectedDate.value!.month.toString().padLeft(2, '0')}-${selectedDate.value!.day.toString().padLeft(2, '0')}";
+      final selectedYear = selectedDate.value!.year;
+      final selectedMonth = selectedDate.value!.month;
+      final selectedDay = selectedDate.value!.day;
+      final selectedDateStr = "$selectedYear-${selectedMonth.toString().padLeft(2, '0')}-${selectedDay.toString().padLeft(2, '0')}";
       
-      final matchingGroup = appointmentsData.value!.upcoming.firstWhere(
-        (group) => group.date == selectedDateStr,
-        orElse: () => UpcomingDate(date: selectedDateStr, data: []),
-      );
-      
-      filteredUpcoming.value = [matchingGroup];
+      // When a specific date is requested, the API returns those appointments in `today_appointments`.
+      filteredUpcoming.value = [
+        UpcomingDate(
+          date: appointmentsData.value!.selectedDate ?? selectedDateStr,
+          data: appointmentsData.value!.todayAppointments,
+        )
+      ];
     }
   }
 }

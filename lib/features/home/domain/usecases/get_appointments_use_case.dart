@@ -6,7 +6,7 @@ class GetAppointmentsUseCase {
 
   GetAppointmentsUseCase(this.repository);
 
-  Future<AppointmentsResponse> call() async {
-    return await repository.getCleanerAppointments();
+  Future<AppointmentsResponse> call([DateTime? date]) async {
+    return await repository.getCleanerAppointments(date);
   }
 }

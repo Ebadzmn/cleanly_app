@@ -1,4 +1,5 @@
 import "dart:convert";
+import "../core/utils/date_time_utils.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import "dart:io";
@@ -393,21 +394,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     }
   }
 
-  String formatTime(String timeStr) {
-    try {
-      final parts = timeStr.split(":");
-      if (parts.length >= 2) {
-        final hour = int.parse(parts[0]);
-        final minute = int.parse(parts[1]);
-        final period = hour >= 12 ? "PM" : "AM";
-        final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-        return "$displayHour:${minute.toString().padLeft(2, "0")} $period";
-      }
-    } catch (e) {
-      debugPrint("Error formatting time: $e");
-    }
-    return timeStr;
-  }
+
 
   int calculateETA(String startTime, String endTime) {
     try {
@@ -606,8 +593,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     try {
       final DateTime date = DateTime.parse(dateStr);
       final String formattedDate = DateFormat("MMM dd").format(date);
-      final String formattedStartTime = formatTime(startTime);
-      final String formattedEndTime = formatTime(endTime);
+      final String formattedStartTime = DateTimeUtils.formatTime(startTime);
+      final String formattedEndTime = DateTimeUtils.formatTime(endTime);
       return "$formattedDate, $formattedStartTime - $formattedEndTime";
     } catch (e) {
       debugPrint("Error formatting date time: $e");

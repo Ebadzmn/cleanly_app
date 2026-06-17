@@ -6,12 +6,32 @@ import '../../signup/pages/signup_page.dart';
 import '../../../services/localization_service.dart';
 import '../controllers/login_controller.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  late final LoginController controller;
+  late final String controllerTag;
+
+  @override
+  void initState() {
+    super.initState();
+    controllerTag = UniqueKey().toString();
+    controller = Get.put(LoginController(), tag: controllerTag);
+  }
+
+  @override
+  void dispose() {
+    Get.delete<LoginController>(tag: controllerTag, force: true);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final LoginController controller = Get.put(LoginController());
     final size = MediaQuery.of(context).size;
 
     return Scaffold(

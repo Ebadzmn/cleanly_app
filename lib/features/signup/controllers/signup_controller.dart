@@ -6,6 +6,7 @@ import '../../../../config/api_config.dart';
 import '../../../../services/localization_service.dart';
 import '../../../../services/network_caller.dart';
 import '../../login/pages/login_page.dart';
+import '../../login/controllers/login_controller.dart';
 
 class SignupController extends GetxController {
   final TextEditingController emailController = TextEditingController();
@@ -111,13 +112,13 @@ class SignupController extends GetxController {
           await prefs.setString("phone", (data["user"]["phone"] ?? "").toString());
           await prefs.setString("isBusiness", (data["user"]["is_business"] ?? "").toString());
 
-          Get.offAll(() => const LoginPage());
-
           Get.snackbar(
             LocalizationService().translate("common.success") ?? "Success",
             LocalizationService().translate("signup.registrationSuccessful") ?? "Registration successful!",
             snackPosition: SnackPosition.BOTTOM,
           );
+          
+          Get.offAll(() => const LoginPage());
         } else {
           Get.snackbar(
             LocalizationService().translate("common.success") ?? "Success",
@@ -142,7 +143,9 @@ class SignupController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
-      isLoading.value = false;
+      if (!isClosed) {
+        isLoading.value = false;
+      }
     }
   }
 }

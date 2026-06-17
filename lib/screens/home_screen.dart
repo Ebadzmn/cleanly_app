@@ -1,6 +1,9 @@
 import 'package:get/get.dart';
 import '../features/home/domain/models/appointment_models.dart';
 import '../features/home/presentation/controllers/home_controller.dart';
+import '../features/home/widgets/customer_details_widget.dart';
+import '../features/home/widgets/agenda_day_card_widget.dart';
+import '../core/utils/date_time_utils.dart';
 import "dart:convert";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
@@ -10,14 +13,14 @@ import "../config/api_config.dart";
 import "../services/localization_service.dart";
 import "event_detail_screen.dart";
 import '../features/jobs/pages/jobs_page.dart';
-import "notification_screen.dart";
+import '../features/notifications/pages/notification_page.dart';
 import '../features/more/pages/more_page.dart';
-import '../services/network_caller.dart';
 import "package:http/http.dart" as http;
+
 class HomeScreen extends StatefulWidget {
   final String? token;
 
-  const HomeScreen({this.token, Key? key}) : super(key: key);
+  const HomeScreen({super.key, this.token});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -37,11 +40,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String? _userName;
   String? _userImage;
   bool _isLoading = false;
-
-  AppointmentsResponse? _appointmentsData;
-  bool _isLoadingAppointments = false;
-  bool _isRefreshing = false;
-  bool _hasInitializedDate = false;
 
   @override
   void initState() {
@@ -193,6 +191,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         selectedDate = selectedDate.subtract(const Duration(days: 1));
       }
     });
+    _homeController.selectDate(selectedDate);
     _scrollToSelectedDate();
     _fetchAppointments();
   }
@@ -313,7 +312,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             case 1:
               return const JobsPage();
             case 2:
-              return const NotificationScreen();
+              return const NotificationPage();
             case 3:
               return const MorePage();
             default:
@@ -325,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         color: Colors.transparent,
         child: SafeArea(
           child: Container(
-            margin: const EdgeInsets.only(left: 20, right: 20, bottom: 24),
+            margin: const EdgeInsets.only(left: 20, right: 20, bottom: 0),
             decoration: BoxDecoration(
               color: const Color(0xFF1E2638), // Elegant deep navy background
               borderRadius: BorderRadius.circular(36),
@@ -770,6 +769,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             1,
                                           );
                                         });
+                                        _homeController.selectDate(selectedDate);
                                         _fetchAppointments();
                                       },
                                       child: Container(
@@ -795,6 +795,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             1,
                                           );
                                         });
+                                        _homeController.selectDate(selectedDate);
                                         _fetchAppointments();
                                       },
                                       child: Container(
@@ -843,7 +844,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       // Events Section
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: _homeController.isLoading.value && !_homeController.isRefreshing.value
+                        child:
+                            _homeController.isLoading.value &&
+                                !_homeController.isRefreshing.value
                             ? Container(
                                 height: 100,
                                 alignment: Alignment.center,
@@ -1003,77 +1006,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Column(children: rows);
   }
 
-  Widget _buildCustomerDetails(Customer customer) {
-    Widget buildRow(String label, String? value) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 2),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "$label: ",
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF64748B),
-              ),
-            ),
-            Expanded(
-              child: Text(
-                value ?? "null",
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E2638),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        buildRow("Title", customer.title),
-        buildRow("Name", customer.name),
-      ],
-    );
-  }
-
   Widget _buildUpNextCard(Appointment appointment) {
-      String formatTime(String timeStr) {
-    try {
-      if (timeStr.toUpperCase().contains("AM") || timeStr.toUpperCase().contains("PM")) {
-        return timeStr;
-      }
-      final parts = timeStr.split(":");
-      if (parts.length >= 2) {
-        final hour = int.parse(parts[0]);
-        final minuteStr = parts[1].replaceAll(RegExp(r'[^0-9]'), '');
-        final minute = int.parse(minuteStr);
-        final period = hour >= 12 ? "PM" : "AM";
-        final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-        return "$displayHour:${minute.toString().padLeft(2, "0")} $period";
-      }
-    } catch (e) {}
-    return timeStr;
-  }
-
     final String timeRange =
-        "${formatTime(appointment.startTime)} - ${formatTime(appointment.endTime)}";
-    final String customerName =
-        "Title: ${appointment.customer.title ?? 'null'}\n"
-        "Name: ${appointment.customer.name ?? 'null'}\n"
-        "First Name: ${appointment.customer.firstName ?? 'null'}\n"
-        "Last Name: ${appointment.customer.lastName ?? 'null'}";
+        "${DateTimeUtils.formatTime(appointment.startTime)} - ${DateTimeUtils.formatTime(appointment.endTime)}";
     final String address =
         appointment.customer.address ?? "Address not available";
-    final String type = appointment.type.isNotEmpty
-        ? appointment.type
-        : "Deep Clean - 3BHK";
 
     return Container(
       decoration: BoxDecoration(
@@ -1110,9 +1047,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: SizedBox.shrink(),
-                        ),
+                        Expanded(child: SizedBox.shrink()),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -1182,7 +1117,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildCustomerDetails(appointment.customer),
+                                CustomerDetailsWidget(
+                                  customer: appointment.customer,
+                                ),
                                 Text(
                                   address,
                                   style: const TextStyle(
@@ -1425,122 +1362,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildAgendaDayCard(
-    DateTime date,
-    String tagText,
-    Color tagBgColor,
-    Color tagTextColor,
-    Color borderColor,
-    List<Appointment> appointments,
-  ) {
-    final String dateStr = DateFormat("EEE dd MMM").format(date);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF2F4F7), width: 1),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: 5,
-              decoration: BoxDecoration(
-                color: borderColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  bottomLeft: Radius.circular(12),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.calendar_today_outlined,
-                              size: 20,
-                              color: Color(0xFF90702F),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              dateStr,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1E2638),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: tagBgColor,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            tagText.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: tagTextColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    if (appointments.isEmpty)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF4F6F8),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            "No appointments booked",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF7A869A),
-                            ),
-                          ),
-                        ),
-                      )
-                    else
-                      ...appointments
-                          .map(
-                            (appt) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _buildAppointmentCard(appt),
-                            ),
-                          )
-                          .toList(),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   List<Widget> _buildEventSections() {
     final List<Widget> sections = [];
 
@@ -1586,8 +1407,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           GestureDetector(
             onTap: () {
               setState(() {
-                 // Clear selection to view all
-                 _homeController.clearDateSelection();
+                // Clear selection to view all
+                _homeController.clearDateSelection();
               });
             },
             child: const Text(
@@ -1605,227 +1426,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     sections.add(const SizedBox(height: 16));
 
     final upcomingList = _homeController.filteredUpcoming;
-    
+
     if (upcomingList.isEmpty) {
-        sections.add(_buildNoAppointmentsCard());
+      sections.add(_buildNoAppointmentsCard());
     } else {
-        for (final group in upcomingList) {
-          try {
-            final DateTime upcomingDate = DateTime.parse(group.date);
-            sections.add(
-              _buildAgendaDayCard(
-                upcomingDate,
-                "Upcoming",
-                const Color(0xFFF9F0D6),
-                const Color(0xFF90702F),
-                const Color(0xFFF6C844),
-                group.data,
-              ),
-            );
-          } catch (e) {}
-        }
+      for (final group in upcomingList) {
+        try {
+          final DateTime upcomingDate = DateTime.parse(group.date);
+          sections.add(
+            AgendaDayCardWidget(
+              date: upcomingDate,
+              tagText: "Upcoming",
+              tagBgColor: const Color(0xFFF9F0D6),
+              tagTextColor: const Color(0xFF90702F),
+              borderColor: const Color(0xFFF6C844),
+              appointments: group.data,
+            ),
+          );
+        } catch (e) {}
+      }
     }
 
     sections.add(const SizedBox(height: 20));
     return sections;
-  }
-
-  Widget _buildAppointmentCard(Appointment appointment) {
-      String formatTime(String timeStr) {
-    try {
-      if (timeStr.toUpperCase().contains("AM") || timeStr.toUpperCase().contains("PM")) {
-        return timeStr;
-      }
-      final parts = timeStr.split(":");
-      if (parts.length >= 2) {
-        final hour = int.parse(parts[0]);
-        final minuteStr = parts[1].replaceAll(RegExp(r'[^0-9]'), '');
-        final minute = int.parse(minuteStr);
-        final period = hour >= 12 ? "PM" : "AM";
-        final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-        return "$displayHour:${minute.toString().padLeft(2, "0")} $period";
-      }
-    } catch (e) {}
-    return timeStr;
-  }
-
-    final String startTimeFormatted = formatTime(appointment.startTime);
-    final String endTimeFormatted = formatTime(appointment.endTime);
-    final String customerName =
-        "Title: ${appointment.customer.title ?? 'null'}\n"
-        "Name: ${appointment.customer.name ?? 'null'}\n"
-        "First Name: ${appointment.customer.firstName ?? 'null'}\n"
-        "Last Name: ${appointment.customer.lastName ?? 'null'}";
-    final String address =
-        appointment.customer.address ?? "Address not available";
-    final String type = appointment.type.isNotEmpty
-        ? appointment.type
-        : "Service";
-
-    String statusText = appointment.status.replaceAll("_", " ").toUpperCase();
-    Color statusBgColor = const Color(0xFFE8F5E9);
-    Color statusTextColor = const Color(0xFF2E7D32);
-
-    if (appointment.status == "cleaner_assigned") {
-      statusText = LocalizationService().translate("events.active");
-    } else if (appointment.status == "on_my_way") {
-      statusText = LocalizationService().translate(
-        "arrivalNotification.onMyWay",
-      );
-      statusBgColor = const Color(0xFFE3F2FD);
-      statusTextColor = const Color(0xFF1565C0);
-    } else if (appointment.status == "checked_in") {
-      statusText = LocalizationService().translate("events.check_in");
-    } else if (appointment.status == "checked_out" ||
-        appointment.status == "completed") {
-      statusText = appointment.status == "completed"
-          ? LocalizationService().translate("events.complete")
-          : LocalizationService().translate("events.check_out");
-      statusBgColor = const Color(0xFFF1F5F9);
-      statusTextColor = const Color(0xFF475569);
-    } else if (appointment.status == "cancelled") {
-      statusText = LocalizationService().translate("events.cancel");
-      statusBgColor = const Color(0xFFFFEBEE);
-      statusTextColor = const Color(0xFFC62828);
-    }
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                EventDetailScreen(occurrenceId: appointment.occurrenceId),
-          ),
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 70,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    startTimeFormatted,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1E2638),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    "-",
-                    style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8)),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    endTimeFormatted,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF64748B),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-              width: 1,
-              height: 40,
-              color: const Color(0xFFE2E8F0),
-            ),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: _buildCustomerDetails(appointment.customer),
-                      ),
-                      const SizedBox(width: 8),
-                      if (statusText != "SCHEDULED")
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: statusBgColor,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            statusText,
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                              color: statusTextColor,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        size: 12,
-                        color: Color(0xFF64748B),
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          address,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF64748B),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.chevron_right,
-                size: 16,
-                color: Color(0xFF94A3B8),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildAvatarPlaceholder() {
