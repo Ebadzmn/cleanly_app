@@ -54,7 +54,7 @@ class Appointment {
   });
 
   factory Appointment.fromJson(Map<String, dynamic> json) {
-    final String parsedId = json["id"]?.toString() ?? json["appointment_id"]?.toString() ?? "0";
+    final String parsedId = json["occurrence_id"]?.toString() ?? json["id"]?.toString() ?? json["appointment_id"]?.toString() ?? "0";
     final List<dynamic>? rawOccurrences =
         json["all_occurrences"] as List<dynamic>?;
     final List<AppointmentOccurrence> parsedOccurrences = rawOccurrences == null
@@ -67,9 +67,12 @@ class Appointment {
     String customerName = json["name"]?.toString() ?? "";
     if (customerName.isEmpty && json["customer"] != null) {
       final customer = json["customer"];
-      final firstName = customer["firstName"]?.toString() ?? "";
-      final lastName = customer["lastName"]?.toString() ?? "";
-      customerName = "$firstName $lastName".trim();
+      customerName = customer["name"]?.toString() ?? "";
+      if (customerName.isEmpty) {
+        final firstName = customer["firstName"]?.toString() ?? "";
+        final lastName = customer["lastName"]?.toString() ?? "";
+        customerName = "$firstName $lastName".trim();
+      }
     }
 
     return Appointment(

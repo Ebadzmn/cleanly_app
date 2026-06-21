@@ -27,6 +27,7 @@ class AppointmentOccurrenceDetail {
 class AppointmentDetailData {
   final String appointmentId;
   final String type;
+  final String status;
   final String description;
   final String fees;
   final String grossProfit;
@@ -34,6 +35,16 @@ class AppointmentDetailData {
   final String cleanerPay;
   final String gateWayFee;
   final String address;
+  final String? addressLine1;
+  final String? houseNumber;
+  final String? apartmentNumber;
+  final String? city;
+  final String? state;
+  final String? zipCode;
+  final int? bedrooms;
+  final int? bathrooms;
+  final int? kitchens;
+  final int? squareFootage;
   final String name;
   final String title;
   final String firstName;
@@ -52,6 +63,7 @@ class AppointmentDetailData {
   const AppointmentDetailData({
     required this.appointmentId,
     required this.type,
+    required this.status,
     required this.description,
     required this.fees,
     required this.grossProfit,
@@ -59,6 +71,16 @@ class AppointmentDetailData {
     required this.cleanerPay,
     required this.gateWayFee,
     required this.address,
+    this.addressLine1,
+    this.houseNumber,
+    this.apartmentNumber,
+    this.city,
+    this.state,
+    this.zipCode,
+    this.bedrooms,
+    this.bathrooms,
+    this.kitchens,
+    this.squareFootage,
     required this.name,
     required this.title,
     required this.firstName,
@@ -77,7 +99,7 @@ class AppointmentDetailData {
 
   factory AppointmentDetailData.fromJson(Map<String, dynamic> json) {
     final String parsedId = json["appointment_id"]?.toString() ?? json["id"]?.toString() ?? "";
-    final List<dynamic>? rawOccurrences = json["all_occurrences"] as List<dynamic>?;
+    final List<dynamic>? rawOccurrences = (json["occurrences"] as List<dynamic>?) ?? (json["all_occurrences"] as List<dynamic>?);
     final List<AppointmentOccurrenceDetail> occurrences = rawOccurrences == null
         ? <AppointmentOccurrenceDetail>[]
         : rawOccurrences
@@ -109,16 +131,65 @@ class AppointmentDetailData {
       parsedPhone = json["client"]["phone"]?.toString() ?? json["client"]["phone_number"]?.toString() ?? json["client"]["mobile"]?.toString() ?? json["client"]["contact_number"]?.toString() ?? "";
     }
 
+    final addressRaw = json["addressDetails"] ?? json["address"];
+    String addressString = "";
+    String? addressLine1;
+    String? houseNumber;
+    String? apartmentNumber;
+    String? city;
+    String? state;
+    String? zipCode;
+    int? bedrooms;
+    int? bathrooms;
+    int? kitchens;
+    int? squareFootage;
+
+    if (addressRaw is Map<String, dynamic>) {
+      addressLine1 = addressRaw["addressLine1"]?.toString() ?? json["addressLine1"]?.toString();
+      houseNumber = addressRaw["houseNumber"]?.toString() ?? json["houseNumber"]?.toString();
+      apartmentNumber = addressRaw["apartmentNumber"]?.toString() ?? json["apartmentNumber"]?.toString();
+      city = addressRaw["city"]?.toString() ?? json["city"]?.toString();
+      state = addressRaw["state"]?.toString() ?? json["state"]?.toString();
+      zipCode = addressRaw["zipCode"]?.toString() ?? json["zipCode"]?.toString();
+      bedrooms = addressRaw["bedrooms"] != null ? int.tryParse(addressRaw["bedrooms"].toString()) : null;
+      bathrooms = addressRaw["bathrooms"] != null ? int.tryParse(addressRaw["bathrooms"].toString()) : null;
+      kitchens = addressRaw["kitchens"] != null ? int.tryParse(addressRaw["kitchens"].toString()) : null;
+      squareFootage = addressRaw["squareFootage"] != null ? int.tryParse(addressRaw["squareFootage"].toString()) : null;
+    } else {
+      addressString = addressRaw?.toString() ?? "";
+      addressLine1 = json["addressLine1"]?.toString();
+      houseNumber = json["houseNumber"]?.toString();
+      apartmentNumber = json["apartmentNumber"]?.toString();
+      city = json["city"]?.toString();
+      state = json["state"]?.toString();
+      zipCode = json["zipCode"]?.toString();
+      bedrooms = json["bedrooms"] != null ? int.tryParse(json["bedrooms"].toString()) : null;
+      bathrooms = json["bathrooms"] != null ? int.tryParse(json["bathrooms"].toString()) : null;
+      kitchens = json["kitchens"] != null ? int.tryParse(json["kitchens"].toString()) : null;
+      squareFootage = json["squareFootage"] != null ? int.tryParse(json["squareFootage"].toString()) : null;
+    }
+
     return AppointmentDetailData(
       appointmentId: parsedId,
       type: json["type"]?.toString() ?? "",
+      status: json["status"]?.toString() ?? "",
       description: json["description"]?.toString() ?? "",
       fees: json["fees"]?.toString() ?? "0.00",
       grossProfit: json["gross_profit"]?.toString() ?? "0.00",
       netProfit: json["net_profit"]?.toString() ?? "0.00",
       cleanerPay: json["price"]?.toString() ?? json["cleaner_pay"]?.toString() ?? "",
       gateWayFee: json["gateway_fee"]?.toString() ?? "",
-      address: json["address"]?.toString() ?? "",
+      address: addressString,
+      addressLine1: addressLine1,
+      houseNumber: houseNumber,
+      apartmentNumber: apartmentNumber,
+      city: city,
+      state: state,
+      zipCode: zipCode,
+      bedrooms: bedrooms,
+      bathrooms: bathrooms,
+      kitchens: kitchens,
+      squareFootage: squareFootage,
       name: json["name"]?.toString() ?? "",
       title: json["title"]?.toString() ?? "",
       firstName: json["first_name"]?.toString() ?? "",
@@ -134,5 +205,32 @@ class AppointmentDetailData {
       notesAdmin: json["notes_admin"]?.toString(),
       allOccurrences: occurrences,
     );
+  }
+
+  String get fullAddress {
+    List<String> parts = [];
+    
+    String line1 = "";
+    if (houseNumber != null && houseNumber!.isNotEmpty) {
+      line1 += houseNumber!;
+    }
+    if (addressLine1 != null && addressLine1!.isNotEmpty) {
+      if (line1.isNotEmpty) line1 += " ";
+      line1 += addressLine1!;
+    }
+    if (line1.isNotEmpty) parts.add(line1);
+    
+    if (apartmentNumber != null && apartmentNumber!.isNotEmpty) {
+      parts.add("Apt $apartmentNumber");
+    }
+    
+    if (city != null && city!.isNotEmpty) parts.add(city!);
+    if (state != null && state!.isNotEmpty) parts.add(state!);
+    if (zipCode != null && zipCode!.isNotEmpty) parts.add(zipCode!);
+    
+    if (parts.isNotEmpty) {
+      return parts.join(', ');
+    }
+    return address;
   }
 }

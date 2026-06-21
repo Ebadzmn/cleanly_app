@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../domain/models/appointment_models.dart';
 import '../../../core/utils/date_time_utils.dart';
-import '../../../screens/event_detail_screen.dart';
+import '../../appointment_detail/pages/appointment_detail_page.dart';
 
 class AppointmentCardWidget extends StatelessWidget {
   final Appointment appointment;
@@ -32,11 +32,21 @@ class AppointmentCardWidget extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
+        final Map<String, dynamic> jobData = {
+          "appointment_id": appointment.appointmentId,
+          "name": appointment.customer.name ?? "Unknown",
+          "status": appointment.status,
+          "date": appointment.date,
+          "time": "${appointment.startTime} - ${appointment.endTime}",
+          "location": appointment.customer.address ?? "",
+          "description": appointment.description,
+          "type": appointment.type,
+        };
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) =>
-                EventDetailScreen(occurrenceId: appointment.occurrenceId),
+                AppointmentDetailPage(appointmentData: jobData),
           ),
         );
       },

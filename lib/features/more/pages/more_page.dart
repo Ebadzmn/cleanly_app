@@ -7,6 +7,7 @@ import '../../profile/bindings/profile_binding.dart';
 import '../../language/pages/language_page.dart';
 import '../../language/bindings/language_binding.dart';
 import '../controllers/more_controller.dart';
+import 'blocked_availability_list_page.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -40,7 +41,9 @@ class MorePage extends StatelessWidget {
                 child: Obx(() {
                   if (controller.isLoading.value) {
                     return const Center(
-                      child: CircularProgressIndicator(color: Color(0xFF5A4D3D)),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF5A4D3D),
+                      ),
                     );
                   }
 
@@ -96,7 +99,8 @@ class MorePage extends StatelessWidget {
                           width: 44,
                           height: 44,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => _buildAvatarPlaceholder(),
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildAvatarPlaceholder(),
                         )
                       : _buildAvatarPlaceholder(),
                 ),
@@ -124,7 +128,9 @@ class MorePage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionTitle(LocalizationService().translate("more.profile") ?? "Profile"),
+          _buildSectionTitle(
+            LocalizationService().translate("more.profile") ?? "Profile",
+          ),
           const SizedBox(height: 12),
           _buildMenuItem(
             icon: "assets/svg/profile.svg",
@@ -134,25 +140,54 @@ class MorePage extends StatelessWidget {
             },
           ),
           const SizedBox(height: 32),
-          _buildSectionTitle(LocalizationService().translate("more.language") ?? "Language"),
+          _buildSectionTitle(
+            LocalizationService().translate("more.language") ?? "Language",
+          ),
           const SizedBox(height: 12),
           _buildMenuItem(
             icon: "assets/svg/language.svg",
-            title: LocalizationService().translate("more.languages") ?? "Languages",
+            title:
+                LocalizationService().translate("more.languages") ??
+                "Languages",
             onTap: () {
               Get.to(() => const LanguagePage(), binding: LanguageBinding());
             },
           ),
           const SizedBox(height: 32),
-          _buildSectionTitle(LocalizationService().translate("more.logout") ?? "Logout"),
+          _buildSectionTitle(
+            LocalizationService().translate("more.availability") ??
+                "Availability",
+          ),
           const SizedBox(height: 12),
-          Obx(() => _buildMenuItem(
-                icon: "assets/svg/logout.svg",
-                title: LocalizationService().translate("more.logout") ?? "Logout",
-                isLoading: controller.isLogoutLoading.value,
-                isDestructive: true,
-                onTap: () => controller.logoutUser(),
-              )),
+          _buildMenuItem(
+            iconData: Icons.event_busy_outlined,
+            title:
+                LocalizationService().translate("Block my availability") ??
+                "Block my availability",
+            onTap: () => _showBlockAvailabilityDialog(context, controller),
+          ),
+          const SizedBox(height: 12),
+          _buildMenuItem(
+            iconData: Icons.list_alt,
+            title: LocalizationService().translate("Blocked Availability List") ?? "Blocked Availability List",
+            onTap: () {
+              Get.to(() => const BlockedAvailabilityListPage());
+            },
+          ),
+          const SizedBox(height: 32),
+          _buildSectionTitle(
+            LocalizationService().translate("more.logout") ?? "Logout",
+          ),
+          const SizedBox(height: 12),
+          Obx(
+            () => _buildMenuItem(
+              icon: "assets/svg/logout.svg",
+              title: LocalizationService().translate("more.logout") ?? "Logout",
+              isLoading: controller.isLogoutLoading.value,
+              isDestructive: true,
+              onTap: () => controller.logoutUser(),
+            ),
+          ),
         ],
       ),
     );
@@ -170,13 +205,16 @@ class MorePage extends StatelessWidget {
   }
 
   Widget _buildMenuItem({
-    required String icon,
+    String? icon,
+    IconData? iconData,
     required String title,
     required VoidCallback onTap,
     bool isLoading = false,
     bool isDestructive = false,
   }) {
-    final Color iconAndTextColor = isDestructive ? const Color(0xFFC70036) : const Color(0xFF5A4D3D);
+    final Color iconAndTextColor = isDestructive
+        ? const Color(0xFFC70036)
+        : const Color(0xFF5A4D3D);
 
     return GestureDetector(
       onTap: isLoading ? null : onTap,
@@ -202,12 +240,17 @@ class MorePage extends StatelessWidget {
                 color: Colors.white.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: SvgPicture.asset(
-                icon,
-                width: 20,
-                height: 20,
-                colorFilter: ColorFilter.mode(iconAndTextColor, BlendMode.srcIn),
-              ),
+              child: icon != null
+                  ? SvgPicture.asset(
+                      icon,
+                      width: 20,
+                      height: 20,
+                      colorFilter: ColorFilter.mode(
+                        iconAndTextColor,
+                        BlendMode.srcIn,
+                      ),
+                    )
+                  : Icon(iconData, size: 20, color: iconAndTextColor),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -230,10 +273,276 @@ class MorePage extends StatelessWidget {
                 ),
               )
             else
-              Icon(Icons.chevron_right, size: 24, color: iconAndTextColor.withOpacity(0.5)),
+              Icon(
+                Icons.chevron_right,
+                size: 24,
+                color: iconAndTextColor.withOpacity(0.5),
+              ),
           ],
         ),
       ),
     );
+  }
+
+  void _showBlockAvailabilityDialog(
+    BuildContext context,
+    MoreController controller,
+  ) {
+    DateTime? selectedDate;
+    TimeOfDay? selectedStartTime;
+    TimeOfDay? selectedEndTime;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Container(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Block Availability",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E2638),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Date Picker
+                  GestureDetector(
+                    onTap: () async {
+                      final DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate ?? DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (pickedDate != null) {
+                        setState(() {
+                          selectedDate = pickedDate;
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            selectedDate == null
+                                ? "Select Date"
+                                : "${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: selectedDate == null
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF1E2638),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.calendar_today,
+                            color: Color(0xFF64748B),
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Start Time Picker
+                  GestureDetector(
+                    onTap: () async {
+                      final TimeOfDay? pickedTime = await showTimePicker(
+                        context: context,
+                        initialTime: selectedStartTime ?? TimeOfDay.now(),
+                      );
+                      if (pickedTime != null) {
+                        setState(() {
+                          selectedStartTime = pickedTime;
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            selectedStartTime == null
+                                ? "Select Start Time"
+                                : _formatTimeOfDay(selectedStartTime!),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: selectedStartTime == null
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF1E2638),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.access_time,
+                            color: Color(0xFF64748B),
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // End Time Picker
+                  GestureDetector(
+                    onTap: () async {
+                      final TimeOfDay? pickedTime = await showTimePicker(
+                        context: context,
+                        initialTime:
+                            selectedEndTime ??
+                            (selectedStartTime ?? TimeOfDay.now()),
+                      );
+                      if (pickedTime != null) {
+                        setState(() {
+                          selectedEndTime = pickedTime;
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            selectedEndTime == null
+                                ? "Select End Time"
+                                : _formatTimeOfDay(selectedEndTime!),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: selectedEndTime == null
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF1E2638),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.access_time,
+                            color: Color(0xFF64748B),
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Submit Button
+                  Obx(
+                    () => SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed:
+                            controller.isBlocking.value ||
+                                selectedDate == null ||
+                                selectedStartTime == null ||
+                                selectedEndTime == null
+                            ? null
+                            : () {
+                                final dateStr =
+                                    "${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}";
+                                final startStr = _formatTimeOfDay(
+                                  selectedStartTime!,
+                                );
+                                final endStr = _formatTimeOfDay(
+                                  selectedEndTime!,
+                                );
+                                controller.blockAvailability(
+                                  dateStr,
+                                  startStr,
+                                  endStr,
+                                );
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: controller.isBlocking.value
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                "Block Availability",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _formatTimeOfDay(TimeOfDay tod) {
+    int hour = tod.hour;
+    String ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12;
+    if (hour == 0) hour = 12;
+    return '${hour.toString().padLeft(2, '0')}:${tod.minute.toString().padLeft(2, '0')} $ampm';
   }
 }

@@ -12,6 +12,10 @@ import "package:shared_preferences/shared_preferences.dart";
 import "../config/api_config.dart";
 import "../services/localization_service.dart";
 import "event_detail_screen.dart";
+import '../features/appointment_detail/pages/appointment_detail_page.dart';
+import '../../features/profile/pages/profile_page.dart';
+import '../../features/profile/bindings/profile_binding.dart';
+import '../features/home/presentation/pages/upcoming_agenda_page.dart';
 import '../features/jobs/pages/jobs_page.dart';
 import '../features/notifications/pages/notification_page.dart';
 import '../features/more/pages/more_page.dart';
@@ -30,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final HomeController _homeController = Get.put(HomeController());
 
   DateTime selectedDate = DateTime.now();
+  DateTime viewMonthDate = DateTime.now();
   int selectedTabIndex = 0;
   DateTime today = DateTime.now();
 
@@ -40,6 +45,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String? _userName;
   String? _userImage;
   bool _isLoading = false;
+
+  int _acceptedJobs = 0;
+  int _activeAppointments = 0;
 
   @override
   void initState() {
@@ -63,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     });
     _fetchUserData();
     _fetchAppointments();
+    _fetchStats();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToToday();
@@ -157,6 +166,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _fetchStats() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString("token");
+
+      if (token == null || token.isEmpty) return;
+
+      final url = Uri.parse(ApiConfig.buildUrl("/api/cleaners/stats"));
+      final response = await http.get(
+        url,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Accept": "application/json",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        if (data["success"] == true && data["data"] != null) {
+          if (mounted) {
+            setState(() {
+              _acceptedJobs = data["data"]["acceptedJobs"] ?? 0;
+              _activeAppointments = data["data"]["activeAppointments"] ?? 0;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching cleaner stats: $e");
     }
   }
 
@@ -277,6 +318,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _onRefresh() async {
     setState(() {
       selectedDate = DateTime(today.year, today.month, today.day);
+      viewMonthDate = selectedDate;
     });
     _homeController.selectDate(selectedDate);
 
@@ -665,66 +707,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            Column(
+                            Row(
                               children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildSummaryCard(
-                                        "Active",
-                                        "12",
-                                        [
-                                          const Color(0xFFD3F2FD),
-                                          const Color(0xFFEEF9FF),
-                                        ],
-                                        const Color(0xFF35697D),
-                                        Icons.play_circle_outline,
-                                      ),
+                                Expanded(
+                                  child: _buildSummaryCard(
+                                    "Accepted",
+                                    _activeAppointments.toString().padLeft(
+                                      2,
+                                      '0',
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: _buildSummaryCard(
-                                        "Accepted",
-                                        "45",
-                                        [
-                                          const Color(0xFFD1FADF),
-                                          const Color(0xFFE8FDF0),
-                                        ],
-                                        const Color(0xFF2E6B47),
-                                        Icons.assignment_turned_in_outlined,
-                                      ),
-                                    ),
-                                  ],
+                                    [
+                                      const Color(0xFFD3F2FD),
+                                      const Color(0xFFEEF9FF),
+                                    ],
+                                    const Color(0xFF35697D),
+                                    Icons.play_circle_outline,
+                                  ),
                                 ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildSummaryCard(
-                                        "Pending",
-                                        "08",
-                                        [
-                                          const Color(0xFFFDEBB2),
-                                          const Color(0xFFFDF6DE),
-                                        ],
-                                        const Color(0xFF8B6C20),
-                                        Icons.pending_actions_outlined,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: _buildSummaryCard(
-                                        "Rejected",
-                                        "03",
-                                        [
-                                          const Color(0xFFFEE2E2),
-                                          const Color(0xFFFEF2F2),
-                                        ],
-                                        const Color(0xFF991B1B),
-                                        Icons.cancel_outlined,
-                                      ),
-                                    ),
-                                  ],
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildSummaryCard(
+                                    "Active Appointments",
+                                    _acceptedJobs.toString().padLeft(2, '0'),
+                                    [
+                                      const Color(0xFFD1FADF),
+                                      const Color(0xFFE8FDF0),
+                                    ],
+                                    const Color(0xFF2E6B47),
+                                    Icons.assignment_turned_in_outlined,
+                                  ),
                                 ),
                               ],
                             ),
@@ -750,11 +761,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
-                                  "Calendar",
-                                  style: TextStyle(
+                                Text(
+                                  DateFormat('MMMM yyyy').format(viewMonthDate),
+                                  style: const TextStyle(
                                     fontSize: 16,
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: FontWeight.bold,
                                     color: Color(0xFF1E2638),
                                   ),
                                 ),
@@ -763,14 +774,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     GestureDetector(
                                       onTap: () {
                                         setState(() {
-                                          selectedDate = DateTime(
-                                            selectedDate.year,
-                                            selectedDate.month - 1,
+                                          viewMonthDate = DateTime(
+                                            viewMonthDate.year,
+                                            viewMonthDate.month - 1,
                                             1,
                                           );
                                         });
-                                        _homeController.selectDate(selectedDate);
-                                        _fetchAppointments();
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.all(6),
@@ -789,14 +798,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     GestureDetector(
                                       onTap: () {
                                         setState(() {
-                                          selectedDate = DateTime(
-                                            selectedDate.year,
-                                            selectedDate.month + 1,
+                                          viewMonthDate = DateTime(
+                                            viewMonthDate.year,
+                                            viewMonthDate.month + 1,
                                             1,
                                           );
                                         });
-                                        _homeController.selectDate(selectedDate);
-                                        _fetchAppointments();
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.all(6),
@@ -836,13 +843,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   .toList(),
                             ),
                             const SizedBox(height: 16),
-                            _buildCalendarGrid(),
+                            Obx(() => _buildCalendarGrid()),
                           ],
                         ),
                       ),
 
                       // Events Section
-                      Padding(
+                      Obx(() => Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child:
                             _homeController.isLoading.value &&
@@ -862,7 +869,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: _buildEventSections(),
                               ),
-                      ),
+                      )),
                       const SizedBox(height: 30),
                     ],
                   ),
@@ -932,7 +939,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildCalendarGrid() {
-    DateTime now = selectedDate;
+    DateTime now = viewMonthDate;
     int daysInMonth = DateTime(now.year, now.month + 1, 0).day;
     DateTime firstDayOfMonth = DateTime(now.year, now.month, 1);
     int startingWeekday = firstDayOfMonth.weekday; // 1 (Mon) to 7 (Sun)
@@ -946,7 +953,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     for (int day = 1; day <= daysInMonth; day++) {
-      bool isSelected = day == selectedDate.day;
+      bool isSelected =
+          day == selectedDate.day &&
+          now.month == selectedDate.month &&
+          now.year == selectedDate.year;
+
+      bool hasAppointment = false;
+      if (_homeController.appointmentsData.value != null) {
+        final String dateStr =
+            "${now.year}-${now.month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}";
+        for (final upcoming
+            in _homeController.appointmentsData.value!.upcoming) {
+          if (upcoming.date == dateStr && upcoming.data.isNotEmpty) {
+            hasAppointment = true;
+            break;
+          }
+        }
+        if (!hasAppointment &&
+            _homeController.appointmentsData.value!.selectedDate == dateStr &&
+            _homeController
+                .appointmentsData
+                .value!
+                .todayAppointments
+                .isNotEmpty) {
+          hasAppointment = true;
+        }
+      }
+
       currentRow.add(
         GestureDetector(
           onTap: () {
@@ -957,20 +990,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             _fetchAppointments();
           },
           child: Container(
-            width: 32,
-            height: 32,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFF2BC41) : Colors.transparent,
+              color: isSelected
+                  ? const Color(0xFFF2BC41)
+                  : (hasAppointment
+                        ? const Color(0xFFF2BC41).withOpacity(0.25)
+                        : Colors.transparent),
               shape: BoxShape.circle,
+              border: hasAppointment && !isSelected
+                  ? Border.all(color: const Color(0xFFF2BC41), width: 1.5)
+                  : null,
             ),
             child: Center(
               child: Text(
                 day.toString(),
                 style: TextStyle(
-                  color: isSelected
+                  color: isSelected || hasAppointment
                       ? const Color(0xFF1E2638)
                       : const Color(0xFF387A8C),
-                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+                  fontWeight: isSelected || hasAppointment
+                      ? FontWeight.bold
+                      : FontWeight.w400,
                   fontSize: 14,
                 ),
               ),
@@ -1138,12 +1180,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     const SizedBox(height: 16),
                     GestureDetector(
                       onTap: () {
+                        final Map<String, dynamic> jobData = {
+                          "appointment_id": appointment.appointmentId,
+                          "name": appointment.customer.name ?? "Unknown",
+                          "status": appointment.status,
+                          "date": appointment.date,
+                          "time":
+                              "${appointment.startTime} - ${appointment.endTime}",
+                          "location": appointment.customer.address ?? "",
+                          "description": appointment.description,
+                          "type": appointment.type,
+                        };
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => EventDetailScreen(
-                              occurrenceId: appointment.occurrenceId,
-                            ),
+                            builder: (context) =>
+                                AppointmentDetailPage(appointmentData: jobData),
                           ),
                         );
                       },
@@ -1365,32 +1417,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<Widget> _buildEventSections() {
     final List<Widget> sections = [];
 
-    Appointment? upNextAppointment;
-    if (_homeController.todayAppointments.isNotEmpty) {
-      upNextAppointment = _homeController.todayAppointments.first;
-    }
-
-    sections.add(
-      const Text(
-        "UP NEXT",
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF7A869A),
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-    sections.add(const SizedBox(height: 16));
-
-    if (upNextAppointment != null) {
-      sections.add(_buildUpNextCard(upNextAppointment));
-    } else {
-      sections.add(_buildMockUpNextCard());
-    }
-
-    sections.add(const SizedBox(height: 30));
-
     sections.add(
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1406,10 +1432,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           GestureDetector(
             onTap: () {
-              setState(() {
-                // Clear selection to view all
-                _homeController.clearDateSelection();
-              });
+              Get.to(() => const UpcomingAgendaPage());
             },
             child: const Text(
               "View All",

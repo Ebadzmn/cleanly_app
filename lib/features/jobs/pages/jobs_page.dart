@@ -61,9 +61,9 @@ class JobsPage extends StatelessWidget {
                   const SizedBox(width: 8),
                   _buildPillTab("Accepted", 1, controller),
                   const SizedBox(width: 8),
-                  _buildPillTab("Rejected", 2, controller),
+                  _buildPillTab("Assigned", 2, controller),
                   const SizedBox(width: 8),
-                  _buildPillTab("Pending", 3, controller, badgeCount: controller.pendingAppointments.length),
+                  _buildPillTab("Completed", 3, controller, badgeCount: controller.completedAppointments.length),
                 ],
               )),
             ),
@@ -104,9 +104,9 @@ class JobsPage extends StatelessWidget {
                 } else if (currentIndex == 1) {
                   return _buildList(controller.acceptedAppointments, controller, 1, "Accepted", controller.isAcceptedLoading.value);
                 } else if (currentIndex == 2) {
-                  return _buildList(controller.rejectedAppointments, controller, 2, "Rejected", controller.isRejectedLoading.value);
+                  return _buildList(controller.assignedAppointments, controller, 2, "Assigned", controller.isAssignedLoading.value);
                 } else {
-                  return _buildList(controller.pendingAppointments, controller, 3, "Pending", controller.isPendingLoading.value);
+                  return _buildList(controller.completedAppointments, controller, 3, "Completed", controller.isCompletedLoading.value);
                 }
               }),
             ),
@@ -140,7 +140,7 @@ class JobsPage extends StatelessWidget {
             children: [
               Flexible(
                 child: Text(
-                  LocalizationService().translate("jobs.${title.toLowerCase()}_tab") ?? title,
+                  title,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 12,
@@ -182,8 +182,8 @@ class JobsPage extends StatelessWidget {
     Future<void> onRefresh() async {
       if (tabIndex == 0) await controller.refreshActive();
       else if (tabIndex == 1) await controller.refreshAccepted();
-      else if (tabIndex == 2) await controller.refreshRejected();
-      else if (tabIndex == 3) await controller.refreshPending();
+      else if (tabIndex == 2) await controller.refreshAssigned();
+      else if (tabIndex == 3) await controller.refreshCompleted();
     }
 
     return RefreshIndicator(

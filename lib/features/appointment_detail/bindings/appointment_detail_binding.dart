@@ -10,7 +10,10 @@ class AppointmentDetailBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<AppointmentDetailController>(
-      () => AppointmentDetailController(appointmentId: appointmentId, appointmentData: appointmentData),
+      () => AppointmentDetailController(
+        appointmentId: appointmentId,
+        targetDate: appointmentData["date"]?.toString(),
+      ),
     );
   }
 }

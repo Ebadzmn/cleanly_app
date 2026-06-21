@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/network/network_response.dart';
 import '../core/network/network_exceptions.dart' as exceptions;
 
@@ -45,7 +46,13 @@ class NetworkCaller {
       finalHeaders.addAll(headers);
     }
     const secureStorage = FlutterSecureStorage();
-    final token = await secureStorage.read(key: 'auth_token');
+    String? token = await secureStorage.read(key: 'auth_token');
+    
+    if (token == null || token.isEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      token = prefs.getString('token');
+    }
+
     if (token != null && token.isNotEmpty) {
       finalHeaders['Authorization'] = 'Bearer $token';
     }

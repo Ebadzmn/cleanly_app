@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import '../../../../services/localization_service.dart';
 import '../controllers/appointment_detail_controller.dart';
 import '../models/appointment_detail_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AppointmentDetailPage extends StatelessWidget {
   final Map<String, dynamic> appointmentData;
+  final bool isJob;
 
-  const AppointmentDetailPage({super.key, required this.appointmentData});
+  const AppointmentDetailPage({super.key, required this.appointmentData, this.isJob = false});
 
   @override
   Widget build(BuildContext context) {
-    final String appointmentId = appointmentData["appointment_id"]?.toString() ?? appointmentData["id"]?.toString() ?? "0";
+    final String appointmentId =
+        appointmentData["appointment_id"]?.toString() ??
+        appointmentData["id"]?.toString() ??
+        "0";
+    final String targetDate = appointmentData["date"]?.toString() ?? "";
 
     // Inject the controller directly here so we pass the dynamic data
     final AppointmentDetailController controller = Get.put(
       AppointmentDetailController(
         appointmentId: appointmentId,
-        appointmentData: appointmentData,
+        targetDate: targetDate,
+        isJob: isJob,
       ),
       tag: appointmentId.toString(),
     );
@@ -49,7 +54,7 @@ class AppointmentDetailPage extends StatelessWidget {
                 Navigator.pop(context, true), // Pass true to refresh parent
           ),
           title: Text(
-            LocalizationService().translate("Job Details") ?? "Job Details",
+            isJob ? "Job Details" : "Appointment Details",
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -112,7 +117,32 @@ class AppointmentDetailPage extends StatelessWidget {
     AppointmentDetailData detail,
   ) {
     final String customerName = appointmentData["name"]?.toString() ?? "";
-    final String status = appointmentData["status"]?.toString() ?? "";
+
+    // Determine the most accurate status: Occurrence status > Detail status > Fallback
+    String status = appointmentData["status"]?.toString() ?? "";
+    if (detail.status.isNotEmpty) {
+      status = detail.status;
+    }
+    if (detail.allOccurrences.isNotEmpty) {
+      final targetDate = appointmentData["date"]?.toString() ?? "";
+      if (targetDate.isNotEmpty) {
+        try {
+          final occ = detail.allOccurrences.firstWhere(
+            (o) => o.date == targetDate,
+          );
+          if (occ.status.isNotEmpty) status = occ.status;
+        } catch (e) {
+          // fallback to first if not found
+          final occStatus = detail.allOccurrences.first.status;
+          if (occStatus.isNotEmpty) status = occStatus;
+        }
+      } else {
+        final occStatus = detail.allOccurrences.first.status;
+        if (occStatus.isNotEmpty) status = occStatus;
+      }
+    }
+
+    final String initialTabStatus = appointmentData["status"]?.toString().toLowerCase() ?? "";
 
     return Column(
       children: [
@@ -123,13 +153,12 @@ class AppointmentDetailPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildHeaderCard(
+                _buildCustomerProfileCard(
                   customerName,
-                  detail.appointmentId.toString(),
+                  detail.firstName,
+                  detail.lastName,
                   status,
                 ),
-                const SizedBox(height: 12),
-                _buildContactCard(detail.email, detail.phoneNumber),
                 const SizedBox(height: 12),
                 _buildScheduleCard(detail),
                 const SizedBox(height: 12),
@@ -137,79 +166,28 @@ class AppointmentDetailPage extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildLocationCard(detail),
                 const SizedBox(height: 12),
+                _buildHouseInfoCard(detail),
+                const SizedBox(height: 12),
                 _buildJobInfoCard(detail.title, detail.description),
                 const SizedBox(height: 24),
               ],
             ),
           ),
         ),
-        _buildBottomActions(controller, status),
+        _buildBottomActions(context, controller, status, initialTabStatus),
       ],
     );
   }
 
-  Widget _buildHeaderCard(String name, String id, String status) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF1F2937),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "Appointment ID: $id",
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF4B5563),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF4C535),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              status,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF5A4D3D),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildCustomerProfileCard(String headerName, String firstName, String lastName, String status) {
+    final String fullName = [
+      firstName,
+      lastName,
+    ].where((s) => s.isNotEmpty).join(' ').trim();
+    
+    final String displayKeyName = headerName.isNotEmpty ? headerName : fullName;
+    final String displayName = displayKeyName.isNotEmpty ? displayKeyName : "Unknown Customer";
 
-  Widget _buildContactCard(String email, String phone) {
-    if (email.isEmpty && phone.isEmpty) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -227,58 +205,84 @@ class AppointmentDetailPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(
-                Icons.contact_mail_outlined,
-                color: Color(0xFF8B6C13),
-                size: 18,
+              Row(
+                children: [
+                  const Icon(
+                    Icons.person,
+                    color: Color(0xFF8B6C13),
+                    size: 16,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    "CUSTOMER",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF8B6C13),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              const Text(
-                "CONTACT INFO",
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF8B6C13),
-                  letterSpacing: 0.5,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF4C535).withOpacity(0.2), // Light yellow for status
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFF4C535), width: 1),
+                ),
+                child: Text(
+                  status.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF8B6C13),
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          if (email.isNotEmpty)
-            Row(
-              children: [
-                const Icon(Icons.email_outlined, color: Color(0xFF6B7280), size: 16),
-                const SizedBox(width: 8),
-                Expanded(
+          Row(
+            children: [
+              Container(
+                height: 50,
+                width: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFF3F4F6),
+                ),
+                child: Center(
                   child: Text(
-                    email,
+                    displayName[0].toUpperCase(),
                     style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF1F2937),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF4B5563),
                     ),
                   ),
                 ),
-              ],
-            ),
-          if (email.isNotEmpty && phone.isNotEmpty) const SizedBox(height: 12),
-          if (phone.isNotEmpty)
-            Row(
-              children: [
-                const Icon(Icons.phone_outlined, color: Color(0xFF6B7280), size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    phone,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF1F2937),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -301,76 +305,91 @@ class AppointmentDetailPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            LocalizationService().translate("appointments.schedule") ??
-                "Schedule",
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1F2937),
+          Row(
+            children: [
+              const Icon(
+                Icons.calendar_month_outlined,
+                color: Color(0xFF8B6C13),
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                "SCHEDULE",
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF8B6C13),
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF9E6), // light yellowish background
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFFDE68A)),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _buildIconContainer(Icons.calendar_today_outlined),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Date",
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF6B7280),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Date",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF8B6C13),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      detail.date.isEmpty ? "N/A" : detail.date,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F2937),
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatDate(detail.date),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1F2937),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _buildIconContainer(Icons.access_time_outlined),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Time",
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF6B7280),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      "${_formatTime(detail.startTime)} - ${_formatTime(detail.endTime)}",
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-                  ],
+                Container(
+                  height: 40,
+                  width: 1,
+                  color: const Color(0xFFFDE68A),
                 ),
-              ),
-            ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Time",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF8B6C13),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "${_formatTime(detail.startTime)} - ${_formatTime(detail.endTime)}",
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1F2937),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -547,7 +566,7 @@ class AppointmentDetailPage extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        detail.address,
+                        detail.fullAddress,
                         style: const TextStyle(
                           fontSize: 14,
                           color: Color(0xFF1F2937),
@@ -566,13 +585,25 @@ class AppointmentDetailPage extends StatelessWidget {
                       final lat = detail.lat;
                       final lng = detail.lng;
                       Uri uri;
-                      if (lat.isNotEmpty && lng.isNotEmpty && lat != "0" && lng != "0" && lat != "0.0" && lng != "0.0") {
-                        uri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng");
+                      if (lat.isNotEmpty &&
+                          lng.isNotEmpty &&
+                          lat != "0" &&
+                          lng != "0" &&
+                          lat != "0.0" &&
+                          lng != "0.0") {
+                        uri = Uri.parse(
+                          "https://www.google.com/maps/search/?api=1&query=$lat,$lng",
+                        );
                       } else {
-                        uri = Uri.parse("https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(detail.address)}");
+                        uri = Uri.parse(
+                          "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(detail.fullAddress)}",
+                        );
                       }
                       if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        await launchUrl(
+                          uri,
+                          mode: LaunchMode.externalApplication,
+                        );
                       }
                     },
                     icon: const Icon(Icons.map_outlined, size: 18),
@@ -591,6 +622,86 @@ class AppointmentDetailPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildHouseInfoCard(AppointmentDetailData detail) {
+    if (detail.bedrooms == null && detail.bathrooms == null && detail.kitchens == null && detail.squareFootage == null) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.home_outlined,
+                color: Color(0xFF8B6C13),
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                "HOUSE INFO",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF8B6C13),
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (detail.bedrooms != null) ...[
+            _buildHouseInfoRow("Bedrooms", "${detail.bedrooms}"),
+            const SizedBox(height: 12),
+          ],
+          if (detail.bathrooms != null) ...[
+            _buildHouseInfoRow("Bathrooms", "${detail.bathrooms}"),
+            const SizedBox(height: 12),
+          ],
+          if (detail.kitchens != null) ...[
+            _buildHouseInfoRow("Kitchens", "${detail.kitchens}"),
+            const SizedBox(height: 12),
+          ],
+          if (detail.squareFootage != null) ...[
+            _buildHouseInfoRow("Square Footage", "${detail.squareFootage} sqft"),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHouseInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563)),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1F2937),
+          ),
+        ),
+      ],
     );
   }
 
@@ -658,15 +769,118 @@ class AppointmentDetailPage extends StatelessWidget {
   }
 
   Widget _buildBottomActions(
+    BuildContext context,
     AppointmentDetailController controller,
     String status,
+    String initialTabStatus,
   ) {
-    // Only show bottom actions if it's "Pending" or "Active", adjust as needed
-    // Assuming the mockup shows "Accept Job", "Decline", and a chat icon, it's likely for a Pending job
-    final isPendingOrActive =
-        status.toLowerCase() == "pending" || status.toLowerCase() == "active";
-    if (!isPendingOrActive) return const SizedBox.shrink();
+    final statusLower = status.toLowerCase();
+    final isPending = statusLower == "pending";
 
+    final bool isOnMyWay = statusLower == "on_my_way";
+    final bool isCheckedIn = statusLower == "checked_in";
+    final bool isCheckedOut = statusLower == "checked_out";
+    final bool isCompleted = statusLower == "completed";
+
+    final bool onMyWayEnabled = !isPending && !isCheckedOut && !isCompleted;
+    final bool checkInEnabled = !isPending && !isCheckedOut && !isCompleted;
+    final bool checkOutEnabled = !isPending && !isCheckedOut && !isCompleted;
+
+    if (isJob && (initialTabStatus == "accepted" || initialTabStatus == "assigned" || initialTabStatus == "completed")) {
+      return const SizedBox.shrink();
+    }
+
+    if (isJob || isPending) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: ElevatedButton.icon(
+                  onPressed: () => controller.acceptAppointment(),
+                  icon: const Icon(Icons.check_circle_outline, size: 20),
+                  label: Obx(
+                    () => controller.acceptingAppointmentId.value != null
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF5A4D3D),
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            "Accept Job",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF4C535),
+                    foregroundColor: const Color(0xFF5A4D3D),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 1,
+                child: OutlinedButton(
+                  onPressed: () => controller.cancelAppointment(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF4B5563),
+                    side: const BorderSide(color: Color(0xFF9CA3AF)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Obx(
+                    () => controller.cancellingAppointmentId.value != null
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF4B5563),
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            "Decline",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Tracking buttons for accepted/active jobs
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -681,78 +895,212 @@ class AppointmentDetailPage extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              flex: 2,
-              child: ElevatedButton.icon(
-                onPressed: () => controller.acceptAppointment(),
-                icon: const Icon(Icons.check_circle_outline, size: 20),
-                label: Obx(
-                  () => controller.acceptingAppointmentId.value != null
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Color(0xFF5A4D3D),
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text(
-                          "Accept Job",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+            GestureDetector(
+              onTap: onMyWayEnabled
+                  ? () => _showArriveInDialog(context, controller)
+                  : null,
+              child: Container(
+                width: double.infinity,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: onMyWayEnabled
+                      ? const Color(0xFF1e1e1e)
+                      : const Color(0xFFE0E0E0),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF4C535),
-                  foregroundColor: const Color(0xFF5A4D3D),
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.directions_car,
+                      color: onMyWayEnabled
+                          ? Colors.white
+                          : const Color(0xFF999999),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "On My Way",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: onMyWayEnabled
+                            ? Colors.white
+                            : const Color(0xFF999999),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 1,
-              child: OutlinedButton(
-                onPressed: () => controller.cancelAppointment(),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF4B5563),
-                  side: const BorderSide(color: Color(0xFF9CA3AF)),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: checkInEnabled ? () => controller.checkIn() : null,
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: checkInEnabled
+                              ? const Color(0xFF1e1e1e)
+                              : const Color(0xFFE0E0E0),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            color: checkInEnabled
+                                ? const Color(0xFF00b8db)
+                                : const Color(0xFF999999),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 5),
+                          Obx(
+                            () => controller.isCheckingIn.value
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFF00b8db),
+                                    ),
+                                  )
+                                : Flexible(
+                                    child: Text(
+                                      "Check In",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: checkInEnabled
+                                            ? const Color(0xFF313131)
+                                            : const Color(0xFF999999),
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                child: Obx(
-                  () => controller.cancellingAppointmentId.value != null
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Color(0xFF4B5563),
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text(
-                          "Decline",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: checkOutEnabled ? () => controller.checkOut() : null,
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: checkOutEnabled
+                              ? const Color(0xFF1e1e1e)
+                              : const Color(0xFFE0E0E0),
+                          width: 1,
                         ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.access_time_filled,
+                            color: checkOutEnabled
+                                ? const Color(0xFFC70036)
+                                : const Color(0xFF999999),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 5),
+                          Obx(
+                            () => controller.isCheckingOut.value
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFFC70036),
+                                    ),
+                                  )
+                                : Flexible(
+                                    child: Text(
+                                      "Check Out",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: checkOutEnabled
+                                            ? const Color(0xFF313131)
+                                            : const Color(0xFF999999),
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showArriveInDialog(
+    BuildContext context,
+    AppointmentDetailController controller,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            "Select Arrival Time",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildEtaOption(context, controller, "15 mins"),
+              _buildEtaOption(context, controller, "30 mins"),
+              _buildEtaOption(context, controller, "45 mins"),
+              _buildEtaOption(context, controller, "60 mins"),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEtaOption(
+    BuildContext context,
+    AppointmentDetailController controller,
+    String eta,
+  ) {
+    return ListTile(
+      title: Text(eta),
+      onTap: () {
+        controller.selectedArriveIn.value = eta;
+        Navigator.pop(context);
+        controller.arriveIn();
+      },
     );
   }
 
@@ -765,6 +1113,23 @@ class AppointmentDetailPage extends StatelessWidget {
       ),
       child: Icon(icon, color: const Color(0xFF266185), size: 22),
     );
+  }
+
+  String _formatDate(String dateString) {
+    if (dateString.isEmpty) return "N/A";
+    try {
+      final DateTime date = DateTime.parse(dateString);
+      final List<String> months = [
+        "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      ];
+      return "${months[date.month]} ${date.day}, ${date.year}";
+    } catch (e) {
+      if (dateString.contains("T")) {
+        return dateString.split("T").first;
+      }
+      return dateString;
+    }
   }
 
   String _formatTime(String timeString) {

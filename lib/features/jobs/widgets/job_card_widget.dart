@@ -73,7 +73,7 @@ class JobCardWidget extends StatelessWidget {
       onTap: () async {
         final bool? shouldRefresh = await Navigator.push<bool>(
           context,
-          MaterialPageRoute(builder: (context) => AppointmentDetailPage(appointmentData: jobData)),
+          MaterialPageRoute(builder: (context) => AppointmentDetailPage(appointmentData: jobData, isJob: true)),
         );
         if (shouldRefresh == true) {
           Get.find<JobsController>().refreshActive();
@@ -240,7 +240,7 @@ class JobCardWidget extends StatelessWidget {
                       elevation: 0,
                     ),
                     child: Text(
-                      LocalizationService().translate("jobs.rejectJob") ?? "Reject",
+                      "Reject",
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -268,7 +268,7 @@ class JobCardWidget extends StatelessWidget {
                       elevation: 0,
                     ),
                     child: Text(
-                      LocalizationService().translate("jobs.acceptJob") ?? "Accept",
+                      "Accept",
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -286,7 +286,7 @@ class JobCardWidget extends StatelessWidget {
               onTap: () async {
                 final bool? shouldRefresh = await Navigator.push<bool>(
                   context,
-                  MaterialPageRoute(builder: (context) => AppointmentDetailPage(appointmentData: jobData)),
+                  MaterialPageRoute(builder: (context) => AppointmentDetailPage(appointmentData: jobData, isJob: true)),
                 );
                 if (shouldRefresh == true) {
                   Get.find<JobsController>().refreshActive();

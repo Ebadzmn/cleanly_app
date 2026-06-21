@@ -13,10 +13,10 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
   var currentTabIndex = 0.obs;
 
   final List<String> jobTabs = [
-    LocalizationService().translate("jobs.active_tab") ?? "Active",
-    LocalizationService().translate("jobs.accepted_tab") ?? "Accepted",
-    LocalizationService().translate("jobs.rejected_tab") ?? "Rejected",
-    LocalizationService().translate("jobs.pending_tab") ?? "Pending",
+    "Active",
+    "Accepted",
+    "Assigned",
+    "Completed",
   ];
 
   var activeAppointments = <Appointment>[].obs;
@@ -27,13 +27,13 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
   var isAcceptedLoading = false.obs;
   var acceptedError = RxnString();
 
-  var rejectedAppointments = <Appointment>[].obs;
-  var isRejectedLoading = false.obs;
-  var rejectedError = RxnString();
+  var assignedAppointments = <Appointment>[].obs;
+  var isAssignedLoading = false.obs;
+  var assignedError = RxnString();
 
-  var pendingAppointments = <Appointment>[].obs;
-  var isPendingLoading = false.obs;
-  var pendingError = RxnString();
+  var completedAppointments = <Appointment>[].obs;
+  var isCompletedLoading = false.obs;
+  var completedError = RxnString();
 
   var acceptingAppointmentId = RxnString();
   var cancellingAppointmentId = RxnString();
@@ -49,10 +49,10 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
       }
     });
 
-    _fetchAvailableAppointments();
+    _fetchTabAppointments("active");
     _fetchTabAppointments("accepted");
-    _fetchTabAppointments("rejected");
-    _fetchTabAppointments("pending");
+    _fetchTabAppointments("assigned");
+    _fetchTabAppointments("completed");
   }
 
   @override
@@ -62,84 +62,44 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
   }
 
   void _fetchDataForTab(int index) {
-    if (index == 0) _fetchAvailableAppointments();
+    if (index == 0) _fetchTabAppointments("active");
     if (index == 1) _fetchTabAppointments("accepted");
-    if (index == 2) _fetchTabAppointments("rejected");
-    if (index == 3) _fetchTabAppointments("pending");
+    if (index == 2) _fetchTabAppointments("assigned");
+    if (index == 3) _fetchTabAppointments("completed");
   }
 
-  Future<void> refreshActive() => _fetchAvailableAppointments();
+  Future<void> refreshActive() => _fetchTabAppointments("active");
   Future<void> refreshAccepted() => _fetchTabAppointments("accepted");
-  Future<void> refreshRejected() => _fetchTabAppointments("rejected");
-  Future<void> refreshPending() => _fetchTabAppointments("pending");
-
-  Future<void> _fetchAvailableAppointments() async {
-    isActiveLoading.value = true;
-    activeError.value = null;
-
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String? token = prefs.getString("token");
-
-      if (token == null || token.isEmpty) {
-        activeError.value = "Authentication token is missing.";
-        isActiveLoading.value = false;
-        return;
-      }
-
-      final Uri url = Uri.parse(
-        ApiConfig.buildUrlWithParams("/api/jobs/active", {
-          "_t": DateTime.now().millisecondsSinceEpoch.toString(),
-        }),
-      );
-
-      final response = await NetworkCaller.get(url);
-
-      if (response.isSuccess) {
-        final Map<String, dynamic>? decodedBody = response.data as Map<String, dynamic>?;
-        
-        if (decodedBody != null && decodedBody.containsKey("data")) {
-          final List<dynamic>? rawData = decodedBody["data"] as List<dynamic>?;
-          if (rawData != null) {
-            activeAppointments.value = rawData
-                .whereType<Map<String, dynamic>>()
-                .map(Appointment.fromJson)
-                .toList();
-          }
-        }
-      } else {
-        activeError.value = response.message ?? "Failed to fetch active appointments.";
-      }
-    } catch (e) {
-      activeError.value = "An error occurred while fetching data.";
-    } finally {
-      isActiveLoading.value = false;
-    }
-  }
+  Future<void> refreshAssigned() => _fetchTabAppointments("assigned");
+  Future<void> refreshCompleted() => _fetchTabAppointments("completed");
 
   Future<void> _fetchTabAppointments(String tab) async {
-    if (tab == "accepted") {
+    if (tab == "active") {
+      isActiveLoading.value = true;
+      activeError.value = null;
+    } else if (tab == "accepted") {
       isAcceptedLoading.value = true;
       acceptedError.value = null;
-    } else if (tab == "pending") {
-      isPendingLoading.value = true;
-      pendingError.value = null;
-    } else if (tab == "rejected") {
-      isRejectedLoading.value = true;
-      rejectedError.value = null;
+    } else if (tab == "completed") {
+      isCompletedLoading.value = true;
+      completedError.value = null;
+    } else if (tab == "assigned") {
+      isAssignedLoading.value = true;
+      assignedError.value = null;
     }
 
     try {
       String statusParam = "all";
+      if (tab == "active") statusParam = "Active";
       if (tab == "accepted") statusParam = "Accepted";
-      if (tab == "pending") statusParam = "Pending";
-      if (tab == "rejected") statusParam = "Rejected";
+      if (tab == "completed") statusParam = "Completed";
+      if (tab == "assigned") statusParam = "Assigned";
 
       final Uri url = Uri.parse(
-        ApiConfig.buildUrlWithParams("/api/jobs/cleaner", {
+        ApiConfig.buildUrlWithParams("/api/appointments/cleaner", {
           "status": statusParam,
           "page": "1",
-          "limit": "100",
+          "limit": "10",
         }),
       );
 
@@ -156,22 +116,26 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
                 .map(Appointment.fromJson)
                 .toList();
 
-        if (tab == "accepted") {
+        if (tab == "active") {
+          activeAppointments.value = fetchedAppointments;
+        } else if (tab == "accepted") {
           acceptedAppointments.value = fetchedAppointments;
-        } else if (tab == "pending") {
-          pendingAppointments.value = fetchedAppointments;
-        } else if (tab == "rejected") {
-          rejectedAppointments.value = fetchedAppointments;
+        } else if (tab == "completed") {
+          completedAppointments.value = fetchedAppointments;
+        } else if (tab == "assigned") {
+          assignedAppointments.value = fetchedAppointments;
         }
       }
     } catch (e) {
+      if (tab == "active") activeError.value = "Error fetching data.";
       if (tab == "accepted") acceptedError.value = "Error fetching data.";
-      if (tab == "pending") pendingError.value = "Error fetching data.";
-      if (tab == "rejected") rejectedError.value = "Error fetching data.";
+      if (tab == "completed") completedError.value = "Error fetching data.";
+      if (tab == "assigned") assignedError.value = "Error fetching data.";
     } finally {
+      if (tab == "active") isActiveLoading.value = false;
       if (tab == "accepted") isAcceptedLoading.value = false;
-      if (tab == "pending") isPendingLoading.value = false;
-      if (tab == "rejected") isRejectedLoading.value = false;
+      if (tab == "completed") isCompletedLoading.value = false;
+      if (tab == "assigned") isAssignedLoading.value = false;
     }
   }
 
@@ -188,7 +152,7 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
         if (data != null && data["success"] == true) {
           Get.snackbar("Success", LocalizationService().translate("jobs.appointmentAccepted") ?? "Appointment accepted.",
               backgroundColor: Colors.green, colorText: Colors.white);
-          _fetchAvailableAppointments();
+          _fetchTabAppointments("active");
           _fetchTabAppointments("accepted");
         } else {
           Get.snackbar("Error", data?["message"] ?? "Failed to accept.",
@@ -219,8 +183,7 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
         if (data != null && data["success"] == true) {
           Get.snackbar("Success", LocalizationService().translate("jobs.appointmentCancelled") ?? "Appointment rejected.",
               backgroundColor: Colors.green, colorText: Colors.white);
-          _fetchAvailableAppointments();
-          _fetchTabAppointments("rejected");
+          _fetchTabAppointments("active");
         } else {
           Get.snackbar("Error", data?["message"] ?? "Failed to reject.",
               backgroundColor: Colors.red, colorText: Colors.white);

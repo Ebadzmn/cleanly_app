@@ -170,7 +170,6 @@ class ProfilePage extends StatelessWidget {
                             placeholder: localization.translate(
                               "login.emailPlaceholder",
                             ),
-                            readOnly: true,
                           ),
                           const SizedBox(height: 16),
                           ProfileFormFieldWidget(
