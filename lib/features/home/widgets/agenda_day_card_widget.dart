@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../services/localization_service.dart';
 import 'package:intl/intl.dart';
 import '../domain/models/appointment_models.dart';
 import 'appointment_card_widget.dart';
@@ -102,10 +103,10 @@ class AgendaDayCardWidget extends StatelessWidget {
                           color: const Color(0xFFF4F6F8),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
-                            "No appointments booked",
-                            style: TextStyle(
+                            LocalizationService().translate("home.noAppointmentsBooked") ?? "No appointments booked",
+                            style: const TextStyle(
                               fontSize: 14,
                               color: Color(0xFF7A869A),
                             ),

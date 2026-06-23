@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../controllers/blocked_availability_list_controller.dart';
+import '../../../../services/localization_service.dart';
 
 class BlockedAvailabilityListPage extends StatelessWidget {
   const BlockedAvailabilityListPage({super.key});
@@ -13,9 +14,9 @@ class BlockedAvailabilityListPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text(
-          "Blocked Availability",
-          style: TextStyle(color: Color(0xFF1E2638), fontWeight: FontWeight.bold),
+        title: Text(
+          LocalizationService().translate("more.blockedAvailabilityList") ?? "Blocked Availability",
+          style: const TextStyle(color: Color(0xFF1E2638), fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
         elevation: 0.5,
@@ -27,10 +28,10 @@ class BlockedAvailabilityListPage extends StatelessWidget {
         }
 
         if (controller.blockedList.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
-              "No blocked availability found.",
-              style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
+              LocalizationService().translate("more.noBlockedAvailability") ?? "No blocked availability found.",
+              style: const TextStyle(fontSize: 16, color: Color(0xFF64748B)),
             ),
           );
         }
@@ -42,7 +43,7 @@ class BlockedAvailabilityListPage extends StatelessWidget {
             final item = controller.blockedList[index];
             
             // Format Date safely
-            String formattedDate = "N/A";
+            String formattedDate = LocalizationService().translate("common.na") ?? "N/A";
             try {
               if (item["date"] != null) {
                 final dt = DateTime.parse(item["date"].toString());

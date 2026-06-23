@@ -162,14 +162,14 @@ class MorePage extends StatelessWidget {
           _buildMenuItem(
             iconData: Icons.event_busy_outlined,
             title:
-                LocalizationService().translate("Block my availability") ??
+                LocalizationService().translate("more.blockAvailability") ??
                 "Block my availability",
             onTap: () => _showBlockAvailabilityDialog(context, controller),
           ),
           const SizedBox(height: 12),
           _buildMenuItem(
             iconData: Icons.list_alt,
-            title: LocalizationService().translate("Blocked Availability List") ?? "Blocked Availability List",
+            title: LocalizationService().translate("more.blockedAvailabilityList") ?? "Blocked Availability List",
             onTap: () {
               Get.to(() => const BlockedAvailabilityListPage());
             },
@@ -317,8 +317,8 @@ class MorePage extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Block Availability",
+                  Text(
+                    LocalizationService().translate("more.blockAvailability") ?? "Block Availability",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -357,7 +357,7 @@ class MorePage extends StatelessWidget {
                         children: [
                           Text(
                             selectedDate == null
-                                ? "Select Date"
+                                ? (LocalizationService().translate("more.selectDate") ?? "Select Date")
                                 : "${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}",
                             style: TextStyle(
                               fontSize: 16,
@@ -405,7 +405,7 @@ class MorePage extends StatelessWidget {
                         children: [
                           Text(
                             selectedStartTime == null
-                                ? "Select Start Time"
+                                ? (LocalizationService().translate("more.selectStartTime") ?? "Select Start Time")
                                 : _formatTimeOfDay(selectedStartTime!),
                             style: TextStyle(
                               fontSize: 16,
@@ -455,7 +455,7 @@ class MorePage extends StatelessWidget {
                         children: [
                           Text(
                             selectedEndTime == null
-                                ? "Select End Time"
+                                ? (LocalizationService().translate("more.selectEndTime") ?? "Select End Time")
                                 : _formatTimeOfDay(selectedEndTime!),
                             style: TextStyle(
                               fontSize: 16,
@@ -519,8 +519,8 @@ class MorePage extends StatelessWidget {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                "Block Availability",
+                            : Text(
+                                LocalizationService().translate("more.blockAvailability") ?? "Block Availability",
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,

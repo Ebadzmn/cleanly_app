@@ -74,14 +74,14 @@ class AppointmentDetailController extends GetxController {
               data["data"] as Map<String, dynamic>;
           appointmentDetail.value = AppointmentDetailData.fromJson(dataMap);
         } else {
-          error.value = "Invalid response format from server.";
+          error.value = LocalizationService().translate("jobs.invalidResponse") ?? "Invalid response format from server.";
         }
       } else {
         error.value =
-            "Failed to load appointment details. ${response.message ?? ''}";
+            "${LocalizationService().translate("jobs.failedToLoadDetails") ?? "Failed to load appointment details."} ${response.message ?? ''}";
       }
     } catch (e) {
-      error.value = "Something went wrong while loading appointment details.";
+      error.value = LocalizationService().translate("jobs.errorLoadingDetails") ?? "Something went wrong while loading appointment details.";
     } finally {
       isLoading.value = false;
     }
@@ -205,7 +205,7 @@ class AppointmentDetailController extends GetxController {
 
     final occId = occurrenceId;
     if (occId == null || occId.isEmpty) {
-      Get.snackbar("Error", "No occurrence available for this job.");
+      Get.snackbar(LocalizationService().translate("common.error") ?? "Error", LocalizationService().translate("jobs.noOccurrenceAvailable") ?? "No occurrence available for this job.");
       return;
     }
 
@@ -234,18 +234,18 @@ class AppointmentDetailController extends GetxController {
           await _fetchAppointmentDetail();
         } else {
           Get.snackbar(
-            "Error",
-            data?["message"] ?? "Failed to confirm arrival time.",
+            LocalizationService().translate("common.error") ?? "Error",
+            data?["message"] ?? (LocalizationService().translate("jobs.failedToConfirmArrival") ?? "Failed to confirm arrival time."),
           );
         }
       } else {
         Get.snackbar(
-          "Error",
-          response.message ?? "Failed to confirm arrival time.",
+          LocalizationService().translate("common.error") ?? "Error",
+          response.message ?? (LocalizationService().translate("jobs.failedToConfirmArrival") ?? "Failed to confirm arrival time."),
         );
       }
     } catch (e) {
-      Get.snackbar("Error", "Something went wrong while confirming arrival.");
+      Get.snackbar(LocalizationService().translate("common.error") ?? "Error", LocalizationService().translate("jobs.errorConfirmingArrival") ?? "Something went wrong while confirming arrival.");
     } finally {
       isArrivingIn.value = false;
     }
@@ -280,7 +280,7 @@ class AppointmentDetailController extends GetxController {
   Future<void> checkIn() async {
     final occId = occurrenceId;
     if (occId == null || occId.isEmpty) {
-      Get.snackbar("Error", "No occurrence available for this job.");
+      Get.snackbar(LocalizationService().translate("common.error") ?? "Error", LocalizationService().translate("jobs.noOccurrenceAvailable") ?? "No occurrence available for this job.");
       return;
     }
     isCheckingIn.value = true;
@@ -305,13 +305,13 @@ class AppointmentDetailController extends GetxController {
           );
           await _fetchAppointmentDetail();
         } else {
-          Get.snackbar("Error", data?["message"] ?? "Failed to check in.");
+          Get.snackbar(LocalizationService().translate("common.error") ?? "Error", data?["message"] ?? (LocalizationService().translate("jobs.failedToCheckIn") ?? "Failed to check in."));
         }
       } else {
-        Get.snackbar("Error", response.message ?? "Failed to check in.");
+        Get.snackbar(LocalizationService().translate("common.error") ?? "Error", response.message ?? (LocalizationService().translate("jobs.failedToCheckIn") ?? "Failed to check in."));
       }
     } catch (e) {
-      Get.snackbar("Error", "Something went wrong while checking in.");
+      Get.snackbar(LocalizationService().translate("common.error") ?? "Error", LocalizationService().translate("jobs.errorCheckingIn") ?? "Something went wrong while checking in.");
     } finally {
       isCheckingIn.value = false;
     }
@@ -320,7 +320,7 @@ class AppointmentDetailController extends GetxController {
   Future<void> checkOut() async {
     final occId = occurrenceId;
     if (occId == null || occId.isEmpty) {
-      Get.snackbar("Error", "No occurrence available for this job.");
+      Get.snackbar(LocalizationService().translate("common.error") ?? "Error", LocalizationService().translate("jobs.noOccurrenceAvailable") ?? "No occurrence available for this job.");
       return;
     }
     isCheckingOut.value = true;
@@ -348,13 +348,13 @@ class AppointmentDetailController extends GetxController {
           );
           await _fetchAppointmentDetail(); // Refresh job details
         } else {
-          Get.snackbar("Error", data?["message"] ?? "Failed to check out.");
+          Get.snackbar(LocalizationService().translate("common.error") ?? "Error", data?["message"] ?? (LocalizationService().translate("jobs.failedToCheckOut") ?? "Failed to check out."));
         }
       } else {
-        Get.snackbar("Error", response.message ?? "Failed to check out.");
+        Get.snackbar(LocalizationService().translate("common.error") ?? "Error", response.message ?? (LocalizationService().translate("jobs.failedToCheckOut") ?? "Failed to check out."));
       }
     } catch (e) {
-      Get.snackbar("Error", "Something went wrong while checking out.");
+      Get.snackbar(LocalizationService().translate("common.error") ?? "Error", LocalizationService().translate("jobs.errorCheckingOut") ?? "Something went wrong while checking out.");
     } finally {
       isCheckingOut.value = false;
     }

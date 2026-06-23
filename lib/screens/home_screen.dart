@@ -146,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             if (mounted) {
               setState(() {
                 _userName = data["name"]?.toString() ?? "";
-                _userImage = data["profile_url"]?.toString();
+                _userImage = ApiConfig.getFullImageUrl(data["profile_url"]?.toString());
                 _greeting = greeting;
               });
             }
@@ -680,8 +680,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            const Text(
-                              "You have a clear schedule ahead.",
+                            Text(
+                              LocalizationService().translate("home.clearSchedule") ?? "You have a clear schedule ahead.",
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Color(0xFF4A8B99),
@@ -697,8 +697,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              "JOB SUMMARY",
+                            Text(
+                              LocalizationService().translate("home.jobSummary") ?? "JOB SUMMARY",
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -711,7 +711,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               children: [
                                 Expanded(
                                   child: _buildSummaryCard(
-                                    "Accepted",
+                                    LocalizationService().translate("home.accepted") ?? "Accepted",
                                     _activeAppointments.toString().padLeft(
                                       2,
                                       '0',
@@ -727,7 +727,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: _buildSummaryCard(
-                                    "Active Appointments",
+                                    LocalizationService().translate("home.activeAppointments") ?? "Active Appointments",
                                     _acceptedJobs.toString().padLeft(2, '0'),
                                     [
                                       const Color(0xFFD1FADF),
@@ -1422,7 +1422,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            "UPCOMING AGENDA",
+            LocalizationService().translate("home.upcomingAgenda") ?? "UPCOMING AGENDA",
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -1434,8 +1434,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             onTap: () {
               Get.to(() => const UpcomingAgendaPage());
             },
-            child: const Text(
-              "View All",
+            child: Text(
+            LocalizationService().translate("home.viewAll") ?? "View All",
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -1459,7 +1459,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           sections.add(
             AgendaDayCardWidget(
               date: upcomingDate,
-              tagText: "Upcoming",
+              tagText: LocalizationService().translate("home.upcoming") ?? "Upcoming",
               tagBgColor: const Color(0xFFF9F0D6),
               tagTextColor: const Color(0xFF90702F),
               borderColor: const Color(0xFFF6C844),

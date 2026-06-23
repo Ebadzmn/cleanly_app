@@ -1,34 +1,57 @@
 import 'package:flutter/material.dart';
+import '../../../../services/localization_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../controllers/appointment_detail_controller.dart';
 import '../models/appointment_detail_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class AppointmentDetailPage extends StatelessWidget {
+class AppointmentDetailPage extends StatefulWidget {
   final Map<String, dynamic> appointmentData;
   final bool isJob;
 
   const AppointmentDetailPage({super.key, required this.appointmentData, this.isJob = false});
 
   @override
-  Widget build(BuildContext context) {
-    final String appointmentId =
-        appointmentData["appointment_id"]?.toString() ??
-        appointmentData["id"]?.toString() ??
-        "0";
-    final String targetDate = appointmentData["date"]?.toString() ?? "";
+  State<AppointmentDetailPage> createState() => _AppointmentDetailPageState();
+}
+
+class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
+  late String appointmentId;
+  late String targetDate;
+  late AppointmentDetailController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    appointmentId = widget.isJob
+        ? (widget.appointmentData["job_id"]?.toString() ??
+           widget.appointmentData["id"]?.toString() ??
+           "0")
+        : (widget.appointmentData["appointment_id"]?.toString() ??
+           widget.appointmentData["id"]?.toString() ??
+           "0");
+    targetDate = widget.appointmentData["date"]?.toString() ?? "";
 
     // Inject the controller directly here so we pass the dynamic data
-    final AppointmentDetailController controller = Get.put(
+    controller = Get.put(
       AppointmentDetailController(
         appointmentId: appointmentId,
         targetDate: targetDate,
-        isJob: isJob,
+        isJob: widget.isJob,
       ),
       tag: appointmentId.toString(),
     );
+  }
 
+  @override
+  void dispose() {
+    Get.delete<AppointmentDetailController>(tag: appointmentId.toString());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -54,7 +77,7 @@ class AppointmentDetailPage extends StatelessWidget {
                 Navigator.pop(context, true), // Pass true to refresh parent
           ),
           title: Text(
-            isJob ? "Job Details" : "Appointment Details",
+            widget.isJob ? (LocalizationService().translate("jobs.jobDetails") ?? "Job Details") : (LocalizationService().translate("jobs.appointmentDetails") ?? "Appointment Details"),
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -91,7 +114,7 @@ class AppointmentDetailPage extends StatelessWidget {
                 controller.appointmentDetail.value == null) {
               return Center(
                 child: Text(
-                  controller.error.value ?? "Failed to load details.",
+                  controller.error.value ?? (LocalizationService().translate("jobs.failedToLoadDetails") ?? "Failed to load details."),
                   style: const TextStyle(
                     color: Color(0xFFC70036),
                     fontSize: 16,
@@ -116,33 +139,51 @@ class AppointmentDetailPage extends StatelessWidget {
     AppointmentDetailController controller,
     AppointmentDetailData detail,
   ) {
-    final String customerName = appointmentData["name"]?.toString() ?? "";
+    final String customerName = widget.appointmentData["name"]?.toString() ?? "";
 
     // Determine the most accurate status: Occurrence status > Detail status > Fallback
-    String status = appointmentData["status"]?.toString() ?? "";
+    String status = widget.appointmentData["status"]?.toString() ?? "";
+    String displayDate = detail.date;
+    String displayStartTime = detail.startTime;
+    String displayEndTime = detail.endTime;
+
     if (detail.status.isNotEmpty) {
       status = detail.status;
     }
     if (detail.allOccurrences.isNotEmpty) {
-      final targetDate = appointmentData["date"]?.toString() ?? "";
+      final targetDate = widget.appointmentData["date"]?.toString() ?? "";
       if (targetDate.isNotEmpty) {
         try {
           final occ = detail.allOccurrences.firstWhere(
             (o) => o.date == targetDate,
           );
           if (occ.status.isNotEmpty) status = occ.status;
+          if (occ.date.isNotEmpty) displayDate = occ.date;
+          if (occ.startTime.isNotEmpty) displayStartTime = occ.startTime;
+          if (occ.endTime.isNotEmpty) displayEndTime = occ.endTime;
         } catch (e) {
           // fallback to first if not found
-          final occStatus = detail.allOccurrences.first.status;
-          if (occStatus.isNotEmpty) status = occStatus;
+          final occ = detail.allOccurrences.first;
+          if (occ.status.isNotEmpty) status = occ.status;
+          if (occ.date.isNotEmpty) displayDate = occ.date;
+          if (occ.startTime.isNotEmpty) displayStartTime = occ.startTime;
+          if (occ.endTime.isNotEmpty) displayEndTime = occ.endTime;
         }
       } else {
-        final occStatus = detail.allOccurrences.first.status;
-        if (occStatus.isNotEmpty) status = occStatus;
+        final occ = detail.allOccurrences.first;
+        if (occ.status.isNotEmpty) status = occ.status;
+        if (occ.date.isNotEmpty) displayDate = occ.date;
+        if (occ.startTime.isNotEmpty) displayStartTime = occ.startTime;
+        if (occ.endTime.isNotEmpty) displayEndTime = occ.endTime;
+      }
+    } else {
+      final targetDate = widget.appointmentData["date"]?.toString() ?? "";
+      if (targetDate.isNotEmpty) {
+        displayDate = targetDate;
       }
     }
 
-    final String initialTabStatus = appointmentData["status"]?.toString().toLowerCase() ?? "";
+    final String initialTabStatus = widget.appointmentData["status"]?.toString().toLowerCase() ?? "";
 
     return Column(
       children: [
@@ -160,7 +201,7 @@ class AppointmentDetailPage extends StatelessWidget {
                   status,
                 ),
                 const SizedBox(height: 12),
-                _buildScheduleCard(detail),
+                _buildScheduleCard(displayDate, displayStartTime, displayEndTime),
                 const SizedBox(height: 12),
                 _buildServiceDetailsCard(detail),
                 const SizedBox(height: 12),
@@ -186,7 +227,7 @@ class AppointmentDetailPage extends StatelessWidget {
     ].where((s) => s.isNotEmpty).join(' ').trim();
     
     final String displayKeyName = headerName.isNotEmpty ? headerName : fullName;
-    final String displayName = displayKeyName.isNotEmpty ? displayKeyName : "Unknown Customer";
+    final String displayName = displayKeyName.isNotEmpty ? displayKeyName : (LocalizationService().translate("jobs.unknownCustomer") ?? "Unknown Customer");
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -216,7 +257,7 @@ class AppointmentDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    "CUSTOMER",
+                    LocalizationService().translate("jobs.customer") ?? "CUSTOMER",
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -288,7 +329,7 @@ class AppointmentDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildScheduleCard(AppointmentDetailData detail) {
+  Widget _buildScheduleCard(String date, String startTime, String endTime) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -314,7 +355,7 @@ class AppointmentDetailPage extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                "SCHEDULE",
+                LocalizationService().translate("jobs.schedule") ?? "SCHEDULE",
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -338,8 +379,8 @@ class AppointmentDetailPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "Date",
+                      Text(
+                        LocalizationService().translate("jobs.date") ?? "Date",
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -348,7 +389,7 @@ class AppointmentDetailPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _formatDate(detail.date),
+                        _formatDate(date),
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -368,8 +409,8 @@ class AppointmentDetailPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "Time",
+                      Text(
+                        LocalizationService().translate("jobs.time") ?? "Time",
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -378,7 +419,7 @@ class AppointmentDetailPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "${_formatTime(detail.startTime)} - ${_formatTime(detail.endTime)}",
+                        "${_formatTime(startTime)} - ${_formatTime(endTime)}",
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -398,8 +439,8 @@ class AppointmentDetailPage extends StatelessWidget {
 
   Widget _buildServiceDetailsCard(AppointmentDetailData detail) {
     final typeText = detail.type.toLowerCase() == "recurring"
-        ? "Recurring Cleaning"
-        : "Deep Cleaning";
+        ? (LocalizationService().translate("jobs.recurringCleaning") ?? "Recurring Cleaning")
+        : (LocalizationService().translate("jobs.deepCleaning") ?? "Deep Cleaning");
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -425,7 +466,7 @@ class AppointmentDetailPage extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                "SERVICE DETAILS",
+                LocalizationService().translate("jobs.serviceDetails") ?? "SERVICE DETAILS",
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -439,8 +480,8 @@ class AppointmentDetailPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Type",
+              Text(
+                LocalizationService().translate("jobs.type") ?? "Type",
                 style: TextStyle(fontSize: 14, color: Color(0xFF4B5563)),
               ),
               Text(
@@ -457,13 +498,13 @@ class AppointmentDetailPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Duration",
+              Text(
+                LocalizationService().translate("jobs.duration") ?? "Duration",
                 style: TextStyle(fontSize: 14, color: Color(0xFF4B5563)),
               ),
               // Assume 2 Hours if not explicitly available, but since we have start/end time, we can leave as generic or calculate. Let's just put "2 Hours" to match mockup.
-              const Text(
-                "2 Hours",
+              Text(
+                LocalizationService().translate("jobs.twoHours") ?? "2 Hours",
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -478,8 +519,8 @@ class AppointmentDetailPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Pay Rate",
+              Text(
+                LocalizationService().translate("jobs.payRate") ?? "Pay Rate",
                 style: TextStyle(fontSize: 14, color: Color(0xFF4B5563)),
               ),
               Text(
@@ -607,7 +648,7 @@ class AppointmentDetailPage extends StatelessWidget {
                       }
                     },
                     icon: const Icon(Icons.map_outlined, size: 18),
-                    label: const Text("Open in Maps"),
+                    label: Text(LocalizationService().translate("jobs.openInMaps") ?? "Open in Maps"),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF266185),
                       side: const BorderSide(color: Color(0xFF266185)),
@@ -653,8 +694,8 @@ class AppointmentDetailPage extends StatelessWidget {
                 size: 18,
               ),
               const SizedBox(width: 8),
-              const Text(
-                "HOUSE INFO",
+              Text(
+                LocalizationService().translate("jobs.houseInfo") ?? "HOUSE INFO",
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -666,19 +707,19 @@ class AppointmentDetailPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           if (detail.bedrooms != null) ...[
-            _buildHouseInfoRow("Bedrooms", "${detail.bedrooms}"),
+            _buildHouseInfoRow(LocalizationService().translate("jobs.bedrooms") ?? "Bedrooms", "${detail.bedrooms}"),
             const SizedBox(height: 12),
           ],
           if (detail.bathrooms != null) ...[
-            _buildHouseInfoRow("Bathrooms", "${detail.bathrooms}"),
+            _buildHouseInfoRow(LocalizationService().translate("jobs.bathrooms") ?? "Bathrooms", "${detail.bathrooms}"),
             const SizedBox(height: 12),
           ],
           if (detail.kitchens != null) ...[
-            _buildHouseInfoRow("Kitchens", "${detail.kitchens}"),
+            _buildHouseInfoRow(LocalizationService().translate("jobs.kitchens") ?? "Kitchens", "${detail.kitchens}"),
             const SizedBox(height: 12),
           ],
           if (detail.squareFootage != null) ...[
-            _buildHouseInfoRow("Square Footage", "${detail.squareFootage} sqft"),
+            _buildHouseInfoRow(LocalizationService().translate("jobs.squareFootage") ?? "Square Footage", "${detail.squareFootage} ${LocalizationService().translate("jobs.sqft") ?? "sqft"}"),
           ],
         ],
       ),
@@ -731,8 +772,8 @@ class AppointmentDetailPage extends StatelessWidget {
                 size: 18,
               ),
               const SizedBox(width: 8),
-              const Text(
-                "JOB INFO",
+              Text(
+                LocalizationService().translate("jobs.jobInfo") ?? "JOB INFO",
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -786,11 +827,11 @@ class AppointmentDetailPage extends StatelessWidget {
     final bool checkInEnabled = !isPending && !isCheckedOut && !isCompleted;
     final bool checkOutEnabled = !isPending && !isCheckedOut && !isCompleted;
 
-    if (isJob && (initialTabStatus == "accepted" || initialTabStatus == "assigned" || initialTabStatus == "completed")) {
+    if (widget.isJob && (initialTabStatus == "accepted" || initialTabStatus == "assigned" || initialTabStatus == "completed")) {
       return const SizedBox.shrink();
     }
 
-    if (isJob || isPending) {
+    if (widget.isJob || isPending) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -822,8 +863,8 @@ class AppointmentDetailPage extends StatelessWidget {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text(
-                            "Accept Job",
+                        : Text(
+                            LocalizationService().translate("jobs.acceptJob") ?? "Accept Job",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -864,8 +905,8 @@ class AppointmentDetailPage extends StatelessWidget {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text(
-                            "Decline",
+                        : Text(
+                            LocalizationService().translate("common.decline") ?? "Decline",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -923,7 +964,7 @@ class AppointmentDetailPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      "On My Way",
+                      LocalizationService().translate("jobs.onMyWay") ?? "On My Way",
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -977,7 +1018,7 @@ class AppointmentDetailPage extends StatelessWidget {
                                   )
                                 : Flexible(
                                     child: Text(
-                                      "Check In",
+                                      LocalizationService().translate("jobs.checkIn") ?? "Check In",
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
@@ -1034,7 +1075,7 @@ class AppointmentDetailPage extends StatelessWidget {
                                   )
                                 : Flexible(
                                     child: Text(
-                                      "Check Out",
+                                      LocalizationService().translate("jobs.checkOut") ?? "Check Out",
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
@@ -1071,17 +1112,17 @@ class AppointmentDetailPage extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
-            "Select Arrival Time",
-            style: TextStyle(fontWeight: FontWeight.bold),
+          title: Text(
+            LocalizationService().translate("jobs.selectArrivalTime") ?? "Select Arrival Time",
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildEtaOption(context, controller, "15 mins"),
-              _buildEtaOption(context, controller, "30 mins"),
-              _buildEtaOption(context, controller, "45 mins"),
-              _buildEtaOption(context, controller, "60 mins"),
+              _buildEtaOption(context, controller, LocalizationService().translate("jobs.mins15") ?? "15 mins"),
+              _buildEtaOption(context, controller, LocalizationService().translate("jobs.mins30") ?? "30 mins"),
+              _buildEtaOption(context, controller, LocalizationService().translate("jobs.mins45") ?? "45 mins"),
+              _buildEtaOption(context, controller, LocalizationService().translate("jobs.mins60") ?? "60 mins"),
             ],
           ),
         );
@@ -1116,7 +1157,7 @@ class AppointmentDetailPage extends StatelessWidget {
   }
 
   String _formatDate(String dateString) {
-    if (dateString.isEmpty) return "N/A";
+    if (dateString.isEmpty) return LocalizationService().translate("common.na") ?? "N/A";
     try {
       final DateTime date = DateTime.parse(dateString);
       final List<String> months = [

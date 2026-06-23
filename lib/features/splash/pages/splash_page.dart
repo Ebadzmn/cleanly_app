@@ -88,7 +88,7 @@ class SplashPage extends GetView<SplashController> {
 
                     // Slogan / Subtitle
                     Text(
-                      "Premium Cleaning Services",
+                      LocalizationService().translate("splash.subtitle"),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -118,7 +118,7 @@ class SplashPage extends GetView<SplashController> {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        "Version 1.0.0",
+                        LocalizationService().translate("splash.version"),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,

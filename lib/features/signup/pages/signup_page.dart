@@ -184,19 +184,46 @@ class _SignupPageState extends State<SignupPage> {
         const SizedBox(height: 20),
         _buildTextField(
           controller: controller.usernameController,
-          label: LocalizationService().translate("Username") ?? "Username",
-          hint: LocalizationService().translate("Username") ?? "john_doe",
+          label: LocalizationService().translate("signup.username") ?? "Username",
+          hint: LocalizationService().translate("signup.usernamePlaceholder") ?? "john_doe",
           icon: Icons.alternate_email,
           isRequired: true,
         ),
         const SizedBox(height: 20),
         _buildTextField(
           controller: controller.phoneController,
-          label: "Phone",
+          label: LocalizationService().translate("signup.phone") ?? "Phone",
           hint:
-              LocalizationService().translate("Phone Number") ?? "+1234567890",
+              LocalizationService().translate("signup.phoneNumber") ?? "+1234567890",
           icon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
+          isRequired: true,
+        ),
+        const SizedBox(height: 20),
+        _buildTextField(
+          controller: controller.addressController,
+          label: LocalizationService().translate("signup.address") ?? "Address",
+          hint: LocalizationService().translate("signup.addressPlaceholder") ?? "123 Main St",
+          icon: Icons.location_on_outlined,
+          isRequired: true,
+        ),
+        const SizedBox(height: 20),
+        _buildTextField(
+          controller: controller.ssnController,
+          label: LocalizationService().translate("signup.ssn") ?? "SSN",
+          hint: LocalizationService().translate("signup.ssnPlaceholder") ?? "XXX-XX-XXXX",
+          icon: Icons.badge_outlined,
+          isRequired: true,
+        ),
+        const SizedBox(height: 20),
+        _buildDropdownField(
+          label: LocalizationService().translate("signup.language") ?? "Language",
+          icon: Icons.language_outlined,
+          value: controller.selectedLanguage,
+          items: ["English", "Spanish"],
+          onChanged: (val) {
+            if (val != null) controller.selectedLanguage.value = val;
+          },
           isRequired: true,
         ),
         const SizedBox(height: 20),
@@ -281,6 +308,74 @@ class _SignupPageState extends State<SignupPage> {
                 vertical: 16,
               ),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required IconData icon,
+    required RxString value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+    bool isRequired = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF5A4D3D),
+              ),
+            ),
+            if (isRequired)
+              const Text(
+                " *",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFFC70036),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF6F5ED),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: const Color(0xFFA19C93), size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Obx(() => DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: value.value,
+                    isExpanded: true,
+                    icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFA19C93)),
+                    style: const TextStyle(fontSize: 16, color: Color(0xFF5A4D3D)),
+                    dropdownColor: const Color(0xFFF6F5ED),
+                    onChanged: onChanged,
+                    items: items.map<DropdownMenuItem<String>>((String item) {
+                      return DropdownMenuItem<String>(
+                        value: item,
+                        child: Text(item),
+                      );
+                    }).toList(),
+                  ),
+                )),
+              ),
+            ],
           ),
         ),
       ],

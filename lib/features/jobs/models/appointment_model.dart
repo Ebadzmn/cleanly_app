@@ -30,6 +30,7 @@ class AppointmentOccurrence {
 
 class Appointment {
   final String appointmentId;
+  final String jobId;
   final String type;
   final String description;
   final String pay;
@@ -42,6 +43,7 @@ class Appointment {
 
   const Appointment({
     required this.appointmentId,
+    required this.jobId,
     required this.type,
     required this.description,
     required this.pay,
@@ -54,7 +56,9 @@ class Appointment {
   });
 
   factory Appointment.fromJson(Map<String, dynamic> json) {
-    final String parsedId = json["occurrence_id"]?.toString() ?? json["id"]?.toString() ?? json["appointment_id"]?.toString() ?? "0";
+    final String parsedAppointmentId = json["appointment_id"]?.toString() ?? json["occurrence_id"]?.toString() ?? json["id"]?.toString() ?? "0";
+    final String parsedJobId = json["job_id"]?.toString() ?? json["id"]?.toString() ?? "0";
+    
     final List<dynamic>? rawOccurrences =
         json["all_occurrences"] as List<dynamic>?;
     final List<AppointmentOccurrence> parsedOccurrences = rawOccurrences == null
@@ -76,7 +80,8 @@ class Appointment {
     }
 
     return Appointment(
-      appointmentId: parsedId,
+      appointmentId: parsedAppointmentId,
+      jobId: parsedJobId,
       type: json["title"]?.toString() ?? json["type"]?.toString() ?? "",
       description: json["description"]?.toString() ?? "",
       pay: json["price"]?.toString() ?? json["cleaner_pay"]?.toString() ?? "0.00",

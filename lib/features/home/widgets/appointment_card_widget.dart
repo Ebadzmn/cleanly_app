@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../services/localization_service.dart';
 import '../domain/models/appointment_models.dart';
 import '../../../core/utils/date_time_utils.dart';
 import '../../appointment_detail/pages/appointment_detail_page.dart';
@@ -19,16 +20,16 @@ class AppointmentCardWidget extends StatelessWidget {
     );
 
     final String title =
-        (appointment.type == "one_time" ? "One Time Service" : appointment.type)
+        (appointment.type == "one_time" ? LocalizationService().translate("home.oneTimeService") ?? "One Time Service" : appointment.type)
             .isNotEmpty
         ? (appointment.type == "one_time"
-              ? "One Time Service"
+              ? LocalizationService().translate("home.oneTimeService") ?? "One Time Service"
               : appointment.type)
-        : "Estate Valuation";
+        : LocalizationService().translate("home.estateValuation") ?? "Estate Valuation";
     final String clientName =
-        "Client: ${appointment.customer.name ?? 'Unknown'}";
+        "${LocalizationService().translate("home.client") ?? "Client"}: ${appointment.customer.name ?? (LocalizationService().translate("home.unknown") ?? 'Unknown')}";
     final String address =
-        appointment.customer.address ?? "Address not available";
+        appointment.customer.address ?? (LocalizationService().translate("home.addressNotAvailable") ?? "Address not available");
 
     return GestureDetector(
       onTap: () {

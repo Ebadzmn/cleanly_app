@@ -16,6 +16,10 @@ class SignupController extends GetxController {
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController ssnController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+
+  var selectedLanguage = "English".obs;
 
   var obscurePassword = true.obs;
   var obscureReEnterPassword = true.obs;
@@ -30,6 +34,8 @@ class SignupController extends GetxController {
     lastNameController.dispose();
     usernameController.dispose();
     phoneController.dispose();
+    ssnController.dispose();
+    addressController.dispose();
     super.onClose();
   }
 
@@ -54,7 +60,9 @@ class SignupController extends GetxController {
         firstNameController.text.isEmpty ||
         lastNameController.text.isEmpty ||
         usernameController.text.isEmpty ||
-        phoneController.text.isEmpty) {
+        phoneController.text.isEmpty ||
+        ssnController.text.isEmpty ||
+        addressController.text.isEmpty) {
       Get.snackbar(
         LocalizationService().translate("common.error") ?? "Error",
         LocalizationService().translate("login.fillAllFields") ?? "Please fill all fields",
@@ -86,7 +94,7 @@ class SignupController extends GetxController {
 
   Future<void> _registerUser() async {
     isLoading.value = true;
-    final url = Uri.parse(ApiConfig.buildUrl("/api/auth/register"));
+    final url = Uri.parse(ApiConfig.buildUrl("/api/auth/register/cleaner"));
 
     try {
       final response = await NetworkCaller.post(
@@ -96,9 +104,12 @@ class SignupController extends GetxController {
           "lastName": lastNameController.text.trim(),
           "email": emailController.text.trim(),
           "password": passwordController.text,
-          "role": "CLEANER",
           "phone": phoneController.text.trim(),
           "username": usernameController.text.trim(),
+          "cleanFlowLanguage": selectedLanguage.value,
+          "ssn": ssnController.text.trim(),
+          "address": addressController.text.trim(),
+          "profilePhoto": "",
         }),
       );
 

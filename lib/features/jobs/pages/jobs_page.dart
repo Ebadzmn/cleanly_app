@@ -57,13 +57,13 @@ class JobsPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Obx(() => Row(
                 children: [
-                  _buildPillTab("Active", 0, controller),
+                  _buildPillTab(LocalizationService().translate("jobs.active") ?? "Active", 0, controller),
                   const SizedBox(width: 8),
-                  _buildPillTab("Accepted", 1, controller),
+                  _buildPillTab(LocalizationService().translate("jobs.accepted") ?? "Accepted", 1, controller),
                   const SizedBox(width: 8),
-                  _buildPillTab("Assigned", 2, controller),
+                  _buildPillTab(LocalizationService().translate("jobs.assigned") ?? "Assigned", 2, controller),
                   const SizedBox(width: 8),
-                  _buildPillTab("Completed", 3, controller, badgeCount: controller.completedAppointments.length),
+                  _buildPillTab(LocalizationService().translate("jobs.completed") ?? "Completed", 3, controller, badgeCount: controller.completedAppointments.length),
                 ],
               )),
             ),
@@ -75,8 +75,8 @@ class JobsPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text(
-                    "Available Requests",
+                  Text(
+                    LocalizationService().translate("jobs.availableRequests") ?? "Available Requests",
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -84,7 +84,7 @@ class JobsPage extends StatelessWidget {
                     ),
                   ),
                   Obx(() => Text(
-                    "${controller.activeAppointments.length} New found",
+                    LocalizationService().translateWithParams("jobs.newFound", {"count": controller.activeAppointments.length.toString()}) ?? "${controller.activeAppointments.length} New found",
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -100,13 +100,13 @@ class JobsPage extends StatelessWidget {
               child: Obx(() {
                 final int currentIndex = controller.currentTabIndex.value;
                 if (currentIndex == 0) {
-                  return _buildList(controller.activeAppointments, controller, 0, "Active", controller.isActiveLoading.value);
+                  return _buildList(controller.activeAppointments, controller, 0, LocalizationService().translate("jobs.active") ?? "Active", controller.isActiveLoading.value);
                 } else if (currentIndex == 1) {
-                  return _buildList(controller.acceptedAppointments, controller, 1, "Accepted", controller.isAcceptedLoading.value);
+                  return _buildList(controller.acceptedAppointments, controller, 1, LocalizationService().translate("jobs.accepted") ?? "Accepted", controller.isAcceptedLoading.value);
                 } else if (currentIndex == 2) {
-                  return _buildList(controller.assignedAppointments, controller, 2, "Assigned", controller.isAssignedLoading.value);
+                  return _buildList(controller.assignedAppointments, controller, 2, LocalizationService().translate("jobs.assigned") ?? "Assigned", controller.isAssignedLoading.value);
                 } else {
-                  return _buildList(controller.completedAppointments, controller, 3, "Completed", controller.isCompletedLoading.value);
+                  return _buildList(controller.completedAppointments, controller, 3, LocalizationService().translate("jobs.completed") ?? "Completed", controller.isCompletedLoading.value);
                 }
               }),
             ),
@@ -190,7 +190,7 @@ class JobsPage extends StatelessWidget {
       onRefresh: onRefresh,
       color: const Color(0xFFF4C535),
       child: appointments.isEmpty
-          ? _buildEmptyState("No $statusLabel appointments available")
+          ? _buildEmptyState(LocalizationService().translateWithParams("jobs.noAppointments", {"status": statusLabel}) ?? "No $statusLabel appointments available")
           : ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: appointments.length,

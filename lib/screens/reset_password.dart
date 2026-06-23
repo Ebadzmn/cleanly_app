@@ -80,7 +80,7 @@ class _ResetPasswordState extends State<ResetPassword> {
       if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(data?['message'] ?? "Password reset successful"),
+            content: Text(data?['message'] ?? LocalizationService().translate("resetPassword.success")),
           ),
         );
 
@@ -90,7 +90,7 @@ class _ResetPasswordState extends State<ResetPassword> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.message ?? "Reset password failed")),
+          SnackBar(content: Text(response.message ?? LocalizationService().translate("resetPassword.failed"))),
         );
       }
     } catch (e) {

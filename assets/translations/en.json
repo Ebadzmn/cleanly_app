@@ -16,7 +16,11 @@
     "submit": "Submit",
     "confirm": "Confirm",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "na": "N/A",
+    "decline": "Decline",
+    "accept": "Accept",
+    "reject": "Reject"
   },
   "language": {
     "title": "Languages",
@@ -38,7 +42,8 @@
     "fillAllFields": "Please fill all required fields.",
     "loginSuccessful": "Login successful",
     "loginFailed": "Login failed",
-    "unexpectedError": "An unexpected error occurred."
+    "unexpectedError": "An unexpected error occurred.",
+    "welcomeBack": "Welcome Back"
   },
   "home": {
     "welcome": "Welcome!",
@@ -59,7 +64,22 @@
     "updatedRecently": "Updated recently",
     "noNotesAvailable": "No notes available",
     "clockIn": "Clock in",
-    "clockOut": "Clock out"
+    "clockOut": "Clock out",
+    "accepted": "Accepted",
+    "activeAppointments": "Active Appointments",
+    "addressNotAvailable": "Address not available",
+    "allUpcomingAgenda": "All Upcoming Agenda",
+    "clearSchedule": "You have a clear schedule ahead!",
+    "client": "Client",
+    "estateValuation": "Estate Valuation",
+    "jobSummary": "JOB SUMMARY",
+    "name": "Name",
+    "nullValue": "null",
+    "oneTimeService": "One Time Service",
+    "title": "Home",
+    "unknown": "Unknown",
+    "upcomingAgenda": "UPCOMING AGENDA",
+    "viewAll": "View All"
   },
   "more": {
     "title": "More",
@@ -70,7 +90,17 @@
     "clearCache": "Clear cache",
     "logout": "Logout",
     "loggedOutSuccessfully": "Logged out successfully",
-    "logoutFailed": "Logout failed. Please try again."
+    "logoutFailed": "Logout failed. Please try again.",
+    "blockAvailability": "Block Availability",
+    "selectDate": "Select Date",
+    "selectStartTime": "Select Start Time",
+    "selectEndTime": "Select End Time",
+    "blockedAvailabilityList": "Blocked Availability List",
+    "noBlockedAvailability": "No blocked availability found.",
+    "tokenNotFound": "Authentication token not found.",
+    "availabilityBlocked": "Availability blocked successfully",
+    "failedToBlockAvailability": "Failed to block availability",
+    "availability": "Availability"
   },
   "profile": {
     "title": "Profile",
@@ -120,10 +150,68 @@
     "accept": "Accept",
     "cancel": "Cancel",
     "deny": "Deny",
-    "active_tab":"Active",
-    "pending_tab":"Pending",
-    "rejected_tab":"Rejected",
-    "accepted_tab":"Accepted"
+    "active_tab": "Active",
+    "pending_tab": "Pending",
+    "rejected_tab": "Rejected",
+    "accepted_tab": "Accepted",
+    "invalidResponse": "Invalid response format from server.",
+    "failedToLoadDetails": "Failed to load appointment details.",
+    "errorLoadingDetails": "Something went wrong while loading appointment details.",
+    "noOccurrenceAvailable": "No occurrence available for this job.",
+    "failedToConfirmArrival": "Failed to confirm arrival time.",
+    "errorConfirmingArrival": "Something went wrong while confirming arrival.",
+    "failedToCheckIn": "Failed to check in.",
+    "errorCheckingIn": "Something went wrong while checking in.",
+    "failedToCheckOut": "Failed to check out.",
+    "errorCheckingOut": "Something went wrong while checking out.",
+    "unknownCustomer": "Unknown Customer",
+    "customer": "CUSTOMER",
+    "schedule": "SCHEDULE",
+    "date": "Date",
+    "time": "Time",
+    "recurringCleaning": "Recurring Cleaning",
+    "deepCleaning": "Deep Cleaning",
+    "serviceDetails": "SERVICE DETAILS",
+    "type": "Type",
+    "duration": "Duration",
+    "twoHours": "2 Hours",
+    "payRate": "Pay Rate",
+    "openInMaps": "Open in Maps",
+    "houseInfo": "HOUSE INFO",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "kitchens": "Kitchens",
+    "squareFootage": "Square Footage",
+    "sqft": "sqft",
+    "jobInfo": "JOB INFO",
+    "acceptJob": "Accept Job",
+    "onMyWay": "On My Way",
+    "checkIn": "Check In",
+    "checkOut": "Check Out",
+    "selectArrivalTime": "Select Arrival Time",
+    "mins15": "15 mins",
+    "mins30": "30 mins",
+    "mins45": "45 mins",
+    "mins60": "60 mins",
+    "errorFetchingData": "Error fetching data.",
+    "failedToAccept": "Failed to accept.",
+    "couldNotAcceptAppointment": "Could not accept appointment.",
+    "failedToReject": "Failed to reject.",
+    "couldNotRejectAppointment": "Could not reject appointment.",
+    "accepted": "Accepted",
+    "active": "Active",
+    "appointmentAccepted": "Appointment accepted",
+    "appointmentCancelled": "Appointment cancelled",
+    "appointmentDetails": "Appointment Details",
+    "assigned": "Assigned",
+    "availableRequests": "Available Requests",
+    "completed": "Completed",
+    "estEarnings": "Est. Earnings",
+    "newFound": "New",
+    "noAppointments": "No Appointments",
+    "serviceAppointment": "Service Appointment",
+    "standardCleaning": "Standard Cleaning",
+    "viewDetails": "View Details"
   },
   "appointments": {
     "title": "Appointments",
@@ -156,43 +244,46 @@
     "notesFromAdmin": "Notes from Admin",
     "netProfit": "Net Profit",
     "cleanerPay": "Cleaner Pay",
-    "gateWayFee":"Gate Way Fee",
+    "gateWayFee": "Gate Way Fee",
     "grossProfit": "Gross Profit",
     "multiple": "Multiple",
-    "access_details":  "Access details will be provided upon acceptance",
-    "service_type":"Service Type:",
-    "access_details_text":"Access details:",
-    "appoinment_id":"Appointment ID:",
-    "access":"Access details",
-    "one_time":"One time",
-    "recurring":"Recurring",
-    "deny":"Deny"
-
+    "access_details": "Access details will be provided upon acceptance",
+    "service_type": "Service Type:",
+    "access_details_text": "Access details:",
+    "appoinment_id": "Appointment ID:",
+    "access": "Access details",
+    "one_time": "One time",
+    "recurring": "Recurring",
+    "deny": "Deny",
+    "checkInSuccess": "Checked in successfully",
+    "checkOutSuccess": "Checked out successfully",
+    "onMyWaySuccess": "On my way updated successfully"
   },
   "notifications": {
     "title": "Notifications",
-    "noNotifications": "Notifications unavailable!"
+    "noNotifications": "Notifications unavailable!",
+    "allCaughtUp": "You're all caught up!"
   },
   "events": {
     "title": "Events",
     "calendar": "Calendar",
     "notes": "Notes",
-    "customer_notes":"Customer Notes",
+    "customer_notes": "Customer Notes",
     "statusUpdatedSuccessfully": "Status updated successfully",
     "errorUpdatingStatus": "Error updating status: {{error}}",
     "retry": "Retry",
     "noEventDataAvailable": "No event data available",
-    "resedentialService":"Residential service",
-    "active":"Active",
-    "on_my_way":"On My Way",
-    "check_in":"Checked In",
-    "check_out":"Checked Out",
-    "complete":"Completed",
-    "cancel":"Cancelled",
-    "bedroom":"Bedroom",
-    "washroom":"Washroom",
-    "kitchen":"Kitchen",
-    "pet":"Pet"
+    "resedentialService": "Residential service",
+    "active": "Active",
+    "on_my_way": "On My Way",
+    "check_in": "Checked In",
+    "check_out": "Checked Out",
+    "complete": "Completed",
+    "cancel": "Cancelled",
+    "bedroom": "Bedroom",
+    "washroom": "Washroom",
+    "kitchen": "Kitchen",
+    "pet": "Pet"
   },
   "signup": {
     "title": "Sign Up For Free",
@@ -217,8 +308,17 @@
     "pleaseEnterEmail": "Please enter your email address",
     "alreadyHaveAnAccount": "Already have an account? ",
     "signIn": "Sign In",
-    "pleaseVerifyReceiveSMS": "Please agree receive sms"
-    
+    "pleaseVerifyReceiveSMS": "Please agree receive sms",
+    "phone": "Phone",
+    "phoneNumber": "Phone Number",
+    "registrationFailed": "Registration failed",
+    "username": "Username",
+    "usernamePlaceholder": "Username",
+    "ssn": "SSN",
+    "ssnPlaceholder": "XXX-XX-XXXX",
+    "language": "Language",
+    "address": "Address",
+    "addressPlaceholder": "123 Main St, New York, NY 10001"
   },
   "forgotPassword": {
     "title": "Forgot Password?",
@@ -233,7 +333,9 @@
     "errorOccurred": "An error occurred: {{error}}",
     "failedToSendOTP": "Failed to send OTP.",
     "invalidEmail": "The selected email is invalid",
-    "complete_otp":"Please enter the complete OTP"
+    "complete_otp": "Please enter the complete OTP",
+    "codeVerified": "Code verified",
+    "verificationFailed": "Verification failed"
   },
   "resetPassword": {
     "title": "Reset Password",
@@ -247,8 +349,9 @@
     "passwordResetSuccessful": "Password reset successful",
     "resetPasswordFailed": "Reset password failed",
     "errorOccurred": "An error occurred: {{error}}",
-    "passwordUpdatedSuccessfully": "Password updated successfully"
-    
+    "passwordUpdatedSuccessfully": "Password updated successfully",
+    "failed": "Reset password failed",
+    "success": "Password reset successful"
   },
   "arrivalNotification": {
     "title": "Arrival Notification",
@@ -265,6 +368,8 @@
     "errorUpdatingStatus": "Error updating status: {{error}}"
   },
   "splash": {
-    "appName": "CleanlyFlow"
+    "appName": "CleanlyFlow",
+    "subtitle": "Professional Cleaning Services",
+    "version": "Version 1.0.0"
   }
 }

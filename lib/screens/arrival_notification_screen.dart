@@ -177,7 +177,7 @@ class _ArrivalNotificationScreenState extends State<ArrivalNotificationScreen> {
 
             if (mounted) {
               setState(() {
-                _userImage = data["profile_url"]?.toString();
+                _userImage = ApiConfig.getFullImageUrl(data["profile_url"]?.toString());
               });
             }
           } catch (e) {

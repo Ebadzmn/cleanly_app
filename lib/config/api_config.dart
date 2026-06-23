@@ -10,6 +10,15 @@ class ApiConfig {
     return '$baseUrl$endpoint';
   }
 
+  static String getFullImageUrl(String? url) {
+    if (url == null || url.isEmpty) return "";
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
+    if (url.startsWith("/")) {
+      return "$baseUrl$url";
+    }
+    return "$baseUrl/$url";
+  }
+
   static String buildUrlWithParams(
     String endpoint,
     Map<String, String> queryParams,

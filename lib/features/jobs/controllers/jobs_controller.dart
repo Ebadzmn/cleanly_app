@@ -96,7 +96,7 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
       if (tab == "assigned") statusParam = "Assigned";
 
       final Uri url = Uri.parse(
-        ApiConfig.buildUrlWithParams("/api/appointments/cleaner", {
+        ApiConfig.buildUrlWithParams("/api/jobs/cleaner", {
           "status": statusParam,
           "page": "1",
           "limit": "10",
@@ -127,10 +127,10 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
         }
       }
     } catch (e) {
-      if (tab == "active") activeError.value = "Error fetching data.";
-      if (tab == "accepted") acceptedError.value = "Error fetching data.";
-      if (tab == "completed") completedError.value = "Error fetching data.";
-      if (tab == "assigned") assignedError.value = "Error fetching data.";
+      if (tab == "active") activeError.value = LocalizationService().translate("jobs.errorFetchingData") ?? "Error fetching data.";
+      if (tab == "accepted") acceptedError.value = LocalizationService().translate("jobs.errorFetchingData") ?? "Error fetching data.";
+      if (tab == "completed") completedError.value = LocalizationService().translate("jobs.errorFetchingData") ?? "Error fetching data.";
+      if (tab == "assigned") assignedError.value = LocalizationService().translate("jobs.errorFetchingData") ?? "Error fetching data.";
     } finally {
       if (tab == "active") isActiveLoading.value = false;
       if (tab == "accepted") isAcceptedLoading.value = false;
@@ -150,20 +150,20 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
       if (response.isSuccess) {
         final data = response.data;
         if (data != null && data["success"] == true) {
-          Get.snackbar("Success", LocalizationService().translate("jobs.appointmentAccepted") ?? "Appointment accepted.",
+          Get.snackbar(LocalizationService().translate("common.success") ?? "Success", LocalizationService().translate("jobs.appointmentAccepted") ?? "Appointment accepted.",
               backgroundColor: Colors.green, colorText: Colors.white);
           _fetchTabAppointments("active");
           _fetchTabAppointments("accepted");
         } else {
-          Get.snackbar("Error", data?["message"] ?? "Failed to accept.",
+          Get.snackbar(LocalizationService().translate("common.error") ?? "Error", data?["message"] ?? (LocalizationService().translate("jobs.failedToAccept") ?? "Failed to accept."),
               backgroundColor: Colors.red, colorText: Colors.white);
         }
       } else {
-        Get.snackbar("Error", response.message ?? "Could not accept appointment.",
+        Get.snackbar(LocalizationService().translate("common.error") ?? "Error", response.message ?? (LocalizationService().translate("jobs.couldNotAcceptAppointment") ?? "Could not accept appointment."),
             backgroundColor: Colors.red, colorText: Colors.white);
       }
     } catch (e) {
-      Get.snackbar("Error", "Could not accept appointment.",
+      Get.snackbar(LocalizationService().translate("common.error") ?? "Error", LocalizationService().translate("jobs.couldNotAcceptAppointment") ?? "Could not accept appointment.",
           backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       acceptingAppointmentId.value = null;
@@ -181,19 +181,19 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
       if (response.isSuccess) {
         final data = response.data;
         if (data != null && data["success"] == true) {
-          Get.snackbar("Success", LocalizationService().translate("jobs.appointmentCancelled") ?? "Appointment rejected.",
+          Get.snackbar(LocalizationService().translate("common.success") ?? "Success", LocalizationService().translate("jobs.appointmentCancelled") ?? "Appointment rejected.",
               backgroundColor: Colors.green, colorText: Colors.white);
           _fetchTabAppointments("active");
         } else {
-          Get.snackbar("Error", data?["message"] ?? "Failed to reject.",
+          Get.snackbar(LocalizationService().translate("common.error") ?? "Error", data?["message"] ?? (LocalizationService().translate("jobs.failedToReject") ?? "Failed to reject."),
               backgroundColor: Colors.red, colorText: Colors.white);
         }
       } else {
-        Get.snackbar("Error", response.message ?? "Could not reject appointment.",
+        Get.snackbar(LocalizationService().translate("common.error") ?? "Error", response.message ?? (LocalizationService().translate("jobs.couldNotRejectAppointment") ?? "Could not reject appointment."),
             backgroundColor: Colors.red, colorText: Colors.white);
       }
     } catch (e) {
-      Get.snackbar("Error", "Could not reject appointment.",
+      Get.snackbar(LocalizationService().translate("common.error") ?? "Error", LocalizationService().translate("jobs.couldNotRejectAppointment") ?? "Could not reject appointment.",
           backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       cancellingAppointmentId.value = null;

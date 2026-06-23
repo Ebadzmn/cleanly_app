@@ -96,7 +96,7 @@ class ProfileController extends GetxController {
             userEmail.value = data["email"]?.toString() ?? "";
             
             // Support both old and new photo keys
-            userImage.value = data["profilePhoto"]?.toString() ?? data["profile_url"]?.toString();
+            userImage.value = ApiConfig.getFullImageUrl(data["profilePhoto"]?.toString() ?? data["profile_url"]?.toString());
             
             // Support both old and new name keys
             final String firstName = data["firstName"]?.toString() ?? "";

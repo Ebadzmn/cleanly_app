@@ -432,7 +432,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
           _showOTPFields = true;
         });
       } else {
-        String errorMessage = response.message ?? data?['message'] ?? 'Failed to send OTP.';
+        String errorMessage = response.message ?? data?['message'] ?? LocalizationService().translate("forgotPassword.failedToSendOTP");
         
         ScaffoldMessenger.of(
           context,
@@ -495,7 +495,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
 
       if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data?['message'] ?? "Code verified")),
+          SnackBar(content: Text(data?['message'] ?? LocalizationService().translate("forgotPassword.codeVerified"))),
         );
 
         Navigator.push(
@@ -507,7 +507,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.message ?? data?['error'] ?? "Verification failed")),
+          SnackBar(content: Text(response.message ?? data?['error'] ?? LocalizationService().translate("forgotPassword.verificationFailed"))),
         );
       }
     } catch (e) {

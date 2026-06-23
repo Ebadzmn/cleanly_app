@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../services/localization_service.dart';
 import '../domain/models/appointment_models.dart';
 
 class CustomerDetailsWidget extends StatelessWidget {
@@ -24,7 +25,7 @@ class CustomerDetailsWidget extends StatelessWidget {
             ),
             Expanded(
               child: Text(
-                value ?? "null",
+                value ?? (LocalizationService().translate("home.nullValue") ?? "null"),
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -42,9 +43,9 @@ class CustomerDetailsWidget extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (customer.title != null && customer.title!.trim().isNotEmpty)
-          buildRow("Title", customer.title),
+          buildRow(LocalizationService().translate("home.title") ?? "Title", customer.title),
         if (customer.name != null && customer.name!.trim().isNotEmpty)
-          buildRow("Name", customer.name),
+          buildRow(LocalizationService().translate("home.name") ?? "Name", customer.name),
       ],
     );
   }

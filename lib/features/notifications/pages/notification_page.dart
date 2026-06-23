@@ -160,9 +160,9 @@ class NotificationPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                "You're all caught up!",
-                style: TextStyle(
+              Text(
+                LocalizationService().translate("notifications.allCaughtUp") ?? "You're all caught up!",
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1F2937),

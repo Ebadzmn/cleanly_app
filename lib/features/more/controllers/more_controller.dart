@@ -38,7 +38,7 @@ class MoreController extends GetxController {
       if (response.isSuccess) {
         final data = response.data;
         if (data != null) {
-          userImage.value = data["profile_url"]?.toString();
+          userImage.value = ApiConfig.getFullImageUrl(data["profile_url"]?.toString());
         }
       }
     } catch (e) {
@@ -102,7 +102,7 @@ class MoreController extends GetxController {
       final String? token = prefs.getString("token");
 
       if (token == null || token.isEmpty) {
-        Get.snackbar("Error", "Authentication token not found.", backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar(LocalizationService().translate("common.error") ?? "Error", LocalizationService().translate("more.tokenNotFound") ?? "Authentication token not found.", backgroundColor: Colors.red, colorText: Colors.white);
         return;
       }
 
@@ -118,23 +118,23 @@ class MoreController extends GetxController {
       if (response.isSuccess) {
         Get.back(); // close the dialog
         Get.snackbar(
-          "Success",
-          "Availability blocked successfully",
+          LocalizationService().translate("common.success") ?? "Success",
+          LocalizationService().translate("more.availabilityBlocked") ?? "Availability blocked successfully",
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
       } else {
         Get.snackbar(
-          "Error",
-          response.message ?? "Failed to block availability",
+          LocalizationService().translate("common.error") ?? "Error",
+          response.message ?? (LocalizationService().translate("more.failedToBlockAvailability") ?? "Failed to block availability"),
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
       }
     } catch (e) {
       Get.snackbar(
-        "Error",
-        "An error occurred: $e",
+        LocalizationService().translate("common.error") ?? "Error",
+        "${LocalizationService().translate("common.error") ?? "An error occurred"}: $e",
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

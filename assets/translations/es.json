@@ -16,7 +16,11 @@
     "submit": "Enviar",
     "confirm": "Confirmar",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "na": "N/D",
+    "decline": "Rechazar",
+    "accept": "Aceptar",
+    "reject": "Rechazar"
   },
   "language": {
     "title": "Idiomas",
@@ -38,7 +42,8 @@
     "fillAllFields": "Por favor completa todos los campos requeridos.",
     "loginSuccessful": "Inicio de sesión exitoso",
     "loginFailed": "Error al iniciar sesión",
-    "unexpectedError": "Ocurrió un error inesperado."
+    "unexpectedError": "Ocurrió un error inesperado.",
+    "welcomeBack": "Bienvenido de nuevo"
   },
   "home": {
     "welcome": "¡Bienvenido!",
@@ -59,7 +64,22 @@
     "updatedRecently": "Actualizado recientemente",
     "noNotesAvailable": "No hay notas disponibles",
     "clockIn": "Marcar entrada",
-    "clockOut": "Marcar salida"
+    "clockOut": "Marcar salida",
+    "accepted": "Aceptado",
+    "activeAppointments": "Citas Activas",
+    "addressNotAvailable": "Dirección no disponible",
+    "allUpcomingAgenda": "Toda la Agenda Próxima",
+    "clearSchedule": "¡Tienes un horario despejado!",
+    "client": "Cliente",
+    "estateValuation": "Valoración de Propiedad",
+    "jobSummary": "RESUMEN DE TRABAJO",
+    "name": "Nombre",
+    "nullValue": "nulo",
+    "oneTimeService": "Servicio Único",
+    "title": "Inicio",
+    "unknown": "Desconocido",
+    "upcomingAgenda": "AGENDA PRÓXIMA",
+    "viewAll": "Ver Todo"
   },
   "more": {
     "title": "Más",
@@ -70,7 +90,17 @@
     "clearCache": "Limpiar caché",
     "logout": "Cerrar sesión",
     "loggedOutSuccessfully": "Sesión cerrada exitosamente",
-    "logoutFailed": "Error al cerrar sesión. Por favor intenta de nuevo."
+    "logoutFailed": "Error al cerrar sesión. Por favor intenta de nuevo.",
+    "blockAvailability": "Bloquear disponibilidad",
+    "selectDate": "Seleccionar fecha",
+    "selectStartTime": "Seleccionar hora de inicio",
+    "selectEndTime": "Seleccionar hora de fin",
+    "blockedAvailabilityList": "Lista de disponibilidad bloqueada",
+    "noBlockedAvailability": "No se encontró disponibilidad bloqueada.",
+    "tokenNotFound": "Token de autenticación no encontrado.",
+    "availabilityBlocked": "Disponibilidad bloqueada con éxito",
+    "failedToBlockAvailability": "Error al bloquear la disponibilidad",
+    "availability": "Disponibilidad"
   },
   "profile": {
     "title": "Perfil",
@@ -120,10 +150,68 @@
     "accept": "Aceptar",
     "cancel": "Cancelar",
     "deny": "Rechazar",
-    "active_tab":"Activo",
-    "pending_tab":"Pendiente",
-    "rejected_tab":"Rechazado",
-    "accepted_tab":"Aceptado"
+    "active_tab": "Activo",
+    "pending_tab": "Pendiente",
+    "rejected_tab": "Rechazado",
+    "accepted_tab": "Aceptado",
+    "invalidResponse": "Formato de respuesta inválido del servidor.",
+    "failedToLoadDetails": "Error al cargar los detalles de la cita.",
+    "errorLoadingDetails": "Algo salió mal al cargar los detalles.",
+    "noOccurrenceAvailable": "No hay ocurrencia disponible para este trabajo.",
+    "failedToConfirmArrival": "Error al confirmar la hora de llegada.",
+    "errorConfirmingArrival": "Algo salió mal al confirmar la llegada.",
+    "failedToCheckIn": "Error al registrar la entrada.",
+    "errorCheckingIn": "Algo salió mal al registrar la entrada.",
+    "failedToCheckOut": "Error al registrar la salida.",
+    "errorCheckingOut": "Algo salió mal al registrar la salida.",
+    "unknownCustomer": "Cliente desconocido",
+    "customer": "CLIENTE",
+    "schedule": "HORARIO",
+    "date": "Fecha",
+    "time": "Hora",
+    "recurringCleaning": "Limpieza Recurrente",
+    "deepCleaning": "Limpieza Profunda",
+    "serviceDetails": "DETALLES DEL SERVICIO",
+    "type": "Tipo",
+    "duration": "Duración",
+    "twoHours": "2 Horas",
+    "payRate": "Tarifa",
+    "openInMaps": "Abrir en Mapas",
+    "houseInfo": "INFORMACIÓN DE LA CASA",
+    "bedrooms": "Habitaciones",
+    "bathrooms": "Baños",
+    "kitchens": "Cocinas",
+    "squareFootage": "Metros cuadrados",
+    "sqft": "pies cuadrados",
+    "jobInfo": "INFORMACIÓN DEL TRABAJO",
+    "acceptJob": "Aceptar Trabajo",
+    "onMyWay": "En camino",
+    "checkIn": "Entrada",
+    "checkOut": "Salida",
+    "selectArrivalTime": "Seleccionar hora de llegada",
+    "mins15": "15 min",
+    "mins30": "30 min",
+    "mins45": "45 min",
+    "mins60": "60 min",
+    "errorFetchingData": "Error al obtener los datos.",
+    "failedToAccept": "Error al aceptar.",
+    "couldNotAcceptAppointment": "No se pudo aceptar la cita.",
+    "failedToReject": "Error al rechazar.",
+    "couldNotRejectAppointment": "No se pudo rechazar la cita.",
+    "accepted": "Aceptado",
+    "active": "Activo",
+    "appointmentAccepted": "Cita aceptada",
+    "appointmentCancelled": "Cita cancelada",
+    "appointmentDetails": "Detalles de Cita",
+    "assigned": "Asignado",
+    "availableRequests": "Solicitudes Disponibles",
+    "completed": "Completado",
+    "estEarnings": "Ganancias Est.",
+    "newFound": "Nuevo",
+    "noAppointments": "Sin Citas",
+    "serviceAppointment": "Cita de Servicio",
+    "standardCleaning": "Limpieza Estándar",
+    "viewDetails": "Ver Detalles"
   },
   "appointments": {
     "title": "Citas",
@@ -156,45 +244,46 @@
     "notesFromAdmin": "Notas del administrador",
     "netProfit": "Beneficio neto",
     "cleanerPay": "Pago más limpio",
-    "gateWayFee":"Tarifa de entrada",
+    "gateWayFee": "Tarifa de entrada",
     "grossProfit": "Beneficio bruto",
     "multiple": "Múltiple",
-    "access_details":"Los detalles de acceso se proporcionarán una vez aceptados.",
-    "service_type":"Tipo de servicio:",
-    "access_details_text":"Los detalles:",
-    "appoinment_id":"ID de cita:",
-    "access":"Los detalles",
-    "one_time":"una vez",
-    "recurring":"Periódico",
-    "deny":"Denegar"
-
-
-
+    "access_details": "Los detalles de acceso se proporcionarán una vez aceptados.",
+    "service_type": "Tipo de servicio:",
+    "access_details_text": "Los detalles:",
+    "appoinment_id": "ID de cita:",
+    "access": "Los detalles",
+    "one_time": "una vez",
+    "recurring": "Periódico",
+    "deny": "Denegar",
+    "checkInSuccess": "Entrada registrada con éxito",
+    "checkOutSuccess": "Salida registrada con éxito",
+    "onMyWaySuccess": "En camino actualizado con éxito"
   },
   "notifications": {
     "title": "Notificaciones",
-    "noNotifications": "¡Notificaciones no disponibles!"
+    "noNotifications": "¡Notificaciones no disponibles!",
+    "allCaughtUp": "¡Estás al día!"
   },
   "events": {
     "title": "Eventos",
     "calendar": "Calendario",
     "notes": "Notas",
-    "customer_notes":"Notas del cliente",
+    "customer_notes": "Notas del cliente",
     "statusUpdatedSuccessfully": "Estado actualizado exitosamente",
     "errorUpdatingStatus": "Error al actualizar el estado: {{error}}",
     "retry": "Reintentar",
     "noEventDataAvailable": "No hay datos del evento disponibles",
-    "resedentialService":"Servicio residencial",
-    "active":"Activo",
-    "on_my_way":"Estoy en camino",
-    "check_in":"Registrado",
-    "check_out":"Revisado",
-    "complete":"Terminado",
-    "cancel":"Cancelado",
-    "bedroom":"Dormitorio",
-    "washroom":"Baño",
-    "kitchen":"Cocina",
-    "pet":"Mascota"
+    "resedentialService": "Servicio residencial",
+    "active": "Activo",
+    "on_my_way": "Estoy en camino",
+    "check_in": "Registrado",
+    "check_out": "Revisado",
+    "complete": "Terminado",
+    "cancel": "Cancelado",
+    "bedroom": "Dormitorio",
+    "washroom": "Baño",
+    "kitchen": "Cocina",
+    "pet": "Mascota"
   },
   "signup": {
     "title": "Regístrate gratis",
@@ -219,7 +308,17 @@
     "pleaseEnterEmail": "Por favor ingresa tu dirección de correo electrónico",
     "alreadyHaveAnAccount": "¿Ya tienes una cuenta? ",
     "signIn": "Iniciar sesión",
-    "pleaseVerifyReceiveSMS": "Por favor acepta recibir sms"
+    "pleaseVerifyReceiveSMS": "Por favor acepta recibir sms",
+    "phone": "Teléfono",
+    "phoneNumber": "Número de Teléfono",
+    "registrationFailed": "Fallo en el registro",
+    "username": "Nombre de usuario",
+    "usernamePlaceholder": "Nombre de usuario",
+    "ssn": "SSN",
+    "ssnPlaceholder": "XXX-XX-XXXX",
+    "language": "Idioma",
+    "address": "Dirección",
+    "addressPlaceholder": "123 Main St, New York, NY 10001"
   },
   "forgotPassword": {
     "title": "¿Olvidaste tu contraseña?",
@@ -234,8 +333,9 @@
     "errorOccurred": "Ocurrió un error: {{error}}",
     "failedToSendOTP": "Error al enviar el código OTP.",
     "invalidEmail": "El correo electrónico seleccionado no es válido",
-    "complete_otp":"Por favor ingrese el OTP completo"
-
+    "complete_otp": "Por favor ingrese el OTP completo",
+    "codeVerified": "Código verificado",
+    "verificationFailed": "Fallo en la verificación"
   },
   "resetPassword": {
     "title": "Restablecer contraseña",
@@ -249,7 +349,9 @@
     "passwordResetSuccessful": "Contraseña restablecida exitosamente",
     "resetPasswordFailed": "Error al restablecer la contraseña",
     "errorOccurred": "Ocurrió un error: {{error}}",
-    "passwordUpdatedSuccessfully": "Contraseña actualizada exitosamente"
+    "passwordUpdatedSuccessfully": "Contraseña actualizada exitosamente",
+    "failed": "Fallo al restablecer contraseña",
+    "success": "Contraseña restablecida con éxito"
   },
   "arrivalNotification": {
     "title": "Notificación de llegada",
@@ -266,6 +368,8 @@
     "errorUpdatingStatus": "Error al actualizar el estado: {{error}}"
   },
   "splash": {
-    "appName": "CleanlyFlow"
+    "appName": "CleanlyFlow",
+    "subtitle": "Servicios de Limpieza Profesionales",
+    "version": "Versión 1.0.0"
   }
 }

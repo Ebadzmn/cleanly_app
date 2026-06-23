@@ -55,7 +55,7 @@ class NotificationController extends GetxController {
         if (response.headers["content-type"]?.contains("application/json") == true) {
           try {
             final Map<String, dynamic> data = json.decode(response.body) as Map<String, dynamic>;
-            userImage.value = data["profile_url"]?.toString() ?? '';
+            userImage.value = ApiConfig.getFullImageUrl(data["profile_url"]?.toString());
           } catch (e) {
             debugPrint("Error parsing JSON response: $e");
           }

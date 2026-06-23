@@ -52,6 +52,7 @@ class JobCardWidget extends StatelessWidget {
     }
 
     return <String, dynamic>{
+      "job_id": appointment.jobId,
       "appointment_id": appointment.appointmentId,
       "name": appointment.customerName,
       "status": statusLabel,
@@ -111,7 +112,7 @@ class JobCardWidget extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        (jobData["type"] == "recurring" ? "RECURRING CLEANING" : "DEEP CLEANING").toUpperCase(),
+                        (jobData["type"] == "recurring" ? (LocalizationService().translate("jobs.recurringCleaning") ?? "RECURRING CLEANING") : (LocalizationService().translate("jobs.deepCleaning") ?? "DEEP CLEANING")).toUpperCase(),
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -144,7 +145,7 @@ class JobCardWidget extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            jobData["type"].toString().isNotEmpty ? jobData["type"] : "Service Appointment",
+            jobData["type"].toString().isNotEmpty ? jobData["type"] : (LocalizationService().translate("jobs.serviceAppointment") ?? "Service Appointment"),
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -197,8 +198,8 @@ class JobCardWidget extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text(
-                  "Est. Earnings",
+                Text(
+                  LocalizationService().translate("jobs.estEarnings") ?? "Est. Earnings",
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -226,9 +227,9 @@ class JobCardWidget extends StatelessWidget {
                   height: 48,
                   child: ElevatedButton(
                     onPressed: () {
-                      final String? appointmentId = jobData["appointment_id"]?.toString();
-                      if (appointmentId != null) {
-                        Get.find<JobsController>().cancelAppointment(appointmentId);
+                      final String? jobId = jobData["job_id"]?.toString();
+                      if (jobId != null) {
+                        Get.find<JobsController>().cancelAppointment(jobId);
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -240,7 +241,7 @@ class JobCardWidget extends StatelessWidget {
                       elevation: 0,
                     ),
                     child: Text(
-                      "Reject",
+                      LocalizationService().translate("common.reject") ?? "Reject",
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -255,9 +256,9 @@ class JobCardWidget extends StatelessWidget {
                   height: 48,
                   child: ElevatedButton(
                     onPressed: () {
-                      final String? appointmentId = jobData["appointment_id"]?.toString();
-                      if (appointmentId != null) {
-                        Get.find<JobsController>().acceptAppointment(appointmentId);
+                      final String? jobId = jobData["job_id"]?.toString();
+                      if (jobId != null) {
+                        Get.find<JobsController>().acceptAppointment(jobId);
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -268,7 +269,7 @@ class JobCardWidget extends StatelessWidget {
                       elevation: 0,
                     ),
                     child: Text(
-                      "Accept",
+                      LocalizationService().translate("common.accept") ?? "Accept",
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -292,8 +293,8 @@ class JobCardWidget extends StatelessWidget {
                   Get.find<JobsController>().refreshActive();
                 }
               },
-              child: const Text(
-                "View Details",
+              child: Text(
+                LocalizationService().translate("jobs.viewDetails") ?? "View Details",
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -348,7 +349,7 @@ class JobCardWidget extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              jobData["type"].toString().isNotEmpty ? jobData["type"] : "Service Appointment",
+                              jobData["type"].toString().isNotEmpty ? jobData["type"] : (LocalizationService().translate("jobs.serviceAppointment") ?? "Service Appointment"),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -406,7 +407,7 @@ class JobCardWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    jobData["type"] == "recurring" ? "Recurring Cleaning" : "Standard Cleaning",
+                    jobData["type"] == "recurring" ? (LocalizationService().translate("jobs.recurringCleaning") ?? "Recurring Cleaning") : (LocalizationService().translate("jobs.standardCleaning") ?? "Standard Cleaning"),
                     style: const TextStyle(
                       fontSize: 12,
                       color: Color(0xFF6B7280),

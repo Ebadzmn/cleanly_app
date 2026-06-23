@@ -372,7 +372,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
             if (mounted) {
               setState(() {
-                _userImage = data["profile_url"]?.toString();
+                _userImage = ApiConfig.getFullImageUrl(data["profile_url"]?.toString());
                 final userData = data["user"] as Map<String, dynamic>?;
                 if (userData != null) {
                   _cleanerId = data["id"] as int?;

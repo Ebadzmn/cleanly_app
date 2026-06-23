@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:restart_app/restart_app.dart';
 import '../../../../services/localization_service.dart';
+import '../../splash/pages/splash_page.dart';
+import '../../splash/controllers/splash_controller.dart';
 
 class LanguageController extends GetxController {
   RxString currentLanguage = 'en'.obs;
@@ -26,7 +27,7 @@ class LanguageController extends GetxController {
     currentLanguage.value = languageCode;
     
     Get.snackbar(
-      "Success",
+      LocalizationService().translate("common.success") ?? "Success",
       languageCode == "en"
           ? "Language changed to English"
           : "Idioma cambiado a Español",
@@ -38,6 +39,7 @@ class LanguageController extends GetxController {
     
     await Future.delayed(const Duration(milliseconds: 1500));
     
-    Restart.restartApp();
+    Get.delete<SplashController>();
+    Get.offAll(() => const SplashPage());
   }
 }
