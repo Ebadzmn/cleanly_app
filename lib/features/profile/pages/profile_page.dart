@@ -214,6 +214,76 @@ class ProfilePage extends StatelessWidget {
                             ),
                             keyboardType: TextInputType.phone,
                           ),
+                          const SizedBox(height: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                localization.translate("profile.language") ==
+                                        "profile.language"
+                                    ? "Language"
+                                    : localization.translate(
+                                        "profile.language",
+                                      ),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF2C2C2C),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: DropdownButtonFormField<String>(
+                                  value: ['en', 'es'].contains(controller.selectedLanguage.value)
+                                      ? controller.selectedLanguage.value
+                                      : 'en',
+                                  decoration: InputDecoration(
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 16,
+                                    ),
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'en',
+                                      child: Text('English'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'es',
+                                      child: Text('Español'),
+                                    ),
+                                  ],
+                                  onChanged: (String? newValue) {
+                                    if (newValue != null) {
+                                      controller.selectedLanguage.value =
+                                          newValue;
+                                    }
+                                  },
+                                  icon: const Icon(
+                                    Icons.arrow_drop_down,
+                                    color: Color(0xFF6B7280),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 32),
                           _buildSubmitProfileButton(controller, localization),
                         ],

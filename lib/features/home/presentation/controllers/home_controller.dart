@@ -48,7 +48,8 @@ class HomeController extends GetxController {
     isError.value = false;
 
     try {
-      final response = await getAppointmentsUseCase.call(selectedDate.value);
+      final dateToFetch = isRefresh ? null : selectedDate.value;
+      final response = await getAppointmentsUseCase.call(dateToFetch);
       appointmentsData.value = response;
 
       // The API now returns today_appointments directly

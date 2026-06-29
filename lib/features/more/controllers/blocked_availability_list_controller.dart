@@ -38,4 +38,40 @@ class BlockedAvailabilityListController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  Future<void> deleteBlockedAvailability(String id) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString("token");
+
+      if (token == null || token.isEmpty) return;
+
+      final Uri url = Uri.parse(ApiConfig.buildUrl('/api/cleaners/availability/block/$id'));
+      final response = await NetworkCaller.delete(url);
+
+      if (response.isSuccess) {
+        Get.snackbar(
+          "Success",
+          "Blocked availability deleted successfully",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        fetchBlockedAvailability();
+      } else {
+        Get.snackbar(
+          "Error",
+          response.message ?? "Failed to delete blocked availability",
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        "Error",
+        "An error occurred: $e",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
 }
