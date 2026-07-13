@@ -3,6 +3,9 @@ import 'package:get/get.dart';
 import '../../../../services/localization_service.dart';
 import '../controllers/jobs_controller.dart';
 import '../widgets/job_card_widget.dart';
+import '../../profile/controllers/profile_controller.dart';
+import '../../profile/pages/profile_page.dart';
+import '../../profile/bindings/profile_binding.dart';
 
 class JobsPage extends StatelessWidget {
   const JobsPage({super.key});
@@ -10,6 +13,7 @@ class JobsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final JobsController controller = Get.put(JobsController());
+    final ProfileController profileController = Get.put(ProfileController());
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FA), // Light bluish-gray matching image
@@ -31,17 +35,31 @@ class JobsPage extends StatelessWidget {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFF4C535), width: 2),
-                image: const DecorationImage(
-                  image: AssetImage('assets/images/placeholder.png'),
-                  fit: BoxFit.cover,
-                ),
-              ),
+            child: GestureDetector(
+              onTap: () {
+                Get.to(() => const ProfilePage(), binding: ProfileBinding());
+              },
+              child: Obx(() {
+                final String? imageUrl = profileController.userImage.value;
+                return Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFF4C535), width: 2),
+                  ),
+                  child: ClipOval(
+                    child: imageUrl != null && imageUrl.isNotEmpty
+                        ? Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Image.asset('assets/images/placeholder.png', fit: BoxFit.cover),
+                          )
+                        : Image.asset('assets/images/placeholder.png', fit: BoxFit.cover),
+                  ),
+                );
+              }),
             ),
           ),
         ],

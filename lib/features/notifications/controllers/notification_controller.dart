@@ -40,8 +40,7 @@ class NotificationController extends GetxController {
         debugPrint("No authentication token found");
         return;
       }
-
-      final Uri url = Uri.parse(ApiConfig.buildUrl("/user"));
+      final Uri url = Uri.parse(ApiConfig.buildUrl("/api/cleaners/profile"));
 
       final http.Response response = await http.get(
         url,
@@ -54,8 +53,13 @@ class NotificationController extends GetxController {
       if (response.statusCode == 200) {
         if (response.headers["content-type"]?.contains("application/json") == true) {
           try {
-            final Map<String, dynamic> data = json.decode(response.body) as Map<String, dynamic>;
-            userImage.value = ApiConfig.getFullImageUrl(data["profile_url"]?.toString());
+            final Map<String, dynamic> parsedData = json.decode(response.body) as Map<String, dynamic>;
+            final data = parsedData.containsKey("data") && parsedData["data"] is Map 
+                ? parsedData["data"] as Map<String, dynamic> 
+                : parsedData;
+            userImage.value = ApiConfig.getFullImageUrl(
+              data["profilePhoto"]?.toString() ?? data["profile_url"]?.toString()
+            );
           } catch (e) {
             debugPrint("Error parsing JSON response: $e");
           }

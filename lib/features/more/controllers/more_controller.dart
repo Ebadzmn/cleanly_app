@@ -31,14 +31,18 @@ class MoreController extends GetxController {
         debugPrint("No authentication token found");
         return;
       }
-
-      final Uri url = Uri.parse(ApiConfig.buildUrl("/user"));
+      final Uri url = Uri.parse(ApiConfig.buildUrl("/api/cleaners/profile"));
       final response = await NetworkCaller.get(url);
 
       if (response.isSuccess) {
-        final data = response.data;
-        if (data != null) {
-          userImage.value = ApiConfig.getFullImageUrl(data["profile_url"]?.toString());
+        final parsedData = response.data;
+        if (parsedData != null) {
+          final data = parsedData is Map && parsedData.containsKey("data") && parsedData["data"] is Map 
+              ? parsedData["data"] as Map<String, dynamic> 
+              : parsedData as Map<String, dynamic>;
+          userImage.value = ApiConfig.getFullImageUrl(
+            data["profilePhoto"]?.toString() ?? data["profile_url"]?.toString()
+          );
         }
       }
     } catch (e) {

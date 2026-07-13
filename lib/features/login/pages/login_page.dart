@@ -95,7 +95,7 @@ class _LoginPageState extends State<LoginPage> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.transparent,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
@@ -105,16 +105,19 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ],
           ),
-          child: Image.asset(
-            "assets/images/Cleanly_Logo.jpg",
-            width: 80,
-            height: 80,
-            fit: BoxFit.contain,
+          child: ClipOval(
+            child: Image.asset(
+              "assets/images/Cleanly_Logo.jpg",
+              width: 80,
+              height: 80,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         const SizedBox(height: 24),
         Text(
-          LocalizationService().translate("login.welcomeBack") ?? "Welcome Back",
+          LocalizationService().translate("login.welcomeBack") ??
+              "Welcome Back",
           style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -353,7 +356,8 @@ class _LoginPageState extends State<LoginPage> {
                 color: Color(0xFF266185),
                 fontWeight: FontWeight.bold,
               ),
-              recognizer: TapGestureRecognizer()..onTap = () => Get.to(() => const SignupPage()),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () => Get.to(() => const SignupPage()),
             ),
           ],
         ),

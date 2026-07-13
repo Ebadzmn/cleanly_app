@@ -97,8 +97,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         }
         return;
       }
-
-      final url = Uri.parse(ApiConfig.buildUrl("/user"));
+      final url = Uri.parse(ApiConfig.buildUrl("/api/cleaners/profile"));
 
       final response = await http.get(
         url,
@@ -115,7 +114,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         if (response.headers["content-type"]?.contains("application/json") ==
             true) {
           try {
-            final data = json.decode(response.body) as Map<String, dynamic>;
+            final parsedData = json.decode(response.body) as Map<String, dynamic>;
+            final data = parsedData.containsKey("data") && parsedData["data"] is Map 
+                ? parsedData["data"] as Map<String, dynamic> 
+                : parsedData;
+            
             debugPrint("User API Parsed data: $data");
 
             String? updatedAtString = data["updated_at"]?.toString();
@@ -146,7 +149,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             if (mounted) {
               setState(() {
                 _userName = data["name"]?.toString() ?? "";
-                _userImage = ApiConfig.getFullImageUrl(data["profile_url"]?.toString());
+                _userImage = ApiConfig.getFullImageUrl(
+                  data["profilePhoto"]?.toString() ?? data["profile_url"]?.toString()
+                );
                 _greeting = greeting;
               });
             }
