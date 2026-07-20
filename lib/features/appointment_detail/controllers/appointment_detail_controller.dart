@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -7,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/api_config.dart';
 import '../../../../services/localization_service.dart';
 import '../../../../services/network_caller.dart';
+import '../../../../screens/home_screen.dart';
 import '../models/appointment_detail_model.dart';
 
 class AppointmentDetailController extends GetxController {
@@ -34,18 +36,43 @@ class AppointmentDetailController extends GetxController {
   var checkOutNotes = "".obs;
 
   String? get occurrenceId {
+    return currentOccurrence?.id;
+  }
+
+  AppointmentOccurrenceDetail? get currentOccurrence {
     final occurrences = appointmentDetail.value?.allOccurrences;
     if (occurrences != null && occurrences.isNotEmpty) {
       if (targetDate != null && targetDate!.isNotEmpty) {
         try {
-          return occurrences.firstWhere((occ) => occ.date == targetDate).id;
+          return occurrences.firstWhere((occ) => occ.date == targetDate);
         } catch (e) {
           // If not found, fallback to first
         }
       }
-      return occurrences.first.id;
+      return occurrences.first;
     }
     return null;
+  }
+
+  var countdownSeconds = 0.obs;
+  Timer? _countdownTimer;
+
+  String get formattedCountdown {
+    int m = countdownSeconds.value ~/ 60;
+    int s = countdownSeconds.value % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  void startCountdown(int seconds) {
+    _countdownTimer?.cancel();
+    countdownSeconds.value = seconds;
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (countdownSeconds.value > 0) {
+        countdownSeconds.value--;
+      } else {
+        timer.cancel();
+      }
+    });
   }
 
   @override
@@ -73,6 +100,25 @@ class AppointmentDetailController extends GetxController {
           final Map<String, dynamic> dataMap =
               data["data"] as Map<String, dynamic>;
           appointmentDetail.value = AppointmentDetailData.fromJson(dataMap);
+
+          final occurrence = currentOccurrence;
+          if (occurrence != null) {
+            final status = occurrence.status.toLowerCase();
+            if (status == 'checked_in' || status == 'in_progress' || status == 'checked_out' || status == 'completed') {
+              hasCheckedIn.value = true;
+              hasArrived.value = true;
+              _countdownTimer?.cancel();
+              countdownSeconds.value = 0;
+            } else if (status == 'on_my_way' || status == 'arrived') {
+              hasArrived.value = true;
+              hasCheckedIn.value = false;
+            } else {
+              hasArrived.value = false;
+              hasCheckedIn.value = false;
+              _countdownTimer?.cancel();
+              countdownSeconds.value = 0;
+            }
+          }
         } else {
           error.value = LocalizationService().translate("jobs.invalidResponse") ?? "Invalid response format from server.";
         }
@@ -106,7 +152,7 @@ class AppointmentDetailController extends GetxController {
                 ) ??
                 "Job accepted.",
           );
-          await _fetchAppointmentDetail();
+          Get.offAll(() => const HomeScreen(initialIndex: 0));
           return true;
         } else {
           Get.snackbar(
@@ -226,6 +272,7 @@ class AppointmentDetailController extends GetxController {
         final data = response.data;
         if (data != null && data["success"] == true) {
           hasArrived.value = true;
+          startCountdown(eta * 60);
           Get.snackbar(
             "Success",
             LocalizationService().translate("appointments.onMyWaySuccess") ??
@@ -298,6 +345,8 @@ class AppointmentDetailController extends GetxController {
         final data = response.data;
         if (data != null && data["success"] == true) {
           hasCheckedIn.value = true;
+          _countdownTimer?.cancel();
+          countdownSeconds.value = 0;
           Get.snackbar(
             "Success",
             LocalizationService().translate("appointments.checkInSuccess") ??

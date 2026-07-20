@@ -28,7 +28,7 @@ class ApiConfig {
   }
 
   static const String googleMapsApiKey =
-      "AIzaSyA9SQetjbchWmEJVV1uKsl4Q_gQID3FGBQ";
+      "AIzaSyACqk7UtvTeomLZdT2MGpIoxw8VAkod3nk";
 
   static String? buildStreetViewUrl(
     String? lat,
@@ -51,5 +51,32 @@ class ApiConfig {
     } catch (e) {
       return null;
     }
+  }
+
+  static String? buildStaticMapUrl(
+    String? lat,
+    String? lng,
+    String? address, {
+    int width = 400,
+    int height = 300,
+    int zoom = 15,
+  }) {
+    final bool hasValidCoordinates = lat != null && lat.isNotEmpty && lat != "0" && lat != "0.0" && 
+                                     lng != null && lng.isNotEmpty && lng != "0" && lng != "0.0";
+    
+    if (hasValidCoordinates) {
+      try {
+        final double latValue = double.parse(lat!);
+        final double lngValue = double.parse(lng!);
+        return "https://maps.googleapis.com/maps/api/staticmap?center=$latValue,$lngValue&zoom=$zoom&size=${width}x${height}&maptype=roadmap&markers=color:red%7C$latValue,$lngValue&key=$googleMapsApiKey";
+      } catch (e) {
+        return null;
+      }
+    } else if (address != null && address.isNotEmpty) {
+      final encodedAddress = Uri.encodeComponent(address);
+      return "https://maps.googleapis.com/maps/api/staticmap?center=$encodedAddress&zoom=$zoom&size=${width}x${height}&maptype=roadmap&markers=color:red%7C$encodedAddress&key=$googleMapsApiKey";
+    }
+    
+    return null;
   }
 }

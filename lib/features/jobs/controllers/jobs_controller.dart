@@ -90,13 +90,18 @@ class JobsController extends GetxController with GetSingleTickerProviderStateMix
 
     try {
       String statusParam = "all";
+      String endpoint = "/api/jobs/cleaner";
+      
       if (tab == "active") statusParam = "Active";
       if (tab == "accepted") statusParam = "Accepted";
-      if (tab == "completed") statusParam = "Completed";
+      if (tab == "completed") {
+        statusParam = "checked_out";
+        endpoint = "/api/appointments/cleaner";
+      }
       if (tab == "assigned") statusParam = "Assigned";
 
       final Uri url = Uri.parse(
-        ApiConfig.buildUrlWithParams("/api/jobs/cleaner", {
+        ApiConfig.buildUrlWithParams(endpoint, {
           "status": statusParam,
           "page": "1",
           "limit": "10",

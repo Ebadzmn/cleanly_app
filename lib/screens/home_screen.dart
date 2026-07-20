@@ -23,8 +23,9 @@ import "package:http/http.dart" as http;
 
 class HomeScreen extends StatefulWidget {
   final String? token;
+  final int initialIndex;
 
-  const HomeScreen({super.key, this.token});
+  const HomeScreen({super.key, this.token, this.initialIndex = 0});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -35,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   DateTime selectedDate = DateTime.now();
   DateTime viewMonthDate = DateTime.now();
-  int selectedTabIndex = 0;
+  late int selectedTabIndex;
   DateTime today = DateTime.now();
 
   late PageController _pageController;
@@ -52,9 +53,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    selectedTabIndex = widget.initialIndex;
 
-    _pageController = PageController(initialPage: 0);
-    _tabController = TabController(length: 4, vsync: this, initialIndex: 0);
+    _pageController = PageController(initialPage: widget.initialIndex);
+    _tabController = TabController(
+      length: 4,
+      vsync: this,
+      initialIndex: widget.initialIndex,
+    );
     _calendarScrollController = ScrollController();
 
     _tabController.addListener(() {
@@ -114,11 +120,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         if (response.headers["content-type"]?.contains("application/json") ==
             true) {
           try {
-            final parsedData = json.decode(response.body) as Map<String, dynamic>;
-            final data = parsedData.containsKey("data") && parsedData["data"] is Map 
-                ? parsedData["data"] as Map<String, dynamic> 
+            final parsedData =
+                json.decode(response.body) as Map<String, dynamic>;
+            final data =
+                parsedData.containsKey("data") && parsedData["data"] is Map
+                ? parsedData["data"] as Map<String, dynamic>
                 : parsedData;
-            
+
             debugPrint("User API Parsed data: $data");
 
             String? updatedAtString = data["updated_at"]?.toString();
@@ -146,11 +154,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               }
             }
 
+            // Support both old and new name keys
+            final String firstName = data["firstName"]?.toString() ?? "";
+            final String lastName = data["lastName"]?.toString() ?? "";
+            final String fullName =
+                data["fullName"]?.toString() ?? data["name"]?.toString() ?? "";
+
+            final String resolvedName =
+                (firstName.isNotEmpty || lastName.isNotEmpty)
+                ? "$firstName $lastName".trim()
+                : fullName;
+
             if (mounted) {
               setState(() {
-                _userName = data["name"]?.toString() ?? "";
+                _userName = resolvedName;
                 _userImage = ApiConfig.getFullImageUrl(
-                  data["profilePhoto"]?.toString() ?? data["profile_url"]?.toString()
+                  data["profilePhoto"]?.toString() ??
+                      data["profile_url"]?.toString(),
                 );
                 _greeting = greeting;
               });
@@ -627,7 +647,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      _userName ?? "Hello!",
+                                      (_userName != null &&
+                                              _userName!.isNotEmpty)
+                                          ? _userName!
+                                          : "Hello!",
                                       style: const TextStyle(
                                         color: Color(0xFF1E2638),
                                         fontSize: 18,
@@ -670,7 +693,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         padding: const EdgeInsets.only(
                           left: 20,
                           right: 20,
-                          top: 30,
+                          top: 2,
                           bottom: 20,
                         ),
                         child: Column(
@@ -686,7 +709,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              LocalizationService().translate("home.clearSchedule") ?? "You have a clear schedule ahead.",
+                              LocalizationService().translate(
+                                    "home.clearSchedule",
+                                  ) ??
+                                  "You have a clear schedule ahead.",
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Color(0xFF4A8B99),
@@ -703,7 +729,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              LocalizationService().translate("home.jobSummary") ?? "JOB SUMMARY",
+                              LocalizationService().translate(
+                                    "home.jobSummary",
+                                  ) ??
+                                  "JOB SUMMARY",
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -716,7 +745,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               children: [
                                 Expanded(
                                   child: _buildSummaryCard(
-                                    LocalizationService().translate("home.accepted") ?? "Accepted",
+                                    LocalizationService().translate(
+                                          "home.accepted",
+                                        ) ??
+                                        "Accepted",
                                     _activeAppointments.toString().padLeft(
                                       2,
                                       '0',
@@ -732,7 +764,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: _buildSummaryCard(
-                                    LocalizationService().translate("home.activeAppointments") ?? "Active Appointments",
+                                    LocalizationService().translate(
+                                          "home.activeAppointments",
+                                        ) ??
+                                        "Active Appointments",
                                     _acceptedJobs.toString().padLeft(2, '0'),
                                     [
                                       const Color(0xFFD1FADF),
@@ -854,27 +889,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
 
                       // Events Section
-                      Obx(() => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child:
-                            _homeController.isLoading.value &&
-                                !_homeController.isRefreshing.value
-                            ? Container(
-                                height: 100,
-                                alignment: Alignment.center,
-                                child: const CircularProgressIndicator(
-                                  strokeWidth: 3.0,
-                                  backgroundColor: Color(0xFF06E0FB),
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.black,
+                      Obx(
+                        () => Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child:
+                              _homeController.isLoading.value &&
+                                  !_homeController.isRefreshing.value
+                              ? Container(
+                                  height: 100,
+                                  alignment: Alignment.center,
+                                  child: const CircularProgressIndicator(
+                                    strokeWidth: 3.0,
+                                    backgroundColor: Color(0xFF06E0FB),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.black,
+                                    ),
                                   ),
+                                )
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: _buildEventSections(),
                                 ),
-                              )
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: _buildEventSections(),
-                              ),
-                      )),
+                        ),
+                      ),
                       const SizedBox(height: 30),
                     ],
                   ),
@@ -1427,7 +1464,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            LocalizationService().translate("home.upcomingAgenda") ?? "UPCOMING AGENDA",
+            LocalizationService().translate("home.upcomingAgenda") ??
+                "UPCOMING AGENDA",
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -1440,7 +1478,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Get.to(() => const UpcomingAgendaPage());
             },
             child: Text(
-            LocalizationService().translate("home.viewAll") ?? "View All",
+              LocalizationService().translate("home.viewAll") ?? "View All",
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -1464,7 +1502,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           sections.add(
             AgendaDayCardWidget(
               date: upcomingDate,
-              tagText: LocalizationService().translate("home.upcoming") ?? "Upcoming",
+              tagText:
+                  LocalizationService().translate("home.upcoming") ??
+                  "Upcoming",
               tagBgColor: const Color(0xFFF9F0D6),
               tagTextColor: const Color(0xFF90702F),
               borderColor: const Color(0xFFF6C844),

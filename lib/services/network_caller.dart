@@ -7,6 +7,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/network/network_response.dart';
 import '../core/network/network_exceptions.dart' as exceptions;
+import 'package:get/get.dart';
+import '../features/login/pages/login_page.dart';
 
 class NetworkCaller {
   static final Logger _logger = Logger(
@@ -194,7 +196,8 @@ class NetworkCaller {
         data: data,
         message: data is Map ? data['message'] : null,
       );
-    } else if (response.statusCode == 401) {
+    } else if (response.statusCode == 401 || response.statusCode == 404) {
+      _handleLogout();
       throw exceptions.UnauthorizedException(data is Map ? data['message']?.toString() ?? "Unauthorized" : "Unauthorized");
     } else if (response.statusCode >= 500) {
       throw exceptions.ServerException(data is Map ? data['message']?.toString() ?? "Server error" : "Server error", response.statusCode);
@@ -381,5 +384,29 @@ class NetworkCaller {
       final streamedResponse = await request.send();
       return await http.Response.fromStream(streamedResponse);
     }, method, url);
+  }
+
+  static Future<void> _handleLogout() async {
+    try {
+      const secureStorage = FlutterSecureStorage();
+      await secureStorage.delete(key: 'auth_token');
+
+      final prefs = await SharedPreferences.getInstance();
+      bool isRemembered = prefs.getBool('remember_me') ?? false;
+      String? savedEmail = prefs.getString('remembered_email');
+      String? savedPassword = prefs.getString('remembered_password');
+
+      await prefs.clear();
+
+      if (isRemembered && savedEmail != null && savedPassword != null) {
+        await prefs.setBool('remember_me', isRemembered);
+        await prefs.setString('remembered_email', savedEmail);
+        await prefs.setString('remembered_password', savedPassword);
+      }
+
+      Get.offAll(() => const LoginPage());
+    } catch (e) {
+      _logger.e("Error during auto logout: $e");
+    }
   }
 }

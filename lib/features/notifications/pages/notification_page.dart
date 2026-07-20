@@ -14,7 +14,8 @@ class NotificationPage extends StatelessWidget {
     final NotificationController controller = Get.put(NotificationController());
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FA),
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         centerTitle: true,
         forceMaterialTransparency: true,
@@ -86,38 +87,55 @@ class NotificationPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Obx(() {
-        if (controller.isInitialLoading.value) {
-          return const Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 3.0,
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF4C535)),
-            ),
-          );
-        }
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: [0.0, 0.4, 0.7, 1.0],
+            colors: [
+              Color(0xFFC7F0F9),
+              Color(0xFFEDF8FA),
+              Color(0xFFFCE18D),
+              Color(0xFFF4C535),
+            ],
+          ),
+        ),
+        child: Obx(() {
+          if (controller.isInitialLoading.value) {
+            return const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 3.0,
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF4C535)),
+              ),
+            );
+          }
 
-        return SafeArea(
-          child: controller.notifications.isEmpty
-              ? _buildEmptyState(controller)
-              : RefreshIndicator(
-                  color: const Color(0xFFF4C535),
-                  backgroundColor: Colors.white,
-                  onRefresh: () => controller.loadNotifications(isRefresh: true),
-                  child: ListView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics(),
+          return SafeArea(
+            child: controller.notifications.isEmpty
+                ? _buildEmptyState(controller)
+                : RefreshIndicator(
+                    color: const Color(0xFFF4C535),
+                    backgroundColor: Colors.white,
+                    onRefresh: () => controller.loadNotifications(isRefresh: true),
+                    child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
+                      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 32),
+                      itemCount: controller.notifications.length,
+                      itemBuilder: (context, index) {
+                        return NotificationCardWidget(
+                          notification: controller.notifications[index],
+                        );
+                      },
                     ),
-                    padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 32),
-                    itemCount: controller.notifications.length,
-                    itemBuilder: (context, index) {
-                      return NotificationCardWidget(
-                        notification: controller.notifications[index],
-                      );
-                    },
                   ),
-                ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 

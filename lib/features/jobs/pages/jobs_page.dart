@@ -16,9 +16,11 @@ class JobsPage extends StatelessWidget {
     final ProfileController profileController = Get.put(ProfileController());
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FA), // Light bluish-gray matching image
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        forceMaterialTransparency: true,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF5A4D3D)),
@@ -64,8 +66,24 @@ class JobsPage extends StatelessWidget {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: [0.0, 0.4, 0.7, 1.0],
+            colors: [
+              Color(0xFFC7F0F9),
+              Color(0xFFEDF8FA),
+              Color(0xFFFCE18D),
+              Color(0xFFF4C535),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
@@ -129,6 +147,7 @@ class JobsPage extends StatelessWidget {
               }),
             ),
           ],
+        ),
         ),
       ),
     );

@@ -45,6 +45,9 @@ class AppointmentDetailData {
   final int? bathrooms;
   final int? kitchens;
   final int? squareFootage;
+  final String? gateCode;
+  final String? petNotes;
+  final String? cleanerInstructions;
   final String name;
   final String title;
   final String firstName;
@@ -81,6 +84,9 @@ class AppointmentDetailData {
     this.bathrooms,
     this.kitchens,
     this.squareFootage,
+    this.gateCode,
+    this.petNotes,
+    this.cleanerInstructions,
     required this.name,
     required this.title,
     required this.firstName,
@@ -143,6 +149,9 @@ class AppointmentDetailData {
     int? bathrooms;
     int? kitchens;
     int? squareFootage;
+    String? gateCode;
+    String? petNotes;
+    String? cleanerInstructions;
 
     if (addressRaw is Map<String, dynamic>) {
       addressLine1 = addressRaw["addressLine1"]?.toString() ?? json["addressLine1"]?.toString();
@@ -155,6 +164,9 @@ class AppointmentDetailData {
       bathrooms = addressRaw["bathrooms"] != null ? int.tryParse(addressRaw["bathrooms"].toString()) : null;
       kitchens = addressRaw["kitchens"] != null ? int.tryParse(addressRaw["kitchens"].toString()) : null;
       squareFootage = addressRaw["squareFootage"] != null ? int.tryParse(addressRaw["squareFootage"].toString()) : null;
+      gateCode = addressRaw["gateCode"]?.toString() ?? addressRaw["gate_code"]?.toString() ?? json["gateCode"]?.toString() ?? json["gate_code"]?.toString();
+      petNotes = addressRaw["petNotes"]?.toString() ?? addressRaw["pet_notes"]?.toString() ?? json["petNotes"]?.toString() ?? json["pet_notes"]?.toString();
+      cleanerInstructions = addressRaw["cleanerInstructions"]?.toString() ?? addressRaw["cleaner_instructions"]?.toString() ?? json["cleanerInstructions"]?.toString() ?? json["cleaner_instructions"]?.toString();
     } else {
       addressString = addressRaw?.toString() ?? "";
       addressLine1 = json["addressLine1"]?.toString();
@@ -167,6 +179,9 @@ class AppointmentDetailData {
       bathrooms = json["bathrooms"] != null ? int.tryParse(json["bathrooms"].toString()) : null;
       kitchens = json["kitchens"] != null ? int.tryParse(json["kitchens"].toString()) : null;
       squareFootage = json["squareFootage"] != null ? int.tryParse(json["squareFootage"].toString()) : null;
+      gateCode = json["gateCode"]?.toString() ?? json["gate_code"]?.toString();
+      petNotes = json["petNotes"]?.toString() ?? json["pet_notes"]?.toString();
+      cleanerInstructions = json["cleanerInstructions"]?.toString() ?? json["cleaner_instructions"]?.toString();
     }
 
     return AppointmentDetailData(
@@ -190,6 +205,9 @@ class AppointmentDetailData {
       bathrooms: bathrooms,
       kitchens: kitchens,
       squareFootage: squareFootage,
+      gateCode: gateCode,
+      petNotes: petNotes,
+      cleanerInstructions: cleanerInstructions,
       name: json["name"]?.toString() ?? "",
       title: json["title"]?.toString() ?? "",
       firstName: json["first_name"]?.toString() ?? "",

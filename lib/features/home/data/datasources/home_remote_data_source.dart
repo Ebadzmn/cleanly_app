@@ -10,7 +10,6 @@ class HomeRemoteDataSource {
       queryParams["date"] = dateStr;
     }
     
-    queryParams["status"] = "scheduled";
     
     final Uri url = Uri.parse(
       ApiConfig.buildUrlWithParams("/api/appointments/cleaner", queryParams),

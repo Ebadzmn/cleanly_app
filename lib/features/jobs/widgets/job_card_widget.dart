@@ -71,15 +71,17 @@ class JobCardWidget extends StatelessWidget {
     final bool isDetailed = tabIndex == 0; // Show detailed card only for 'Active'
 
     return GestureDetector(
-      onTap: () async {
-        final bool? shouldRefresh = await Navigator.push<bool>(
-          context,
-          MaterialPageRoute(builder: (context) => AppointmentDetailPage(appointmentData: jobData, isJob: true)),
-        );
-        if (shouldRefresh == true) {
-          Get.find<JobsController>().refreshActive();
-        }
-      },
+      onTap: tabIndex == 3 
+          ? null 
+          : () async {
+              final bool? shouldRefresh = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(builder: (context) => AppointmentDetailPage(appointmentData: jobData, isJob: true)),
+              );
+              if (shouldRefresh == true) {
+                Get.find<JobsController>().refreshActive();
+              }
+            },
       child: isDetailed ? _buildDetailedCard(context, jobData) : _buildCompactCard(context, jobData),
     );
   }

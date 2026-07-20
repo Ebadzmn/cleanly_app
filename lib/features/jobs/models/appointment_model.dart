@@ -57,7 +57,7 @@ class Appointment {
 
   factory Appointment.fromJson(Map<String, dynamic> json) {
     final String parsedAppointmentId = json["appointment_id"]?.toString() ?? json["occurrence_id"]?.toString() ?? json["id"]?.toString() ?? "0";
-    final String parsedJobId = json["job_id"]?.toString() ?? json["id"]?.toString() ?? "0";
+    final String parsedJobId = json["job_id"]?.toString() ?? (json["job"] != null ? json["job"]["id"]?.toString() : null) ?? json["appointment_id"]?.toString() ?? json["id"]?.toString() ?? "0";
     
     final List<dynamic>? rawOccurrences =
         json["all_occurrences"] as List<dynamic>?;

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../controllers/appointment_detail_controller.dart';
 import '../models/appointment_detail_model.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../config/api_config.dart';
 
 class AppointmentDetailPage extends StatefulWidget {
   final Map<String, dynamic> appointmentData;
@@ -574,12 +575,28 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                 // Simulating a map background
                 Opacity(
                   opacity: 0.5,
-                  child: Image.network(
-                    "https://maps.googleapis.com/maps/api/staticmap?center=Brooklyn+Bridge,New+York,NY&zoom=13&size=600x300&maptype=roadmap&key=INVALID_KEY",
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(color: const Color(0xFFD1D5DB));
+                  child: Builder(
+                    builder: (context) {
+                      final staticMapUrl = ApiConfig.buildStaticMapUrl(
+                        detail.lat,
+                        detail.lng,
+                        detail.fullAddress,
+                        width: 600,
+                        height: 300,
+                      );
+                      
+                      if (staticMapUrl == null) {
+                        return Container(color: const Color(0xFFD1D5DB));
+                      }
+
+                      return Image.network(
+                        staticMapUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(color: const Color(0xFFD1D5DB));
+                        },
+                      );
                     },
                   ),
                 ),
@@ -667,7 +684,18 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
   }
 
   Widget _buildHouseInfoCard(AppointmentDetailData detail) {
-    if (detail.bedrooms == null && detail.bathrooms == null && detail.kitchens == null && detail.squareFootage == null) {
+    final bool hasGateCode = detail.gateCode != null && detail.gateCode!.isNotEmpty;
+    final bool hasPetNotes = detail.petNotes != null && detail.petNotes!.isNotEmpty;
+    final bool hasCleanerInstructions =
+        detail.cleanerInstructions != null && detail.cleanerInstructions!.isNotEmpty;
+
+    if (detail.bedrooms == null &&
+        detail.bathrooms == null &&
+        detail.kitchens == null &&
+        detail.squareFootage == null &&
+        !hasGateCode &&
+        !hasPetNotes &&
+        !hasCleanerInstructions) {
       return const SizedBox.shrink();
     }
     return Container(
@@ -721,8 +749,58 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
           if (detail.squareFootage != null) ...[
             _buildHouseInfoRow(LocalizationService().translate("jobs.squareFootage") ?? "Square Footage", "${detail.squareFootage} ${LocalizationService().translate("jobs.sqft") ?? "sqft"}"),
           ],
+          if (hasGateCode) ...[
+            const SizedBox(height: 12),
+            _buildHouseInfoRow(LocalizationService().translate("jobs.gateCode") ?? "Gate Code", detail.gateCode!),
+          ],
+          if (hasPetNotes || hasCleanerInstructions) ...[
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (hasPetNotes)
+                  Expanded(
+                    child: _buildHouseInfoTextBlock(
+                      LocalizationService().translate("jobs.petNotes") ?? "Pet Notes",
+                      detail.petNotes!,
+                    ),
+                  ),
+                if (hasPetNotes && hasCleanerInstructions)
+                  const SizedBox(width: 16),
+                if (hasCleanerInstructions)
+                  Expanded(
+                    child: _buildHouseInfoTextBlock(
+                      LocalizationService().translate("jobs.cleanerInstructions") ?? "Cleaner Instructions",
+                      detail.cleanerInstructions!,
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _buildHouseInfoTextBlock(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563)),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1F2937),
+            height: 1.4,
+          ),
+        ),
+      ],
     );
   }
 
@@ -815,17 +893,17 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     String status,
     String initialTabStatus,
   ) {
-    final statusLower = status.toLowerCase();
-    final isPending = statusLower == "pending";
+    return Obx(() {
+      final statusLower = status.toLowerCase();
+      final isPending = statusLower == "pending";
 
-    final bool isOnMyWay = statusLower == "on_my_way";
-    final bool isCheckedIn = statusLower == "checked_in";
-    final bool isCheckedOut = statusLower == "checked_out";
-    final bool isCompleted = statusLower == "completed";
+      final bool isCheckedOut = statusLower == "checked_out";
+      final bool isCompleted = statusLower == "completed";
+      final bool hasCheckedIn = controller.hasCheckedIn.value;
 
-    final bool onMyWayEnabled = !isPending && !isCheckedOut && !isCompleted;
-    final bool checkInEnabled = !isPending && !isCheckedOut && !isCompleted;
-    final bool checkOutEnabled = !isPending && !isCheckedOut && !isCompleted;
+      final bool onMyWayEnabled = !isPending && !isCheckedOut && !isCompleted && !hasCheckedIn;
+      final bool checkInEnabled = !isPending && !isCheckedOut && !isCompleted && !hasCheckedIn;
+      final bool checkOutEnabled = !isPending && !isCheckedOut && !isCompleted;
 
     if (widget.isJob && (initialTabStatus == "accepted" || initialTabStatus == "assigned" || initialTabStatus == "completed")) {
       return const SizedBox.shrink();
@@ -964,7 +1042,9 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      LocalizationService().translate("jobs.onMyWay") ?? "On My Way",
+                      controller.countdownSeconds.value > 0
+                          ? controller.formattedCountdown
+                          : (LocalizationService().translate("jobs.onMyWay") ?? "On My Way"),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -1099,6 +1179,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
         ),
       ),
     );
+    });
   }
 
   void _showArriveInDialog(
