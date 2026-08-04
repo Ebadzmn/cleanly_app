@@ -145,6 +145,8 @@
     "somethingWentWrongCancelling": "Algo salió mal al cancelar el trabajo.",
     "confirmAcceptance": "Confirmar aceptación",
     "confirmAcceptanceMessage": "¿Estás seguro de que quieres aceptar el trabajo?",
+    "confirmDeclineTitle": "Confirmar Rechazo",
+    "confirmDeclineMessage": "¿Estás seguro de que deseas rechazar esta solicitud de trabajo?",
     "cancelJob": "Cancelar trabajo",
     "cancelJobMessage": "¿Estás seguro de que quieres cancelar este trabajo?",
     "accept": "Aceptar",

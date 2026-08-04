@@ -231,7 +231,48 @@ class JobCardWidget extends StatelessWidget {
                     onPressed: () {
                       final String? jobId = jobData["job_id"]?.toString();
                       if (jobId != null) {
-                        Get.find<JobsController>().cancelAppointment(jobId);
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              title: Text(
+                                LocalizationService().translate("jobs.confirmDeclineTitle") ?? "Confirm Rejection",
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              content: Text(
+                                LocalizationService().translate("jobs.confirmDeclineMessage") ?? "Are you sure you want to reject this job request?",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: Text(
+                                    LocalizationService().translate("common.cancel") ?? "Cancel",
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    Get.find<JobsController>().cancelAppointment(jobId);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    LocalizationService().translate("common.confirm") ?? "Confirm",
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
                       }
                     },
                     style: ElevatedButton.styleFrom(

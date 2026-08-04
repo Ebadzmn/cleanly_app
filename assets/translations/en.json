@@ -145,6 +145,8 @@
     "somethingWentWrongCancelling": "Something went wrong while cancelling the job.",
     "confirmAcceptance": "Confirm Acceptance",
     "confirmAcceptanceMessage": "Are you sure you want to accept the job?",
+    "confirmDeclineTitle": "Confirm Rejection",
+    "confirmDeclineMessage": "Are you sure you want to reject this job request?",
     "cancelJob": "Cancel Job",
     "cancelJobMessage": "Are you sure want cancel this job?",
     "accept": "Accept",

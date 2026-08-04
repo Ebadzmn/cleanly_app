@@ -5,6 +5,7 @@ import '../../profile/pages/profile_page.dart';
 import '../../profile/bindings/profile_binding.dart';
 import '../controllers/notification_controller.dart';
 import '../widgets/notification_card_widget.dart';
+import '../../../screens/home_screen.dart';
 
 class NotificationPage extends StatelessWidget {
   const NotificationPage({super.key});
@@ -22,7 +23,7 @@ class NotificationPage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: GestureDetector(
-          onTap: () => Get.back(),
+          onTap: () => Get.offAll(() => const HomeScreen(initialIndex: 0)),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Container(

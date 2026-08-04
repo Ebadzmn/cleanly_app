@@ -899,6 +899,10 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
 
       final bool isCheckedOut = statusLower == "checked_out";
       final bool isCompleted = statusLower == "completed";
+      
+      if (controller.isDeclined.value || statusLower == "declined" || statusLower == "rejected" || statusLower == "cancelled") {
+        return const SizedBox.shrink();
+      }
       final bool hasCheckedIn = controller.hasCheckedIn.value;
 
       final bool onMyWayEnabled = !isPending && !isCheckedOut && !isCompleted && !hasCheckedIn;
@@ -964,7 +968,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
               Expanded(
                 flex: 1,
                 child: OutlinedButton(
-                  onPressed: () => controller.cancelAppointment(),
+                  onPressed: () => _showDeclineConfirmationDialog(context, controller),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF4B5563),
                     side: const BorderSide(color: Color(0xFF9CA3AF)),
@@ -1180,6 +1184,54 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
       ),
     );
     });
+  }
+
+  void _showDeclineConfirmationDialog(
+    BuildContext context,
+    AppointmentDetailController controller,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            LocalizationService().translate("jobs.confirmDeclineTitle") ?? "Confirm Rejection",
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            LocalizationService().translate("jobs.confirmDeclineMessage") ?? "Are you sure you want to reject this job request?",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                LocalizationService().translate("common.cancel") ?? "Cancel",
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                controller.cancelAppointment();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                LocalizationService().translate("common.confirm") ?? "Confirm",
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showArriveInDialog(

@@ -6,7 +6,7 @@ import '../widgets/job_card_widget.dart';
 import '../../profile/controllers/profile_controller.dart';
 import '../../profile/pages/profile_page.dart';
 import '../../profile/bindings/profile_binding.dart';
-
+import '../../../screens/home_screen.dart';
 class JobsPage extends StatelessWidget {
   const JobsPage({super.key});
 
@@ -24,7 +24,7 @@ class JobsPage extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF5A4D3D)),
-          onPressed: () => Get.back(),
+          onPressed: () => Get.offAll(() => const HomeScreen(initialIndex: 0)),
         ),
         title: Text(
           LocalizationService().translate("jobs.title") ?? "Jobs",

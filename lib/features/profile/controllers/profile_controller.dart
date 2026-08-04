@@ -218,7 +218,10 @@ class ProfileController extends GetxController {
         return;
       }
 
-      // No need to upload image here anymore, it uploads instantly on selection.
+      if (selectedImage.value != null) {
+        await _uploadAndSaveProfileImage(selectedImage.value!);
+      }
+
       // Update profile details
       final Uri url = Uri.parse(ApiConfig.buildUrl("/api/cleaners/profile"));
 
@@ -232,7 +235,7 @@ class ProfileController extends GetxController {
         "username": userName.value,
         "phone": phoneController.text.trim(),
         "email": emailController.text.trim(),
-        "cleanFlowLanguage": selectedLanguage.value,
+        "cleanFlowLanguage": selectedLanguage.value == "es" ? "spanish" : "english",
       };
 
       // If we had a previously uploaded image, it's already set in the DB,
@@ -391,7 +394,6 @@ class ProfileController extends GetxController {
 
       if (image != null) {
         selectedImage.value = File(image.path);
-        await _uploadAndSaveProfileImage(File(image.path));
       }
     } catch (e) {
       Get.snackbar(

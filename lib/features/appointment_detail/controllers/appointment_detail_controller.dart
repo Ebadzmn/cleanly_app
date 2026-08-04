@@ -27,6 +27,7 @@ class AppointmentDetailController extends GetxController {
   var error = RxnString();
   var acceptingAppointmentId = RxnString();
   var cancellingAppointmentId = RxnString();
+  var isDeclined = false.obs;
   var selectedArriveIn = RxnString();
   var isArrivingIn = false.obs;
   var hasArrived = false.obs;
@@ -209,6 +210,8 @@ class AppointmentDetailController extends GetxController {
                 ) ??
                 "Job rejected.",
           );
+          isDeclined.value = true;
+          _fetchAppointmentDetail(); // Re-fetch details to update UI
           return true;
         } else {
           Get.snackbar(

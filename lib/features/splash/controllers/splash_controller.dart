@@ -46,14 +46,7 @@ class SplashController extends GetxController {
             ? responseData["data"] as Map<String, dynamic> 
             : responseData;
 
-        final cleanFlowLanguage = data["cleanFlowLanguage"]?.toString();
-        if (cleanFlowLanguage != null) {
-          if (cleanFlowLanguage.toLowerCase() == "spanish") {
-            await LocalizationService().loadLanguage("es");
-          } else if (cleanFlowLanguage.toLowerCase() == "english") {
-            await LocalizationService().loadLanguage("en");
-          }
-        }
+
       }
     } catch (e) {
       print("Error fetching profile on app start: $e");

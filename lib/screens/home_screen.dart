@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late PageController _pageController;
   late TabController _tabController;
   late ScrollController _calendarScrollController;
-  String _greeting = "Welcome!";
+  String _greetingKey = "home.welcome";
   String? _userName;
   String? _userImage;
   bool _isLoading = false;
@@ -131,26 +131,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
             String? updatedAtString = data["updated_at"]?.toString();
             DateTime? updatedAt;
-            String greeting = "";
-
-            if (updatedAtString != null) {
+            String greetingKey = "home.welcome";
+            if (data["updated_at"] != null) {
               try {
-                updatedAt = DateTime.parse(updatedAtString).toLocal();
-                int hour = updatedAt.hour;
+                final DateTime updatedAt = DateTime.parse(
+                  data["updated_at"].toString(),
+                ).toLocal();
+                final int hour = updatedAt.hour;
 
-                final LocalizationService localization = LocalizationService();
                 if (hour >= 5 && hour < 12) {
-                  greeting = localization.translate("home.goodMorning");
+                  greetingKey = "home.goodMorning";
                 } else if (hour >= 12 && hour < 17) {
-                  greeting = localization.translate("home.goodAfternoon");
+                  greetingKey = "home.goodAfternoon";
                 } else if (hour >= 17 && hour < 21) {
-                  greeting = localization.translate("home.goodEvening");
+                  greetingKey = "home.goodEvening";
                 } else {
-                  greeting = localization.translate("home.goodNight");
+                  greetingKey = "home.goodNight";
                 }
               } catch (e) {
                 debugPrint("Error parsing updated_at time: $e");
-                greeting = "Welcome!";
+                greetingKey = "home.welcome";
               }
             }
 
@@ -172,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   data["profilePhoto"]?.toString() ??
                       data["profile_url"]?.toString(),
                 );
-                _greeting = greeting;
+                _greetingKey = greetingKey;
               });
             }
           } catch (e) {
@@ -700,7 +700,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _greeting,
+                              LocalizationService().translate(_greetingKey) ?? "Welcome!",
                               style: const TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
