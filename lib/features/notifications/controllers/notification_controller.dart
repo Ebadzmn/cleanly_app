@@ -12,7 +12,9 @@ class NotificationController extends GetxController {
   final RxList<NotificationModel> notifications = <NotificationModel>[].obs;
   final RxBool isInitialLoading = true.obs;
   final RxString userImage = ''.obs;
+  final RxString token = ''.obs;
   Timer? _refreshTimer;
+
 
   @override
   void onInit() {
@@ -34,9 +36,10 @@ class NotificationController extends GetxController {
   Future<void> _fetchUserData() async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String? token = prefs.getString("token");
+      final String? tokenVal = prefs.getString("token");
+      token.value = tokenVal ?? "";
 
-      if (token == null || token.isEmpty) {
+      if (tokenVal == null || tokenVal.isEmpty) {
         debugPrint("No authentication token found");
         return;
       }
@@ -45,10 +48,11 @@ class NotificationController extends GetxController {
       final http.Response response = await http.get(
         url,
         headers: {
-          "Authorization": "Bearer $token",
+          "Authorization": "Bearer $tokenVal",
           "Accept": "application/json",
         },
       );
+
 
       if (response.statusCode == 200) {
         if (response.headers["content-type"]?.contains("application/json") == true) {
@@ -72,9 +76,10 @@ class NotificationController extends GetxController {
   }
 
   Future<void> loadNotifications({bool isRefresh = false}) async {
-    if (!isRefresh) {
+    if (!isRefresh && notifications.isEmpty) {
       isInitialLoading.value = true;
     }
+
 
     try {
       final List<Map<String, dynamic>> storedNotifications = await NotificationService.getStoredNotifications();

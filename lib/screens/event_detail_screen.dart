@@ -213,7 +213,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   bool _isLoading = false;
   String? _error;
   String? _userImage;
+  String? _token;
   int? _cleanerId;
+
 
   bool _isUpdatingOnMyWay = false;
   bool _isUpdatingClockIn = false;
@@ -227,10 +229,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Future<void> _fetchEventDetail() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+    if (_eventDetailData == null) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
+
 
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -372,7 +377,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
             if (mounted) {
               setState(() {
-                _userImage = ApiConfig.getFullImageUrl(data["profile_url"]?.toString());
+                _token = token;
+                _userImage = ApiConfig.getFullImageUrl(
+                  data["profilePhoto"]?.toString() ?? data["profile_url"]?.toString(),
+                );
+
                 final userData = data["user"] as Map<String, dynamic>?;
                 if (userData != null) {
                   _cleanerId = data["id"] as int?;
@@ -716,9 +725,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   child: _userImage != null && _userImage!.isNotEmpty
                       ? Image.network(
                           _userImage!,
+                          headers: _token != null && _token!.isNotEmpty
+                              ? {"Authorization": "Bearer $_token"}
+                              : null,
                           width: 40,
                           height: 40,
                           fit: BoxFit.cover,
+
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               width: 40,

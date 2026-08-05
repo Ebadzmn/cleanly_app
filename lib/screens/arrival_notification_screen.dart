@@ -30,8 +30,10 @@ class _ArrivalNotificationScreenState extends State<ArrivalNotificationScreen> {
   final TextEditingController timeController = TextEditingController();
   final TextEditingController messageController = TextEditingController();
   bool _isUpdating = false;
-  String? _userImage; 
-  bool _apiCallSuccessful = false; 
+  String? _userImage;
+  String? _token;
+  bool _apiCallSuccessful = false;
+
   EventDetailData? _eventDetailData; 
   bool _isLoadingEventDetail = false; 
   bool _notesFieldError = false; 
@@ -67,9 +69,12 @@ class _ArrivalNotificationScreenState extends State<ArrivalNotificationScreen> {
   }
 
   Future<void> _fetchEventDetail() async {
-    setState(() {
-      _isLoadingEventDetail = true;
-    });
+    if (_eventDetailData == null) {
+      setState(() {
+        _isLoadingEventDetail = true;
+      });
+    }
+
 
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -177,9 +182,13 @@ class _ArrivalNotificationScreenState extends State<ArrivalNotificationScreen> {
 
             if (mounted) {
               setState(() {
-                _userImage = ApiConfig.getFullImageUrl(data["profile_url"]?.toString());
+                _token = token;
+                _userImage = ApiConfig.getFullImageUrl(
+                  data["profilePhoto"]?.toString() ?? data["profile_url"]?.toString(),
+                );
               });
             }
+
           } catch (e) {
             debugPrint("Error parsing user JSON response: $e");
           }
@@ -259,9 +268,13 @@ class _ArrivalNotificationScreenState extends State<ArrivalNotificationScreen> {
                   child: _userImage != null && _userImage!.isNotEmpty
                       ? Image.network(
                           _userImage!,
+                          headers: _token != null && _token!.isNotEmpty
+                              ? {"Authorization": "Bearer $_token"}
+                              : null,
                           width: 40,
                           height: 40,
                           fit: BoxFit.cover,
+
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               width: 40,

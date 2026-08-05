@@ -7,6 +7,7 @@ import '../../profile/controllers/profile_controller.dart';
 import '../../profile/pages/profile_page.dart';
 import '../../profile/bindings/profile_binding.dart';
 import '../../../screens/home_screen.dart';
+
 class JobsPage extends StatelessWidget {
   const JobsPage({super.key});
 
@@ -48,17 +49,33 @@ class JobsPage extends StatelessWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFF4C535), width: 2),
+                    border: Border.all(
+                      color: const Color(0xFFF4C535),
+                      width: 2,
+                    ),
                   ),
                   child: ClipOval(
                     child: imageUrl != null && imageUrl.isNotEmpty
                         ? Image.network(
                             imageUrl,
+                            headers:
+                                profileController.userToken.value.isNotEmpty
+                                ? {
+                                    "Authorization":
+                                        "Bearer ${profileController.userToken.value}",
+                                  }
+                                : null,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
-                                Image.asset('assets/images/placeholder.png', fit: BoxFit.cover),
+                                Image.asset(
+                                  'assets/images/placeholder.png',
+                                  fit: BoxFit.cover,
+                                ),
                           )
-                        : Image.asset('assets/images/placeholder.png', fit: BoxFit.cover),
+                        : Image.asset(
+                            'assets/images/placeholder.png',
+                            fit: BoxFit.cover,
+                          ),
                   ),
                 );
               }),
@@ -84,76 +101,142 @@ class JobsPage extends StatelessWidget {
         ),
         child: SafeArea(
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 16),
-            // Custom TabBar as pills
-            Container(
-              height: 40,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Obx(() => Row(
-                children: [
-                  _buildPillTab(LocalizationService().translate("jobs.active") ?? "Active", 0, controller),
-                  const SizedBox(width: 8),
-                  _buildPillTab(LocalizationService().translate("jobs.accepted") ?? "Accepted", 1, controller),
-                  const SizedBox(width: 8),
-                  _buildPillTab(LocalizationService().translate("jobs.assigned") ?? "Assigned", 2, controller),
-                  const SizedBox(width: 8),
-                  _buildPillTab(LocalizationService().translate("jobs.completed") ?? "Completed", 3, controller, badgeCount: controller.completedAppointments.length),
-                ],
-              )),
-            ),
-            const SizedBox(height: 24),
-            // Subheader
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    LocalizationService().translate("jobs.availableRequests") ?? "Available Requests",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1F2937),
-                    ),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              // Custom TabBar as pills
+              Container(
+                height: 40,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Obx(
+                  () => Row(
+                    children: [
+                      _buildPillTab(
+                        LocalizationService().translate("jobs.active") ??
+                            "Active",
+                        0,
+                        controller,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildPillTab(
+                        LocalizationService().translate("jobs.accepted") ??
+                            "Accepted",
+                        1,
+                        controller,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildPillTab(
+                        LocalizationService().translate("jobs.assigned") ??
+                            "Assigned",
+                        2,
+                        controller,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildPillTab(
+                        LocalizationService().translate("jobs.completed") ??
+                            "Completed",
+                        3,
+                        controller,
+                        badgeCount: controller.completedAppointments.length,
+                      ),
+                    ],
                   ),
-                  Obx(() => Text(
-                    LocalizationService().translateWithParams("jobs.newFound", {"count": controller.activeAppointments.length.toString()}) ?? "${controller.activeAppointments.length} New found",
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF266185),
-                    ),
-                  )),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            // List View
-            Expanded(
-              child: Obx(() {
-                final int currentIndex = controller.currentTabIndex.value;
-                if (currentIndex == 0) {
-                  return _buildList(controller.activeAppointments, controller, 0, LocalizationService().translate("jobs.active") ?? "Active", controller.isActiveLoading.value);
-                } else if (currentIndex == 1) {
-                  return _buildList(controller.acceptedAppointments, controller, 1, LocalizationService().translate("jobs.accepted") ?? "Accepted", controller.isAcceptedLoading.value);
-                } else if (currentIndex == 2) {
-                  return _buildList(controller.assignedAppointments, controller, 2, LocalizationService().translate("jobs.assigned") ?? "Assigned", controller.isAssignedLoading.value);
-                } else {
-                  return _buildList(controller.completedAppointments, controller, 3, LocalizationService().translate("jobs.completed") ?? "Completed", controller.isCompletedLoading.value);
-                }
-              }),
-            ),
-          ],
-        ),
+              const SizedBox(height: 24),
+              // Subheader
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      LocalizationService().translate(
+                            "jobs.availableRequests",
+                          ) ??
+                          "Available Requests",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    Obx(
+                      () => Text(
+                        LocalizationService()
+                                .translateWithParams("jobs.newFound", {
+                                  "count": controller.activeAppointments.length
+                                      .toString(),
+                                }) ??
+                            "${controller.activeAppointments.length} New found",
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF266185),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // List View
+              Expanded(
+                child: Obx(() {
+                  final int currentIndex = controller.currentTabIndex.value;
+                  if (currentIndex == 0) {
+                    return _buildList(
+                      controller.activeAppointments,
+                      controller,
+                      0,
+                      LocalizationService().translate("jobs.active") ??
+                          "Active",
+                      controller.isActiveLoading.value,
+                    );
+                  } else if (currentIndex == 1) {
+                    return _buildList(
+                      controller.acceptedAppointments,
+                      controller,
+                      1,
+                      LocalizationService().translate("jobs.accepted") ??
+                          "Accepted",
+                      controller.isAcceptedLoading.value,
+                    );
+                  } else if (currentIndex == 2) {
+                    return _buildList(
+                      controller.assignedAppointments,
+                      controller,
+                      2,
+                      LocalizationService().translate("jobs.assigned") ??
+                          "Assigned",
+                      controller.isAssignedLoading.value,
+                    );
+                  } else {
+                    return _buildList(
+                      controller.completedAppointments,
+                      controller,
+                      3,
+                      LocalizationService().translate("jobs.completed") ??
+                          "Completed",
+                      controller.isCompletedLoading.value,
+                    );
+                  }
+                }),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildPillTab(String title, int index, JobsController controller, {int badgeCount = 0}) {
+  Widget _buildPillTab(
+    String title,
+    int index,
+    JobsController controller, {
+    int badgeCount = 0,
+  }) {
     final bool isSelected = controller.currentTabIndex.value == index;
     return Expanded(
       child: GestureDetector(
@@ -165,7 +248,9 @@ class JobsPage extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected ? const Color(0xFFC7F0F9) : const Color(0xFFE5E7EB),
+              color: isSelected
+                  ? const Color(0xFFC7F0F9)
+                  : const Color(0xFFE5E7EB),
               width: 1.5,
             ),
           ),
@@ -191,7 +276,9 @@ class JobsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: const BoxDecoration(
-                    color: Color(0xFFC70036), // A red color from cleanly app palette
+                    color: Color(
+                      0xFFC70036,
+                    ), // A red color from cleanly app palette
                     shape: BoxShape.circle,
                   ),
                   child: Text(
@@ -211,23 +298,40 @@ class JobsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildList(List appointments, JobsController controller, int tabIndex, String statusLabel, bool isLoading) {
+  Widget _buildList(
+    List appointments,
+    JobsController controller,
+    int tabIndex,
+    String statusLabel,
+    bool isLoading,
+  ) {
     if (isLoading && appointments.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFFF4C535)));
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFF4C535)),
+      );
     }
-    
+
     Future<void> onRefresh() async {
-      if (tabIndex == 0) await controller.refreshActive();
-      else if (tabIndex == 1) await controller.refreshAccepted();
-      else if (tabIndex == 2) await controller.refreshAssigned();
-      else if (tabIndex == 3) await controller.refreshCompleted();
+      if (tabIndex == 0)
+        await controller.refreshActive();
+      else if (tabIndex == 1)
+        await controller.refreshAccepted();
+      else if (tabIndex == 2)
+        await controller.refreshAssigned();
+      else if (tabIndex == 3)
+        await controller.refreshCompleted();
     }
 
     return RefreshIndicator(
       onRefresh: onRefresh,
       color: const Color(0xFFF4C535),
       child: appointments.isEmpty
-          ? _buildEmptyState(LocalizationService().translateWithParams("jobs.noAppointments", {"status": statusLabel}) ?? "No $statusLabel appointments available")
+          ? _buildEmptyState(
+              LocalizationService().translateWithParams("jobs.noAppointments", {
+                    "status": statusLabel,
+                  }) ??
+                  "No $statusLabel appointments available",
+            )
           : ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: appointments.length,

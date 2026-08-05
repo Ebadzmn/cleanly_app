@@ -92,11 +92,17 @@ class ProfilePage extends StatelessWidget {
                                 )
                               : Image.network(
                                   controller.userImage.value ?? "",
+                                  headers: controller.userToken.value.isNotEmpty
+                                      ? {"Authorization": "Bearer ${controller.userToken.value}"}
+                                      : null,
                                   width: 100,
                                   height: 100,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
+
+                                    debugPrint("🖼️ [IMAGE NETWORK ERROR] URL: '${controller.userImage.value}', Error: $error");
                                     return Container(
+
                                       width: 100,
                                       height: 100,
                                       decoration: BoxDecoration(
@@ -140,15 +146,6 @@ class ProfilePage extends StatelessWidget {
                         color: Colors.black,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      controller.userEmail.value,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF666666),
-                      ),
-                    ),
                     const SizedBox(height: 20),
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -159,60 +156,79 @@ class ProfilePage extends StatelessWidget {
                       child: Column(
                         children: [
                           ProfileFormFieldWidget(
-                            label: localization.translate("profile.changeName"),
-                            controller: controller.nameController,
-                            placeholder: localization.translate("profile.name"),
+                            label: "First Name",
+                            controller: controller.firstNameController,
+                            placeholder: "First Name",
                           ),
                           const SizedBox(height: 16),
                           ProfileFormFieldWidget(
-                            label: localization.translate("profile.email"),
-                            controller: controller.emailController,
-                            placeholder: localization.translate(
-                              "login.emailPlaceholder",
-                            ),
+                            label: "Last Name",
+                            controller: controller.lastNameController,
+                            placeholder: "Last Name",
                           ),
                           const SizedBox(height: 16),
                           ProfileFormFieldWidget(
-                            label: localization.translate(
-                              "profile.changePassword",
-                            ),
-                            controller: controller.passwordController,
-                            placeholder: localization.translate(
-                              "profile.password",
-                            ),
-                            isPassword: true,
-                            isRequired: false,
-                            obscureText: controller.obscurePassword.value,
-                            onToggleVisibility:
-                                controller.togglePasswordVisibility,
+                            label: "Username",
+                            controller: controller.usernameController,
+                            placeholder: "Username",
                           ),
                           const SizedBox(height: 16),
                           ProfileFormFieldWidget(
-                            label: localization.translate(
-                              "profile.confirmPassword",
-                            ),
-                            controller: controller.confirmPasswordController,
-                            placeholder: localization.translate(
-                              "profile.confirmPassword",
-                            ),
-                            isPassword: true,
-                            isReEnterPassword: true,
-                            isRequired: false,
-                            obscureText:
-                                controller.obscureReEnterPassword.value,
-                            onToggleVisibility:
-                                controller.toggleReEnterPasswordVisibility,
+                            label: "Birth Date",
+                            controller: controller.birthDateController,
+                            placeholder: "YYYY-MM-DD",
                           ),
                           const SizedBox(height: 16),
                           ProfileFormFieldWidget(
-                            label: localization.translate(
-                              "profile.changePhoneNumber",
-                            ),
-                            controller: controller.phoneController,
-                            placeholder: localization.translate(
-                              "profile.phone",
-                            ),
-                            keyboardType: TextInputType.phone,
+                            label: "SSN",
+                            controller: controller.ssnController,
+                            placeholder: "XXX-XX-1234",
+                          ),
+                          const SizedBox(height: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text("Language (Clean Flow)",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF2C2C2C),
+                                  )),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: Obx(() => DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: controller.selectedLanguage.value,
+                                        isExpanded: true,
+                                        items: const [
+                                          DropdownMenuItem(
+                                              value: "en",
+                                              child: Text("English")),
+                                          DropdownMenuItem(
+                                              value: "es",
+                                              child: Text("Spanish")),
+                                        ],
+                                        onChanged: (val) {
+                                          if (val != null) {
+                                            controller.selectedLanguage.value = val;
+                                          }
+                                        },
+                                      ),
+                                    )),
+                              ),
+                            ],
                           ),
 
                           const SizedBox(height: 32),

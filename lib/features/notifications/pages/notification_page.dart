@@ -42,7 +42,8 @@ class NotificationPage extends StatelessWidget {
           ),
         ),
         title: Text(
-          LocalizationService().translate("notifications.title") ?? "Notifications",
+          LocalizationService().translate("notifications.title") ??
+              "Notifications",
           style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -57,33 +58,45 @@ class NotificationPage extends StatelessWidget {
               onTap: () {
                 Get.to(() => const ProfilePage(), binding: ProfileBinding());
               },
-              child: Obx(() => Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFF4C535), width: 2),
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFF4C535).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+              child: Obx(
+                () => Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFFF4C535),
+                      width: 2,
                     ),
-                  ],
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFF4C535).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: controller.userImage.value.isNotEmpty
+                        ? Image.network(
+                            controller.userImage.value,
+                            headers: controller.token.value.isNotEmpty
+                                ? {
+                                    "Authorization":
+                                        "Bearer ${controller.token.value}",
+                                  }
+                                : null,
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                _buildPlaceholderAvatar(),
+                          )
+                        : _buildPlaceholderAvatar(),
+                  ),
                 ),
-                child: ClipOval(
-                  child: controller.userImage.value.isNotEmpty
-                      ? Image.network(
-                          controller.userImage.value,
-                          width: 40,
-                          height: 40,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _buildPlaceholderAvatar(),
-                        )
-                      : _buildPlaceholderAvatar(),
-                ),
-              )),
+              ),
             ),
           ),
         ],
@@ -120,12 +133,18 @@ class NotificationPage extends StatelessWidget {
                 : RefreshIndicator(
                     color: const Color(0xFFF4C535),
                     backgroundColor: Colors.white,
-                    onRefresh: () => controller.loadNotifications(isRefresh: true),
+                    onRefresh: () =>
+                        controller.loadNotifications(isRefresh: true),
                     child: ListView.builder(
                       physics: const AlwaysScrollableScrollPhysics(
                         parent: BouncingScrollPhysics(),
                       ),
-                      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 32),
+                      padding: const EdgeInsets.only(
+                        left: 16,
+                        right: 16,
+                        top: 16,
+                        bottom: 32,
+                      ),
                       itemCount: controller.notifications.length,
                       itemBuilder: (context, index) {
                         return NotificationCardWidget(
@@ -155,7 +174,9 @@ class NotificationPage extends StatelessWidget {
       backgroundColor: Colors.white,
       onRefresh: () => controller.loadNotifications(isRefresh: true),
       child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         child: Container(
           height: Get.height * 0.7,
           alignment: Alignment.center,
@@ -180,7 +201,8 @@ class NotificationPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                LocalizationService().translate("notifications.allCaughtUp") ?? "You're all caught up!",
+                LocalizationService().translate("notifications.allCaughtUp") ??
+                    "You're all caught up!",
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -189,7 +211,9 @@ class NotificationPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                LocalizationService().translate("notifications.noNotifications") ??
+                LocalizationService().translate(
+                      "notifications.noNotifications",
+                    ) ??
                     "There are no new notifications for you right now.",
                 textAlign: TextAlign.center,
                 style: const TextStyle(

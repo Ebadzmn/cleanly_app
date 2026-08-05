@@ -45,7 +45,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String _greetingKey = "home.welcome";
   String? _userName;
   String? _userImage;
+  String? _token;
   bool _isLoading = false;
+
 
   int _acceptedJobs = 0;
   int _activeAppointments = 0;
@@ -85,11 +87,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _fetchUserData({bool isRefresh = false}) async {
-    if (!isRefresh) {
+    if (!isRefresh && (_userName == null || _userName!.isEmpty)) {
       setState(() {
         _isLoading = true;
       });
     }
+
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString("token");
@@ -167,6 +170,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
             if (mounted) {
               setState(() {
+                _token = token;
                 _userName = resolvedName;
                 _userImage = ApiConfig.getFullImageUrl(
                   data["profilePhoto"]?.toString() ??
@@ -175,6 +179,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 _greetingKey = greetingKey;
               });
             }
+
           } catch (e) {
             debugPrint("Error parsing JSON response: $e");
           }
@@ -607,9 +612,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   child: ClipOval(
                                     child: Image.network(
                                       _userImage ?? "",
+                                      headers: _token != null && _token!.isNotEmpty
+                                          ? {"Authorization": "Bearer $_token"}
+                                          : null,
                                       width: 48,
                                       height: 48,
                                       fit: BoxFit.cover,
+
                                       errorBuilder:
                                           (context, error, stackTrace) {
                                             return Image.asset(

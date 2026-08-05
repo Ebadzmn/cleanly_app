@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../config/api_config.dart';
 import '../../../screens/home_screen.dart';
+import '../../../screens/change_password_screen.dart';
 import '../../../services/localization_service.dart';
 import '../../../services/notification_service.dart';
 import '../../../services/network_caller.dart';
@@ -140,7 +141,11 @@ class LoginController extends GetxController {
             await _removeCredentials();
           }
 
-          Get.offAll(() => HomeScreen(token: token));
+          if (user['mustChangePassword'] == true) {
+            Get.offAll(() => const ChangePasswordScreen());
+          } else {
+            Get.offAll(() => HomeScreen(token: token));
+          }
 
           Get.snackbar(
             LocalizationService().translate("common.success") ?? "Success",

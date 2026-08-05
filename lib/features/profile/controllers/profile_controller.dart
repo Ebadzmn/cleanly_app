@@ -8,14 +8,14 @@ import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/api_config.dart';
 import '../../../../services/localization_service.dart';
+import '../../more/controllers/more_controller.dart';
 
 class ProfileController extends GetxController {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController birthDateController = TextEditingController();
+  final TextEditingController ssnController = TextEditingController();
 
   final ImagePicker _picker = ImagePicker();
 
@@ -23,15 +23,12 @@ class ProfileController extends GetxController {
   RxBool isLoading = false.obs;
   RxBool isUpdatingProfile = false.obs;
 
-  RxBool obscurePassword = true.obs;
-  RxBool obscureReEnterPassword = true.obs;
-
   RxString userName = ''.obs;
   RxString name = ''.obs;
-  RxString phone = ''.obs;
-  RxString userEmail = ''.obs;
   RxnString userImage = RxnString();
   RxString selectedLanguage = 'en'.obs;
+  RxString userToken = ''.obs;
+
 
   @override
   void onInit() {
@@ -42,24 +39,19 @@ class ProfileController extends GetxController {
 
   @override
   void onClose() {
-    nameController.dispose();
-    emailController.dispose();
-    phoneController.dispose();
-    passwordController.dispose();
-    confirmPasswordController.dispose();
+    firstNameController.dispose();
+    lastNameController.dispose();
+    usernameController.dispose();
+    birthDateController.dispose();
+    ssnController.dispose();
     super.onClose();
   }
 
-  void togglePasswordVisibility() {
-    obscurePassword.value = !obscurePassword.value;
-  }
-
-  void toggleReEnterPasswordVisibility() {
-    obscureReEnterPassword.value = !obscureReEnterPassword.value;
-  }
-
   Future<void> fetchUserData() async {
-    isLoading.value = true;
+    if (firstNameController.text.isEmpty && lastNameController.text.isEmpty) {
+      isLoading.value = true;
+    }
+
 
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -70,6 +62,8 @@ class ProfileController extends GetxController {
         isLoading.value = false;
         return;
       }
+      userToken.value = token;
+
 
       final url = Uri.parse(ApiConfig.buildUrl("/api/cleaners/profile"));
 
@@ -99,13 +93,28 @@ class ProfileController extends GetxController {
                 : responseData;
 
             userName.value = data["username"]?.toString() ?? "";
-            userEmail.value = data["email"]?.toString() ?? "";
 
-            // Support both old and new photo keys
-            userImage.value = ApiConfig.getFullImageUrl(
-              data["profilePhoto"]?.toString() ??
-                  data["profile_url"]?.toString(),
-            );
+
+            // Support object or string profilePhoto / profile_url keys
+            String? rawPhoto;
+            if (data["profilePhoto"] != null) {
+              if (data["profilePhoto"] is Map) {
+                rawPhoto = data["profilePhoto"]["url"]?.toString() ??
+                    data["profilePhoto"]["path"]?.toString();
+              } else {
+                rawPhoto = data["profilePhoto"]?.toString();
+              }
+            }
+            rawPhoto ??= data["profile_photo"]?.toString() ??
+                data["profile_url"]?.toString() ??
+                data["profileImage"]?.toString() ??
+                data["avatar"]?.toString() ??
+                data["image"]?.toString();
+
+            userImage.value = ApiConfig.getFullImageUrl(rawPhoto);
+            debugPrint("🖼️ [RAW PROFILE PHOTO FROM API]: $rawPhoto");
+            debugPrint("🖼️ [RESOLVED USER IMAGE URL]: ${userImage.value}");
+
 
             // Support both old and new name keys
             final String firstName = data["firstName"]?.toString() ?? "";
@@ -119,7 +128,8 @@ class ProfileController extends GetxController {
               name.value = fullName;
             }
 
-            phone.value = data["phone"]?.toString() ?? "";
+            firstNameController.text = firstName;
+            lastNameController.text = lastName;
 
             if (data.containsKey("cleanFlowLanguage") && data["cleanFlowLanguage"] != null) {
               final String lang = data["cleanFlowLanguage"].toString().toLowerCase();
@@ -135,12 +145,9 @@ class ProfileController extends GetxController {
               }
             }
 
-            nameController.text = name.value;
-            emailController.text = userEmail.value;
-            String phoneValue = phone.value;
-            phoneController.text = phoneValue.toLowerCase() == "pending"
-                ? ""
-                : phoneValue;
+            usernameController.text = data["username"]?.toString() ?? "";
+            birthDateController.text = data["birthDate"]?.toString() ?? "";
+            ssnController.text = data["ssn"]?.toString() ?? "";
           } catch (e) {
             debugPrint("Error parsing JSON response: $e");
           }
@@ -164,40 +171,15 @@ class ProfileController extends GetxController {
   }
 
   Future<void> updateProfile() async {
-    if (nameController.text.trim().isEmpty) {
+    if (firstNameController.text.trim().isEmpty) {
       Get.snackbar(
         "Error",
-        LocalizationService().translate("profile.nameRequired"),
+        "First name is required",
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
       return;
-    }
-
-    if (passwordController.text.isNotEmpty ||
-        confirmPasswordController.text.isNotEmpty) {
-      if (passwordController.text != confirmPasswordController.text) {
-        Get.snackbar(
-          "Error",
-          LocalizationService().translate("profile.passwordsDoNotMatch"),
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-        return;
-      }
-
-      if (passwordController.text.length < 8) {
-        Get.snackbar(
-          "Error",
-          LocalizationService().translate("profile.passwordTooShort"),
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-        return;
-      }
     }
 
     isUpdatingProfile.value = true;
@@ -218,35 +200,32 @@ class ProfileController extends GetxController {
         return;
       }
 
+      String? uploadedPhotoUrl;
       if (selectedImage.value != null) {
-        await _uploadAndSaveProfileImage(selectedImage.value!);
+        uploadedPhotoUrl = await _uploadImage(selectedImage.value!);
       }
 
       // Update profile details
       final Uri url = Uri.parse(ApiConfig.buildUrl("/api/cleaners/profile"));
 
-      final names = nameController.text.trim().split(" ");
-      final firstName = names.isNotEmpty ? names.first : "";
-      final lastName = names.length > 1 ? names.sublist(1).join(" ") : "";
-
       final Map<String, dynamic> body = {
-        "firstName": firstName,
-        "lastName": lastName,
-        "username": userName.value,
-        "phone": phoneController.text.trim(),
-        "email": emailController.text.trim(),
-        "cleanFlowLanguage": selectedLanguage.value == "es" ? "spanish" : "english",
+        "firstName": firstNameController.text.trim(),
+        "lastName": lastNameController.text.trim(),
+        "username": usernameController.text.trim(),
+        "cleanFlowLanguage": selectedLanguage.value == "es" ? "Spanish" : "English",
+        "birthDate": birthDateController.text.trim(),
+        "ssn": ssnController.text.trim(),
       };
 
-      // If we had a previously uploaded image, it's already set in the DB,
-      // but we can pass it again if we have it, although the API might just ignore it if missing.
+      if (uploadedPhotoUrl != null && uploadedPhotoUrl.isNotEmpty) {
+        body["profilePhoto"] = uploadedPhotoUrl;
+      }
 
-      if (passwordController.text.isNotEmpty) {
-        body["password"] = passwordController.text;
-      }
-      if (confirmPasswordController.text.isNotEmpty) {
-        body["confirm_password"] = confirmPasswordController.text;
-      }
+      debugPrint("\n================ API REQUEST ================");
+      debugPrint("🚀 URL: $url");
+      debugPrint("🛠️ METHOD: PATCH");
+      debugPrint("📦 BODY: ${const JsonEncoder.withIndent('  ').convert(body)}");
+      debugPrint("=============================================\n");
 
       final http.Response response = await http.patch(
         url,
@@ -281,8 +260,6 @@ class ProfileController extends GetxController {
               colorText: Colors.white,
             );
 
-            passwordController.clear();
-            confirmPasswordController.clear();
             selectedImage.value = null;
 
             await fetchUserData();
@@ -408,12 +385,11 @@ class ProfileController extends GetxController {
     }
   }
 
-  Future<void> _uploadAndSaveProfileImage(File file) async {
-    isUpdatingProfile.value = true;
+  Future<String?> _uploadImage(File file) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString("token");
-      if (token == null || token.isEmpty) return;
+      if (token == null || token.isEmpty) return null;
 
       final Uri uploadUrl = Uri.parse(ApiConfig.buildUrl("/api/upload"));
       final http.MultipartRequest uploadRequest = http.MultipartRequest(
@@ -423,7 +399,7 @@ class ProfileController extends GetxController {
       uploadRequest.headers["Authorization"] = "Bearer $token";
       uploadRequest.headers["Accept"] = "application/json";
 
-      final String fileName = file.path.split("/").last;
+      final String fileName = file.path.split("/").last.split("\\").last;
 
       final String extension = fileName.split('.').last.toLowerCase();
       MediaType mediaType = MediaType('image', 'jpeg'); // default
@@ -437,11 +413,9 @@ class ProfileController extends GetxController {
         mediaType = MediaType('image', 'jpeg');
       }
 
-      print("🚀 [UPLOAD] Starting profile image upload...");
-      print("🚀 [UPLOAD] URL: $uploadUrl");
-      print("🚀 [UPLOAD] File path: ${file.path}");
-      print("🚀 [UPLOAD] File name: $fileName");
-      print("🚀 [UPLOAD] MimeType: ${mediaType.mimeType}");
+      debugPrint("🚀 [UPLOAD] Starting profile image upload...");
+      debugPrint("🚀 [UPLOAD] URL: $uploadUrl");
+      debugPrint("🚀 [UPLOAD] File path: ${file.path}");
 
       uploadRequest.files.add(
         await http.MultipartFile.fromPath(
@@ -453,98 +427,39 @@ class ProfileController extends GetxController {
       );
 
       final http.StreamedResponse uploadResponse = await uploadRequest.send();
-      final String uploadResponseBody = await uploadResponse.stream
-          .bytesToString();
+      final String uploadResponseBody = await uploadResponse.stream.bytesToString();
 
-      print("📥 [UPLOAD] Response Code: ${uploadResponse.statusCode}");
-      print("📥 [UPLOAD] Response Body: $uploadResponseBody");
+      debugPrint("📥 [UPLOAD] Response Code: ${uploadResponse.statusCode}");
+      debugPrint("📥 [UPLOAD] Response Body: $uploadResponseBody");
 
-      if (uploadResponse.statusCode == 200 ||
-          uploadResponse.statusCode == 201) {
-        final Map<String, dynamic> decodedUpload =
-            json.decode(uploadResponseBody) as Map<String, dynamic>;
-        if (decodedUpload["success"] == true && decodedUpload["data"] != null) {
-          final String uploadedUrl =
-              decodedUpload["data"]["url"]?.toString() ?? "";
-          print("✅ [UPLOAD] Success! Uploaded URL: $uploadedUrl");
+      if (uploadResponse.statusCode == 200 || uploadResponse.statusCode == 201) {
+        final dynamic decodedUpload = json.decode(uploadResponseBody);
+        String? uploadedUrl;
 
-          if (uploadedUrl.isNotEmpty) {
-            final Uri updateUrl = Uri.parse(
-              ApiConfig.buildUrl("/api/cleaners/profile"),
-            );
-
-            final names = name.value.split(" ");
-            final firstName = names.isNotEmpty ? names.first : "";
-            final lastName = names.length > 1 ? names.sublist(1).join(" ") : "";
-
-            final Map<String, dynamic> body = {
-              "firstName": firstName,
-              "lastName": lastName,
-              "username": userName.value,
-              "profilePhoto": uploadedUrl,
-            };
-
-            print("🚀 [PATCH] Starting profile update...");
-            print("🚀 [PATCH] URL: $updateUrl");
-            print("🚀 [PATCH] Body: ${jsonEncode(body)}");
-
-            final response = await http.patch(
-              updateUrl,
-              headers: {
-                "Authorization": "Bearer $token",
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-              },
-              body: jsonEncode(body),
-            );
-
-            print("📥 [PATCH] Response Code: ${response.statusCode}");
-            print("📥 [PATCH] Response Body: ${response.body}");
-
-            if (response.statusCode == 200) {
-              Get.snackbar(
-                "Success",
-                "Profile photo updated successfully",
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.green,
-                colorText: Colors.white,
-              );
-              await fetchUserData(); // Refresh to show new image
-            } else {
-              print("❌ [PATCH] Failed to update profile.");
-              Get.snackbar(
-                "Error",
-                "Failed to update profile",
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.red,
-                colorText: Colors.white,
-              );
+        if (decodedUpload is Map<String, dynamic>) {
+          if (decodedUpload["data"] != null) {
+            if (decodedUpload["data"] is Map) {
+              uploadedUrl = decodedUpload["data"]["url"]?.toString() ??
+                            decodedUpload["data"]["path"]?.toString() ??
+                            decodedUpload["data"]["image"]?.toString();
+            } else if (decodedUpload["data"] is String) {
+              uploadedUrl = decodedUpload["data"].toString();
             }
           }
-        } else {
-          print("❌ [UPLOAD] API returned success false or missing data.");
-          Get.snackbar(
-            "Error",
-            "Failed to upload image",
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
+          uploadedUrl ??= decodedUpload["url"]?.toString() ??
+                          decodedUpload["path"]?.toString() ??
+                          decodedUpload["image"]?.toString();
         }
-      } else {
-        print("❌ [UPLOAD] HTTP Error: ${uploadResponse.statusCode}");
-        Get.snackbar(
-          "Error",
-          "Failed to upload image",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+
+        debugPrint("✅ [UPLOAD] Extracted Uploaded URL: $uploadedUrl");
+        return uploadedUrl;
       }
-    } catch (e) {
-      print("🚨 [UPLOAD ERROR] Exception: $e");
-    } finally {
-      isUpdatingProfile.value = false;
+    } catch (e, stack) {
+      debugPrint("🚨 [UPLOAD ERROR] Exception: $e");
+      debugPrint("🚨 Stack trace: $stack");
     }
+    return null;
   }
+
+
 }

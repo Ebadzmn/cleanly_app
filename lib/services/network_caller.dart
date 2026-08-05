@@ -9,6 +9,7 @@ import '../core/network/network_response.dart';
 import '../core/network/network_exceptions.dart' as exceptions;
 import 'package:get/get.dart';
 import '../features/login/pages/login_page.dart';
+import '../screens/change_password_screen.dart';
 
 class NetworkCaller {
   static final Logger _logger = Logger(
@@ -196,8 +197,11 @@ class NetworkCaller {
         data: data,
         message: data is Map ? data['message'] : null,
       );
+    } else if (response.statusCode == 403 && data is Map && data['message'] == "You must change your temporary password before continuing.") {
+      Get.offAll(() => const ChangePasswordScreen());
+      throw exceptions.UnauthorizedException(data['message']?.toString() ?? "Temporary password change required");
     } else if (response.statusCode == 401 || response.statusCode == 404) {
-      _handleLogout();
+      handleLogout();
       throw exceptions.UnauthorizedException(data is Map ? data['message']?.toString() ?? "Unauthorized" : "Unauthorized");
     } else if (response.statusCode >= 500) {
       throw exceptions.ServerException(data is Map ? data['message']?.toString() ?? "Server error" : "Server error", response.statusCode);
@@ -386,7 +390,7 @@ class NetworkCaller {
     }, method, url);
   }
 
-  static Future<void> _handleLogout() async {
+  static Future<void> handleLogout() async {
     try {
       const secureStorage = FlutterSecureStorage();
       await secureStorage.delete(key: 'auth_token');

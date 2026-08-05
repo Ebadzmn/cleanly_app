@@ -96,12 +96,16 @@ class MorePage extends StatelessWidget {
                   child: imageUrl != null && imageUrl.isNotEmpty
                       ? Image.network(
                           imageUrl,
+                          headers: controller.token.value.isNotEmpty
+                              ? {"Authorization": "Bearer ${controller.token.value}"}
+                              : null,
                           width: 44,
                           height: 44,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               _buildAvatarPlaceholder(),
                         )
+
                       : _buildAvatarPlaceholder(),
                 ),
               );

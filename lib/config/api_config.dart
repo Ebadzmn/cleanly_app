@@ -12,6 +12,10 @@ class ApiConfig {
 
   static String getFullImageUrl(String? url) {
     if (url == null || url.isEmpty) return "";
+    
+    // Fix for Windows paths returned by backend
+    url = url.replaceAll('\\', '/');
+    
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
     if (url.startsWith("/")) {
       return "$baseUrl$url";

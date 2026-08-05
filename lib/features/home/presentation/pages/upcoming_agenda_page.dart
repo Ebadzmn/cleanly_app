@@ -49,10 +49,14 @@ class UpcomingAgendaPage extends StatelessWidget {
                     child: imageUrl != null && imageUrl.isNotEmpty
                         ? Image.network(
                             imageUrl,
+                            headers: profileController.userToken.value.isNotEmpty
+                                ? {"Authorization": "Bearer ${profileController.userToken.value}"}
+                                : null,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
                                 Image.asset('assets/images/placeholder.png', fit: BoxFit.cover),
                           )
+
                         : Image.asset('assets/images/placeholder.png', fit: BoxFit.cover),
                   ),
                 );

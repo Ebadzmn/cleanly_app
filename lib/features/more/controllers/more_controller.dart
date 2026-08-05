@@ -13,6 +13,7 @@ class MoreController extends GetxController {
   var isLogoutLoading = false.obs;
   var isBlocking = false.obs;
   var userImage = RxnString();
+  var token = ''.obs;
 
   @override
   void onInit() {
@@ -21,16 +22,21 @@ class MoreController extends GetxController {
   }
 
   Future<void> fetchUserData() async {
-    isLoading.value = true;
+    if (userImage.value == null || userImage.value!.isEmpty) {
+      isLoading.value = true;
+    }
+
 
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String? token = prefs.getString("token");
+      final String? tokenVal = prefs.getString("token");
+      token.value = tokenVal ?? "";
 
-      if (token == null || token.isEmpty) {
+      if (tokenVal == null || tokenVal.isEmpty) {
         debugPrint("No authentication token found");
         return;
       }
+
       final Uri url = Uri.parse(ApiConfig.buildUrl("/api/cleaners/profile"));
       final response = await NetworkCaller.get(url);
 
