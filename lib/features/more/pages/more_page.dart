@@ -189,7 +189,7 @@ class MorePage extends StatelessWidget {
               title: LocalizationService().translate("more.logout") ?? "Logout",
               isLoading: controller.isLogoutLoading.value,
               isDestructive: true,
-              onTap: () => controller.logoutUser(),
+              onTap: () => _showLogoutConfirmationDialog(context, controller),
             ),
           ),
         ],
@@ -548,5 +548,67 @@ class MorePage extends StatelessWidget {
     hour = hour % 12;
     if (hour == 0) hour = 12;
     return '${hour.toString().padLeft(2, '0')}:${tod.minute.toString().padLeft(2, '0')} $ampm';
+  }
+
+  void _showLogoutConfirmationDialog(
+    BuildContext context,
+    MoreController controller,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            LocalizationService().translate("more.confirmLogoutTitle") ?? "Confirm Logout",
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E2638),
+            ),
+          ),
+          content: Text(
+            LocalizationService().translate("more.confirmLogoutMessage") ?? "Are you sure you want to log out?",
+            style: const TextStyle(
+              fontSize: 15,
+              color: Color(0xFF4B5563),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                LocalizationService().translate("common.cancel") ?? "Cancel",
+                style: const TextStyle(
+                  color: Color(0xFF6B7280),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                controller.logoutUser();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFC70036),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                LocalizationService().translate("more.logout") ?? "Logout",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

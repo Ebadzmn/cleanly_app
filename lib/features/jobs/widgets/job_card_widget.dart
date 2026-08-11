@@ -62,7 +62,39 @@ class JobCardWidget extends StatelessWidget {
       "cleaner_pay": appointment.pay,
       "description": appointment.description,
       "type": appointment.type,
+      "payment_status": appointment.paymentStatus,
+      "payment_method": appointment.paymentMethod,
+      "gross_profit": appointment.grossProfit,
+      "gateway_fee": appointment.gatewayFee,
+      "net_profit": appointment.netProfit,
+      "cleaner_payout_status": appointment.cleanerPayoutStatus,
+      "bedrooms": appointment.bedrooms,
+      "bathrooms": appointment.bathrooms,
+      "kitchen": appointment.kitchen,
+      "square_footage": appointment.squareFootage,
+      "notes_cleaner": appointment.notesCleaner,
     };
+  }
+
+  void _navigateToDetail(BuildContext context, Map<String, dynamic> jobData) async {
+    final bool? shouldRefresh = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AppointmentDetailPage(appointmentData: jobData, isJob: true),
+      ),
+    );
+    if (shouldRefresh == true) {
+      final controller = Get.find<JobsController>();
+      if (tabIndex == 0) {
+        controller.refreshActive();
+      } else if (tabIndex == 1) {
+        controller.refreshAccepted();
+      } else if (tabIndex == 2) {
+        controller.refreshAssigned();
+      } else if (tabIndex == 3) {
+        controller.refreshCompleted();
+      }
+    }
   }
 
   @override
@@ -72,16 +104,8 @@ class JobCardWidget extends StatelessWidget {
 
     return GestureDetector(
       onTap: tabIndex == 3 
-          ? null 
-          : () async {
-              final bool? shouldRefresh = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(builder: (context) => AppointmentDetailPage(appointmentData: jobData, isJob: true)),
-              );
-              if (shouldRefresh == true) {
-                Get.find<JobsController>().refreshActive();
-              }
-            },
+          ? () => _showCompletedJobPopup(context, jobData) 
+          : () => _navigateToDetail(context, jobData),
       child: isDetailed ? _buildDetailedCard(context, jobData) : _buildCompactCard(context, jobData),
     );
   }
@@ -327,18 +351,10 @@ class JobCardWidget extends StatelessWidget {
           const SizedBox(height: 12),
           Center(
             child: GestureDetector(
-              onTap: () async {
-                final bool? shouldRefresh = await Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute(builder: (context) => AppointmentDetailPage(appointmentData: jobData, isJob: true)),
-                );
-                if (shouldRefresh == true) {
-                  Get.find<JobsController>().refreshActive();
-                }
-              },
+              onTap: () => _navigateToDetail(context, jobData),
               child: Text(
                 LocalizationService().translate("jobs.viewDetails") ?? "View Details",
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF266185),
@@ -462,7 +478,7 @@ class JobCardWidget extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildIconText(Icons.calendar_today_outlined, "${jobData["date"]}, ${jobData["time"]}", size: 12),
-                      const Icon(Icons.chevron_right, color: Color(0xFF8C8476), size: 20),
+                      if (tabIndex != 3) const Icon(Icons.chevron_right, color: Color(0xFF8C8476), size: 20),
                     ],
                   ),
                 ],
@@ -492,6 +508,364 @@ class JobCardWidget extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  void _showCompletedJobPopup(BuildContext context, Map<String, dynamic> jobData) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        final String cleanerPay = jobData["cleaner_pay"]?.toString() ?? "0.00";
+        final String payoutStatus = jobData["cleaner_payout_status"]?.toString() ?? "DUE";
+        final String paymentMethod = jobData["payment_method"]?.toString() ?? "Credit Card";
+        final String paymentStatus = jobData["payment_status"]?.toString() ?? "N/A";
+        final String grossProfit = jobData["gross_profit"]?.toString() ?? "";
+        final int? beds = jobData["bedrooms"] as int?;
+        final int? baths = jobData["bathrooms"] as int?;
+        final int? kit = jobData["kitchen"] as int?;
+        final int? sqft = jobData["square_footage"] as int?;
+        final String notes = jobData["notes_cleaner"]?.toString() ?? jobData["description"]?.toString() ?? "";
+
+        return Container(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              const SizedBox(height: 12),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header with completed status icon & badge
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFD1FAE5),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.check_circle_rounded,
+                              color: Color(0xFF059669),
+                              size: 26,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  jobData["type"] == "one_time" 
+                                      ? (LocalizationService().translate("home.oneTimeService") ?? "One Time Cleaning")
+                                      : (jobData["type"].toString().isNotEmpty ? jobData["type"] : "Service Appointment"),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1F2937),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  LocalizationService().translate("jobs.completedSummary") ?? "Completed Job Summary",
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF6B7280),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFECFDF5),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFA7F3D0)),
+                            ),
+                            child: const Text(
+                              "COMPLETED",
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF047857),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Cleaner Payout Highlight Card
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFFDE68A)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  LocalizationService().translate("jobs.cleanerEarnings") ?? "Cleaner Payout",
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF92400E),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "\$$cleanerPay",
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFFB45309),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: payoutStatus.toUpperCase() == "PAID"
+                                    ? const Color(0xFFD1FAE5)
+                                    : const Color(0xFFFEF3C7),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: payoutStatus.toUpperCase() == "PAID"
+                                      ? const Color(0xFF6EE7B7)
+                                      : const Color(0xFFFCD34D),
+                                ),
+                              ),
+                              child: Text(
+                                "Payout: ${payoutStatus.toUpperCase()}",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: payoutStatus.toUpperCase() == "PAID"
+                                      ? const Color(0xFF065F46)
+                                      : const Color(0xFF92400E),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Customer & Location Details
+                      _buildPopupSectionTitle("Customer & Location"),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildDetailRow(Icons.person_outline, "Customer", jobData["name"]),
+                            const Divider(height: 16, color: Color(0xFFF3F4F6)),
+                            _buildDetailRow(Icons.location_on_outlined, "Address", jobData["location"]),
+                            const Divider(height: 16, color: Color(0xFFF3F4F6)),
+                            _buildDetailRow(Icons.calendar_today_outlined, "Date & Time", "${jobData["date"]}, ${jobData["time"]}"),
+                          ],
+                        ),
+                      ),
+
+                      // Property Specs (if specs present)
+                      if (beds != null || baths != null || kit != null || sqft != null) ...[
+                        const SizedBox(height: 16),
+                        _buildPopupSectionTitle("Property Specs"),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            if (beds != null) _buildSpecChip(Icons.bed_outlined, "$beds Bedrooms"),
+                            if (baths != null) _buildSpecChip(Icons.bathtub_outlined, "$baths Bathrooms"),
+                            if (kit != null) _buildSpecChip(Icons.countertops_outlined, "$kit Kitchen"),
+                            if (sqft != null) _buildSpecChip(Icons.aspect_ratio, "$sqft sq ft"),
+                          ],
+                        ),
+                      ],
+
+                      // Payment Info Section
+                      const SizedBox(height: 16),
+                      _buildPopupSectionTitle("Payment Details"),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: Column(
+                          children: [
+                            if (grossProfit.isNotEmpty) ...[
+                              _buildDetailRow(Icons.payments_outlined, "Gross Amount", "\$$grossProfit"),
+                              const Divider(height: 16, color: Color(0xFFF3F4F6)),
+                            ],
+                            _buildDetailRow(Icons.credit_card_outlined, "Payment Method", paymentMethod),
+                            const Divider(height: 16, color: Color(0xFFF3F4F6)),
+                            _buildDetailRow(Icons.verified_outlined, "Payment Status", paymentStatus.toUpperCase()),
+                          ],
+                        ),
+                      ),
+
+                      // Notes section if present
+                      if (notes.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        _buildPopupSectionTitle("Notes"),
+                        const SizedBox(height: 8),
+                        Text(
+                          notes,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF4B5563),
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFF4C535),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: Text(
+                            LocalizationService().translate("common.close") ?? "Close",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF5A4D3D),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPopupSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: Color(0xFF374151),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: const Color(0xFF6B7280)),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 110,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF6B7280),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F2937),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSpecChip(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: const Color(0xFF4B5563)),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF374151),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

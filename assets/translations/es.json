@@ -100,7 +100,9 @@
     "tokenNotFound": "Token de autenticación no encontrado.",
     "availabilityBlocked": "Disponibilidad bloqueada con éxito",
     "failedToBlockAvailability": "Error al bloquear la disponibilidad",
-    "availability": "Disponibilidad"
+    "availability": "Disponibilidad",
+    "confirmLogoutTitle": "Confirmar cierre de sesión",
+    "confirmLogoutMessage": "¿Estás seguro de que quieres cerrar sesión?"
   },
   "profile": {
     "title": "Perfil",
@@ -216,7 +218,9 @@
     "noAppointments": "Sin Citas",
     "serviceAppointment": "Cita de Servicio",
     "standardCleaning": "Limpieza Estándar",
-    "viewDetails": "Ver Detalles"
+    "viewDetails": "Ver Detalles",
+    "completedSummary": "Resumen del Trabajo Completado",
+    "cleanerEarnings": "Pago del Limpiador"
   },
   "appointments": {
     "title": "Citas",

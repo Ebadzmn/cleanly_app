@@ -100,7 +100,9 @@
     "tokenNotFound": "Authentication token not found.",
     "availabilityBlocked": "Availability blocked successfully",
     "failedToBlockAvailability": "Failed to block availability",
-    "availability": "Availability"
+    "availability": "Availability",
+    "confirmLogoutTitle": "Confirm Logout",
+    "confirmLogoutMessage": "Are you sure you want to log out?"
   },
   "profile": {
     "title": "Profile",
@@ -216,7 +218,9 @@
     "noAppointments": "No Appointments",
     "serviceAppointment": "Service Appointment",
     "standardCleaning": "Standard Cleaning",
-    "viewDetails": "View Details"
+    "viewDetails": "View Details",
+    "completedSummary": "Completed Job Summary",
+    "cleanerEarnings": "Cleaner Payout"
   },
   "appointments": {
     "title": "Appointments",

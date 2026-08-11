@@ -41,6 +41,21 @@ class Appointment {
   final List<AppointmentOccurrence> occurrences;
   final String customerName;
 
+  // Additional fields for detailed completed job information
+  final String? paymentStatus;
+  final String? paymentMethod;
+  final String? grossProfit;
+  final String? gatewayFee;
+  final String? netProfit;
+  final String? cleanerPayoutStatus;
+  final String? status;
+  final int? bedrooms;
+  final int? bathrooms;
+  final int? kitchen;
+  final int? squareFootage;
+  final String? notesCleaner;
+  final Map<String, dynamic>? rawJson;
+
   const Appointment({
     required this.appointmentId,
     required this.jobId,
@@ -53,6 +68,19 @@ class Appointment {
     required this.endTime,
     required this.occurrences,
     required this.customerName,
+    this.paymentStatus,
+    this.paymentMethod,
+    this.grossProfit,
+    this.gatewayFee,
+    this.netProfit,
+    this.cleanerPayoutStatus,
+    this.status,
+    this.bedrooms,
+    this.bathrooms,
+    this.kitchen,
+    this.squareFootage,
+    this.notesCleaner,
+    this.rawJson,
   });
 
   factory Appointment.fromJson(Map<String, dynamic> json) {
@@ -69,8 +97,8 @@ class Appointment {
               .toList();
 
     String customerName = json["name"]?.toString() ?? "";
-    if (customerName.isEmpty && json["customer"] != null) {
-      final customer = json["customer"];
+    if (customerName.isEmpty && json["customer"] != null && json["customer"] is Map<String, dynamic>) {
+      final customer = json["customer"] as Map<String, dynamic>;
       customerName = customer["name"]?.toString() ?? "";
       if (customerName.isEmpty) {
         final firstName = customer["firstName"]?.toString() ?? "";
@@ -79,18 +107,37 @@ class Appointment {
       }
     }
 
+    final Map<String, dynamic>? customerObj = json["customer"] is Map<String, dynamic> ? json["customer"] as Map<String, dynamic> : null;
+    final int? bedrooms = customerObj?["bedrooms"] is int ? customerObj!["bedrooms"] as int : int.tryParse(customerObj?["bedrooms"]?.toString() ?? "");
+    final int? bathrooms = customerObj?["bathrooms"] is int ? customerObj!["bathrooms"] as int : int.tryParse(customerObj?["bathrooms"]?.toString() ?? "");
+    final int? kitchen = customerObj?["kitchen"] is int ? customerObj!["kitchen"] as int : int.tryParse(customerObj?["kitchen"]?.toString() ?? "");
+    final int? squareFootage = customerObj?["square_footage"] is int ? customerObj!["square_footage"] as int : int.tryParse(customerObj?["square_footage"]?.toString() ?? "");
+
     return Appointment(
       appointmentId: parsedAppointmentId,
       jobId: parsedJobId,
       type: json["title"]?.toString() ?? json["type"]?.toString() ?? "",
       description: json["description"]?.toString() ?? "",
-      pay: json["price"]?.toString() ?? json["cleaner_pay"]?.toString() ?? "0.00",
-      address: json["address"]?.toString() ?? "",
+      pay: json["cleaner_pay"]?.toString() ?? json["price"]?.toString() ?? "0.00",
+      address: json["address"]?.toString() ?? (customerObj?["address"]?.toString() ?? ""),
       date: json["date"]?.toString() ?? "",
       startTime: json["startTime"]?.toString() ?? json["start_time"]?.toString() ?? "",
       endTime: json["endTime"]?.toString() ?? json["end_time"]?.toString() ?? "",
       occurrences: parsedOccurrences,
       customerName: customerName,
+      paymentStatus: json["payment_status"]?.toString(),
+      paymentMethod: json["payment_method"]?.toString(),
+      grossProfit: json["gross_profit"]?.toString(),
+      gatewayFee: json["gateway_fee"]?.toString(),
+      netProfit: json["net_profit"]?.toString(),
+      cleanerPayoutStatus: json["cleaner_payout_status"]?.toString(),
+      status: json["status"]?.toString(),
+      bedrooms: bedrooms,
+      bathrooms: bathrooms,
+      kitchen: kitchen,
+      squareFootage: squareFootage,
+      notesCleaner: json["notes_cleaner"]?.toString(),
+      rawJson: json,
     );
   }
 }
