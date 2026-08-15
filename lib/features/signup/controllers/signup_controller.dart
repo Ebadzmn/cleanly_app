@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/api_config.dart';
 import '../../../../services/localization_service.dart';
 import '../../../../services/network_caller.dart';
+import '../../../../services/notification_service.dart';
 import '../../login/pages/login_page.dart';
 import '../../login/controllers/login_controller.dart';
 
@@ -20,6 +23,7 @@ class SignupController extends GetxController {
   final TextEditingController addressController = TextEditingController();
 
   var selectedLanguage = "English".obs;
+  var isContractor = true.obs;
 
   var obscurePassword = true.obs;
   var obscureReEnterPassword = true.obs;
@@ -97,6 +101,13 @@ class SignupController extends GetxController {
     final url = Uri.parse(ApiConfig.buildUrl("/api/auth/register/cleaner"));
 
     try {
+      String deviceToken = NotificationService().fcmToken ?? "";
+      String deviceType = kIsWeb
+          ? "web"
+          : (Platform.isAndroid
+              ? "android"
+              : (Platform.isIOS ? "ios" : "android"));
+
       final response = await NetworkCaller.post(
         url,
         body: json.encode({
@@ -110,6 +121,9 @@ class SignupController extends GetxController {
           "ssn": ssnController.text.trim(),
           "address": addressController.text.trim(),
           "profilePhoto": "",
+          "isContractor": isContractor.value,
+          "deviceToken": deviceToken,
+          "deviceType": deviceType,
         }),
       );
 

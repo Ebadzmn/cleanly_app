@@ -1,6 +1,6 @@
 class ApiConfig {
   static const String baseUrl = "https://api.cleanly.sbs";
-  // static const String baseUrl = "http://10.10.7.102:5000";
+  // static const String baseUrl = "http://10.10.26.199:5000";
 
   static const String previousBaseUrl = "";
   static String buildUrl(String endpoint) {
@@ -12,10 +12,10 @@ class ApiConfig {
 
   static String getFullImageUrl(String? url) {
     if (url == null || url.isEmpty) return "";
-    
+
     // Fix for Windows paths returned by backend
     url = url.replaceAll('\\', '/');
-    
+
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
     if (url.startsWith("/")) {
       return "$baseUrl$url";
@@ -65,9 +65,16 @@ class ApiConfig {
     int height = 300,
     int zoom = 15,
   }) {
-    final bool hasValidCoordinates = lat != null && lat.isNotEmpty && lat != "0" && lat != "0.0" && 
-                                     lng != null && lng.isNotEmpty && lng != "0" && lng != "0.0";
-    
+    final bool hasValidCoordinates =
+        lat != null &&
+        lat.isNotEmpty &&
+        lat != "0" &&
+        lat != "0.0" &&
+        lng != null &&
+        lng.isNotEmpty &&
+        lng != "0" &&
+        lng != "0.0";
+
     if (hasValidCoordinates) {
       try {
         final double latValue = double.parse(lat!);
@@ -80,7 +87,7 @@ class ApiConfig {
       final encodedAddress = Uri.encodeComponent(address);
       return "https://maps.googleapis.com/maps/api/staticmap?center=$encodedAddress&zoom=$zoom&size=${width}x${height}&maptype=roadmap&markers=color:red%7C$encodedAddress&key=$googleMapsApiKey";
     }
-    
+
     return null;
   }
 }

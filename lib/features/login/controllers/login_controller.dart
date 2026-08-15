@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -100,11 +102,16 @@ class LoginController extends GetxController {
     }
 
     isLoading.value = true;
-    final url = Uri.parse(ApiConfig.buildUrl('api/auth/login'));
+    final url = Uri.parse(ApiConfig.buildUrl('/api/auth/login/cleaner'));
 
     try {
       String deviceToken = NotificationService().fcmToken ?? "";
-      debugPrint("Device Token: $deviceToken");
+      String deviceType = kIsWeb
+          ? "web"
+          : (Platform.isAndroid
+              ? "android"
+              : (Platform.isIOS ? "ios" : "android"));
+      debugPrint("Device Token: $deviceToken, Device Type: $deviceType");
 
       final response = await NetworkCaller.post(
         url,
@@ -112,6 +119,7 @@ class LoginController extends GetxController {
           "email": emailController.text.trim(),
           "password": passwordController.text,
           "deviceToken": deviceToken,
+          "deviceType": deviceType,
         }),
       );
 
@@ -127,7 +135,10 @@ class LoginController extends GetxController {
           await secureStorage.write(key: 'auth_token', value: token);
 
           SharedPreferences prefs = await SharedPreferences.getInstance();
-          await prefs.setString('token', token); // Needed for backwards compatibility
+          await prefs.setString(
+            'token',
+            token,
+          ); // Needed for backwards compatibility
           await prefs.setString('id', user['id'].toString());
           await prefs.setString('role', (user['role'] ?? "").toString());
           await prefs.setString('phone', (user['phone'] ?? "").toString());

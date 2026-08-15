@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../services/localization_service.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import '../models/appointment_model.dart';
 import '../controllers/jobs_controller.dart';
 import 'package:get/get.dart';
@@ -21,22 +22,18 @@ class JobCardWidget extends StatelessWidget {
   Map<String, dynamic> _mapAppointmentToJobData() {
     final String scheduleText;
     if (appointment.startTime.isNotEmpty && appointment.endTime.isNotEmpty) {
-      final String startFormatted = appointment.startTime.length >= 5
-          ? appointment.startTime.substring(0, 5)
-          : appointment.startTime;
-      final String endFormatted = appointment.endTime.length >= 5
-          ? appointment.endTime.substring(0, 5)
-          : appointment.endTime;
+      final String startFormatted = DateTimeUtils.formatSingleTime(appointment.startTime);
+      final String endFormatted = DateTimeUtils.formatSingleTime(appointment.endTime);
       scheduleText = "$startFormatted - $endFormatted";
     } else if (appointment.startTime.isNotEmpty) {
-      scheduleText = appointment.startTime.length >= 5
-          ? appointment.startTime.substring(0, 5)
-          : appointment.startTime;
+      scheduleText = DateTimeUtils.formatSingleTime(appointment.startTime);
+    } else if (appointment.endTime.isNotEmpty) {
+      scheduleText = DateTimeUtils.formatSingleTime(appointment.endTime);
     } else {
-      scheduleText = appointment.endTime.length >= 5
-          ? appointment.endTime.substring(0, 5)
-          : appointment.endTime;
+      scheduleText = "";
     }
+
+    final String formattedDate = DateTimeUtils.formatDate(appointment.date);
 
     final String formattedAddress;
     final String address = appointment.address.trim();
@@ -56,7 +53,7 @@ class JobCardWidget extends StatelessWidget {
       "appointment_id": appointment.appointmentId,
       "name": appointment.customerName,
       "status": statusLabel,
-      "date": appointment.date,
+      "date": formattedDate.isNotEmpty ? formattedDate : appointment.date,
       "time": scheduleText,
       "location": address, // Full address for display
       "cleaner_pay": appointment.pay,
@@ -477,7 +474,13 @@ class JobCardWidget extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildIconText(Icons.calendar_today_outlined, "${jobData["date"]}, ${jobData["time"]}", size: 12),
+                      _buildIconText(
+                        Icons.calendar_today_outlined,
+                        jobData["time"].toString().isNotEmpty
+                            ? "${jobData["date"]} • ${jobData["time"]}"
+                            : jobData["date"].toString(),
+                        size: 12,
+                      ),
                       if (tabIndex != 3) const Icon(Icons.chevron_right, color: Color(0xFF8C8476), size: 20),
                     ],
                   ),
@@ -707,7 +710,13 @@ class JobCardWidget extends StatelessWidget {
                             const Divider(height: 16, color: Color(0xFFF3F4F6)),
                             _buildDetailRow(Icons.location_on_outlined, "Address", jobData["location"]),
                             const Divider(height: 16, color: Color(0xFFF3F4F6)),
-                            _buildDetailRow(Icons.calendar_today_outlined, "Date & Time", "${jobData["date"]}, ${jobData["time"]}"),
+                            _buildDetailRow(
+                              Icons.calendar_today_outlined,
+                              "Date & Time",
+                              jobData["time"].toString().isNotEmpty
+                                  ? "${jobData["date"]} • ${jobData["time"]}"
+                                  : jobData["date"].toString(),
+                            ),
                           ],
                         ),
                       ),

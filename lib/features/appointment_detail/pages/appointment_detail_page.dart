@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../services/localization_service.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../controllers/appointment_detail_controller.dart';
@@ -1291,24 +1292,11 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
 
   String _formatDate(String dateString) {
     if (dateString.isEmpty) return LocalizationService().translate("common.na") ?? "N/A";
-    try {
-      final DateTime date = DateTime.parse(dateString);
-      final List<String> months = [
-        "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-      ];
-      return "${months[date.month]} ${date.day}, ${date.year}";
-    } catch (e) {
-      if (dateString.contains("T")) {
-        return dateString.split("T").first;
-      }
-      return dateString;
-    }
+    final formatted = DateTimeUtils.formatDate(dateString);
+    return formatted.isNotEmpty ? formatted : dateString;
   }
 
   String _formatTime(String timeString) {
-    if (timeString.isEmpty) return "";
-    if (timeString.length >= 5) return timeString.substring(0, 5);
-    return timeString;
+    return DateTimeUtils.formatTime(timeString);
   }
 }
