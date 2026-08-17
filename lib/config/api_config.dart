@@ -1,6 +1,6 @@
 class ApiConfig {
-  static const String baseUrl = "https://api.cleanly.sbs";
-  // static const String baseUrl = "http://10.10.26.199:5000";
+  // static const String baseUrl = "https://api.cleanly.sbs";
+  static const String baseUrl = "http://10.10.26.199:5000";
 
   static const String previousBaseUrl = "";
   static String buildUrl(String endpoint) {
