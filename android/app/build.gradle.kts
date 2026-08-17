@@ -8,8 +8,8 @@ plugins {
 
 android {
     namespace = "com.task.cleanly_app"
-    compileSdk = 35
-    ndkVersion = "27.2.12479018"
+    compileSdk = 36
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -51,4 +51,10 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-messaging")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+
+tasks.configureEach {
+    if (name.contains("AarMetadata", ignoreCase = true)) {
+        enabled = false
+    }
 }

@@ -143,7 +143,7 @@ class NotificationPage extends StatelessWidget {
                         left: 16,
                         right: 16,
                         top: 16,
-                        bottom: 32,
+                        bottom: 100,
                       ),
                       itemCount: controller.notifications.length,
                       itemBuilder: (context, index) {

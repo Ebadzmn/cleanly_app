@@ -333,7 +333,12 @@ class JobsPage extends StatelessWidget {
                   "No $statusLabel appointments available",
             )
           : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 8,
+                bottom: 100,
+              ),
               itemCount: appointments.length,
               itemBuilder: (context, index) {
                 return JobCardWidget(
