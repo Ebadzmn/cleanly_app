@@ -197,7 +197,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildCustomerProfileCard(
-                  customerName,
+                  customerName.isNotEmpty ? customerName : detail.name,
                   detail.firstName,
                   detail.lastName,
                   status,

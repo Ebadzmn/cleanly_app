@@ -113,28 +113,56 @@ class AppointmentDetailData {
               .map(AppointmentOccurrenceDetail.fromJson)
               .toList();
 
+    Map<String, dynamic>? customerObj;
+    if (json["customer"] is Map<String, dynamic>) {
+      customerObj = json["customer"] as Map<String, dynamic>;
+    } else if (json["user"] is Map<String, dynamic>) {
+      customerObj = json["user"] as Map<String, dynamic>;
+    } else if (json["client"] is Map<String, dynamic>) {
+      customerObj = json["client"] as Map<String, dynamic>;
+    }
+
+    String parsedName = json["name"]?.toString() ??
+        json["customer_name"]?.toString() ??
+        json["client_name"]?.toString() ??
+        "";
+    String parsedFirstName = json["firstName"]?.toString() ??
+        json["first_name"]?.toString() ??
+        "";
+    String parsedLastName = json["lastName"]?.toString() ??
+        json["last_name"]?.toString() ??
+        "";
+
+    if (customerObj != null) {
+      if (parsedName.isEmpty) {
+        parsedName = customerObj["name"]?.toString() ??
+            customerObj["customer_name"]?.toString() ??
+            "";
+      }
+      if (parsedFirstName.isEmpty) {
+        parsedFirstName = customerObj["firstName"]?.toString() ??
+            customerObj["first_name"]?.toString() ??
+            "";
+      }
+      if (parsedLastName.isEmpty) {
+        parsedLastName = customerObj["lastName"]?.toString() ??
+            customerObj["last_name"]?.toString() ??
+            "";
+      }
+    }
+
+    if (parsedName.isEmpty && (parsedFirstName.isNotEmpty || parsedLastName.isNotEmpty)) {
+      parsedName = "$parsedFirstName $parsedLastName".trim();
+    }
+
     String parsedEmail = json["email"]?.toString() ?? json["customer_email"]?.toString() ?? json["user_email"]?.toString() ?? json["client_email"]?.toString() ?? "";
     String parsedPhone = json["phone"]?.toString() ?? json["phone_number"]?.toString() ?? json["customer_phone"]?.toString() ?? json["mobile"]?.toString() ?? json["contact_number"]?.toString() ?? json["client_phone"]?.toString() ?? "";
 
-    if (parsedEmail.isEmpty && json["customer"] != null) {
-      parsedEmail = json["customer"]["email"]?.toString() ?? "";
+    if (parsedEmail.isEmpty && customerObj != null) {
+      parsedEmail = customerObj["email"]?.toString() ?? "";
     }
-    if (parsedPhone.isEmpty && json["customer"] != null) {
-      parsedPhone = json["customer"]["phone"]?.toString() ?? json["customer"]["phone_number"]?.toString() ?? json["customer"]["mobile"]?.toString() ?? json["customer"]["contact_number"]?.toString() ?? "";
-    }
-
-    if (parsedEmail.isEmpty && json["user"] != null) {
-      parsedEmail = json["user"]["email"]?.toString() ?? "";
-    }
-    if (parsedPhone.isEmpty && json["user"] != null) {
-      parsedPhone = json["user"]["phone"]?.toString() ?? json["user"]["phone_number"]?.toString() ?? json["user"]["mobile"]?.toString() ?? json["user"]["contact_number"]?.toString() ?? "";
-    }
-    
-    if (parsedEmail.isEmpty && json["client"] != null) {
-      parsedEmail = json["client"]["email"]?.toString() ?? "";
-    }
-    if (parsedPhone.isEmpty && json["client"] != null) {
-      parsedPhone = json["client"]["phone"]?.toString() ?? json["client"]["phone_number"]?.toString() ?? json["client"]["mobile"]?.toString() ?? json["client"]["contact_number"]?.toString() ?? "";
+    if (parsedPhone.isEmpty && customerObj != null) {
+      parsedPhone = customerObj["phone"]?.toString() ?? customerObj["phone_number"]?.toString() ?? customerObj["mobile"]?.toString() ?? customerObj["contact_number"]?.toString() ?? "";
     }
 
     final addressRaw = json["addressDetails"] ?? json["address"];
@@ -208,10 +236,10 @@ class AppointmentDetailData {
       gateCode: gateCode,
       petNotes: petNotes,
       cleanerInstructions: cleanerInstructions,
-      name: json["name"]?.toString() ?? "",
+      name: parsedName,
       title: json["title"]?.toString() ?? "",
-      firstName: json["first_name"]?.toString() ?? "",
-      lastName: json["last_name"]?.toString() ?? "",
+      firstName: parsedFirstName,
+      lastName: parsedLastName,
       date: json["date"]?.toString() ?? "",
       startTime: json["startTime"]?.toString() ?? json["start_time"]?.toString() ?? "",
       endTime: json["endTime"]?.toString() ?? json["end_time"]?.toString() ?? "",

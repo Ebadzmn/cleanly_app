@@ -91,6 +91,9 @@ class AppointmentDetailController extends GetxController {
           ? "/api/jobs/$appointmentId"
           : "/api/appointments/$appointmentId";
       final Uri url = Uri.parse(ApiConfig.buildUrl(endpoint));
+      print("========== 🌐 FETCHING DETAILS API ==========");
+      print("isJob: $isJob | Endpoint: $endpoint");
+      print("============================================");
       final response = await NetworkCaller.get(url);
 
       if (response.isSuccess) {

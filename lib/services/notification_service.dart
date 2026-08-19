@@ -1,4 +1,6 @@
 import "dart:convert";
+import "package:get/get.dart";
+import "../features/appointment_detail/pages/appointment_detail_page.dart";
 
 import "package:cleanly_app/firebase_file/firebase_options.dart";
 import "package:firebase_core/firebase_core.dart";
@@ -20,10 +22,12 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     debugPrint('Error initializing Firebase in background handler: $e');
   }
 
-  debugPrint('Handling background message: ${message.messageId}');
-  debugPrint('Message data: ${message.data}');
-  debugPrint('Message notification: ${message.notification?.title}');
-  debugPrint('Message notification body: ${message.notification?.body}');
+  print("========== 🔔 BACKGROUND FCM RECEIVED ==========");
+  print("Message ID: ${message.messageId}");
+  print("Title: ${message.notification?.title}");
+  print("Body: ${message.notification?.body}");
+  print("Data: ${json.encode(message.data)}");
+  print("===============================================");
 
   final FlutterLocalNotificationsPlugin localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -129,7 +133,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
             presentSound: true,
           ),
         ),
-        payload: message.data.toString(),
+        payload: json.encode(message.data),
       );
 
       await NotificationService._storeNotificationLocallyStatic(
@@ -296,10 +300,12 @@ class NotificationService {
   }
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    debugPrint('Received foreground message: ${message.messageId}');
-    debugPrint('Message data: ${message.data}');
-    debugPrint('Message notification title: ${message.notification?.title}');
-    debugPrint('Message notification body: ${message.notification?.body}');
+    print("========== 🔔 FOREGROUND FCM RECEIVED ==========");
+    print("Message ID: ${message.messageId}");
+    print("Title: ${message.notification?.title}");
+    print("Body: ${message.notification?.body}");
+    print("Data: ${json.encode(message.data)}");
+    print("===============================================");
 
     RemoteNotification? notification = message.notification;
 
@@ -330,6 +336,11 @@ class NotificationService {
             : null,
       );
 
+      final Map<String, dynamic> payloadMap = Map<String, dynamic>.from(message.data);
+      if (notification.title != null) {
+        payloadMap["_notification_title"] = notification.title;
+      }
+
       await _localNotifications.show(
         notification.hashCode,
         notification.title,
@@ -342,7 +353,7 @@ class NotificationService {
             presentSound: true,
           ),
         ),
-        payload: message.data.toString(),
+        payload: json.encode(payloadMap),
       );
 
       await _storeNotificationLocally(
@@ -465,13 +476,113 @@ class NotificationService {
     }
   }
 
+  void _navigateToNotificationDetails(Map<String, dynamic> data, {String? title}) {
+    print("========== 🚀 NAVIGATING FROM NOTIFICATION ==========");
+    print("Payload Data: ${json.encode(data)}");
+    if (title != null) print("Notification Title: $title");
+
+    final String type = (data["type"]?.toString() ?? "").toLowerCase();
+    final String titleLower = (title ?? data["_notification_title"]?.toString() ?? data["title"]?.toString() ?? "").toLowerCase();
+    final String route = (data["route"]?.toString() ?? "").toLowerCase();
+
+    final String? appointmentId = data["appointmentId"]?.toString() ??
+        data["appointment_id"]?.toString() ??
+        data["id"]?.toString();
+    final String? jobId = data["jobId"]?.toString() ??
+        data["job_id"]?.toString() ??
+        data["id"]?.toString();
+
+    // 1. APPOINTMENT Notification: Checks type or title containing "appointment" or route
+    final bool isAppointment = type.contains("appointment") ||
+        titleLower.contains("appointment") ||
+        route == "/appointment-details";
+
+    if (isAppointment) {
+      final String? targetId = (appointmentId != null && appointmentId.isNotEmpty)
+          ? appointmentId
+          : jobId;
+
+      if (targetId != null && targetId.isNotEmpty) {
+        final Map<String, dynamic> appointmentData = {
+          "appointment_id": targetId,
+          "id": targetId,
+          "occurrenceId": data["occurrenceId"]?.toString() ?? data["occurrence_id"]?.toString(),
+          "type": data["type"]?.toString() ?? "appointment_assigned",
+        };
+
+        print("Type: APPOINTMENT NOTIFICATION | ID: $targetId | isJob: false");
+        print("=====================================================");
+
+        Get.to(() => AppointmentDetailPage(appointmentData: appointmentData, isJob: false));
+        return;
+      }
+    }
+
+    // 2. JOB Notification: Checks type, title containing "job", or route
+    final bool isJob = type == "new_job_available" ||
+        type.contains("job") ||
+        titleLower.contains("job") ||
+        route == "/job-details";
+
+    if (isJob && jobId != null && jobId.isNotEmpty) {
+      final Map<String, dynamic> jobData = {
+        "job_id": jobId,
+        "id": jobId,
+        "occurrenceId": data["occurrenceId"]?.toString() ?? data["occurrence_id"]?.toString(),
+        "type": data["type"]?.toString() ?? "new_job_available",
+      };
+
+      print("Type: JOB NOTIFICATION | Job ID: $jobId | isJob: true");
+      print("=====================================================");
+
+      Get.to(() => AppointmentDetailPage(appointmentData: jobData, isJob: true));
+      return;
+    }
+
+    // 3. Fallback
+    final String? fallbackId = jobId ?? appointmentId;
+    if (fallbackId != null && fallbackId.isNotEmpty) {
+      final Map<String, dynamic> fallbackData = {
+        "appointment_id": fallbackId,
+        "job_id": fallbackId,
+        "id": fallbackId,
+        "occurrenceId": data["occurrenceId"]?.toString() ?? data["occurrence_id"]?.toString(),
+        "type": data["type"]?.toString() ?? "",
+      };
+
+      print("Type: FALLBACK NOTIFICATION | ID: $fallbackId | isJob: false");
+      print("=====================================================");
+
+      Get.to(() => AppointmentDetailPage(appointmentData: fallbackData, isJob: false));
+      return;
+    }
+
+    print("⚠️ No valid jobId or appointmentId found in notification data");
+    print("=====================================================");
+  }
+
   void _handleNotificationTap(RemoteMessage message) {
-    debugPrint('Notification tapped: ${message.messageId}');
-    debugPrint('Message data: ${message.data}');
+    print("========== 🔔 NOTIFICATION TAPPED (FCM) ==========");
+    print("Message ID: ${message.messageId}");
+    print("Title: ${message.notification?.title}");
+    print("Data: ${json.encode(message.data)}");
+    print("==================================================");
+    _navigateToNotificationDetails(message.data, title: message.notification?.title);
   }
 
   void _onNotificationTapped(NotificationResponse response) {
-    debugPrint('Local notification tapped: ${response.payload}');
+    print("========== 🔔 LOCAL NOTIFICATION TAPPED ==========");
+    print("Payload: ${response.payload}");
+    print("==================================================");
+    if (response.payload != null && response.payload!.isNotEmpty) {
+      try {
+        final Map<String, dynamic> data =
+            json.decode(response.payload!) as Map<String, dynamic>;
+        _navigateToNotificationDetails(data);
+      } catch (e) {
+        debugPrint('Error decoding notification payload: $e');
+      }
+    }
   }
 
   Future<void> subscribeToTopic(String topic) async {
