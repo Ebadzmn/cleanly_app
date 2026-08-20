@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ProfileFormFieldWidget extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final String placeholder;
   final TextInputType keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
   final bool isPassword;
   final bool isReEnterPassword;
   final bool readOnly;
@@ -18,6 +20,7 @@ class ProfileFormFieldWidget extends StatelessWidget {
     required this.controller,
     required this.placeholder,
     this.keyboardType = TextInputType.text,
+    this.inputFormatters,
     this.isPassword = false,
     this.isReEnterPassword = false,
     this.readOnly = false,
@@ -70,6 +73,7 @@ class ProfileFormFieldWidget extends StatelessWidget {
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,
+            inputFormatters: inputFormatters,
             readOnly: readOnly,
             enabled: !readOnly,
             obscureText: obscureText,

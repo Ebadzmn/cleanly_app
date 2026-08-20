@@ -68,7 +68,7 @@ import UserNotifications
   ) {
     let userInfo = notification.request.content.userInfo
     Messaging.messaging().appDidReceiveMessage(userInfo)
-    completionHandler([.alert, .badge, .sound])
+    super.userNotificationCenter(center, willPresent: notification, withCompletionHandler: completionHandler)
   }
 
   override func userNotificationCenter(
@@ -78,6 +78,6 @@ import UserNotifications
   ) {
     let userInfo = response.notification.request.content.userInfo
     Messaging.messaging().appDidReceiveMessage(userInfo)
-    completionHandler()
+    super.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
   }
 }

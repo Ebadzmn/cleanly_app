@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "515872402480",
+    "project_id": "ddevcleanerapp",
+    "storage_bucket": "ddevcleanerapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:515872402480:android:a056b202d97337da4751f5",
+        "android_client_info": {
+          "package_name": "com.cleanly.task.app2026"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArzYP4k_tLPiqOxKtChpba3qJYtLJrupA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

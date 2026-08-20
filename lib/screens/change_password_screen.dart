@@ -35,6 +35,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       return;
     }
 
+    if (oldPassword == newPassword) {
+      _showSnackBar("New password must be different from your old password.");
+      return;
+    }
+
     if (newPassword != confirmPassword) {
       _showSnackBar("New passwords do not match");
       return;

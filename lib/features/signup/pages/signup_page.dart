@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import '../../../../core/utils/ssn_input_formatter.dart';
 import '../../../../services/localization_service.dart';
 import '../../login/pages/login_page.dart';
 import '../controllers/signup_controller.dart';
@@ -211,8 +213,10 @@ class _SignupPageState extends State<SignupPage> {
         _buildTextField(
           controller: controller.ssnController,
           label: LocalizationService().translate("signup.ssn") ?? "SSN",
-          hint: LocalizationService().translate("signup.ssnPlaceholder") ?? "XXX-XX-XXXX",
+          hint: LocalizationService().translate("signup.ssnPlaceholder") ?? "222-22-2222",
           icon: Icons.badge_outlined,
+          keyboardType: TextInputType.number,
+          inputFormatters: [SsnInputFormatter()],
           isRequired: true,
         ),
         const SizedBox(height: 20),
@@ -259,6 +263,7 @@ class _SignupPageState extends State<SignupPage> {
     required String hint,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
     bool isRequired = false,
   }) {
     return Column(
@@ -294,6 +299,7 @@ class _SignupPageState extends State<SignupPage> {
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,
+            inputFormatters: inputFormatters,
             style: const TextStyle(fontSize: 16, color: Color(0xFF5A4D3D)),
             decoration: InputDecoration(
               hintText: hint,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/utils/ssn_input_formatter.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/profile_form_field_widget.dart';
 import '../../../../services/localization_service.dart';
@@ -182,7 +183,9 @@ class ProfilePage extends StatelessWidget {
                           ProfileFormFieldWidget(
                             label: "SSN",
                             controller: controller.ssnController,
-                            placeholder: "XXX-XX-1234",
+                            placeholder: "222-22-2222",
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [SsnInputFormatter()],
                           ),
                           const SizedBox(height: 16),
                           Column(

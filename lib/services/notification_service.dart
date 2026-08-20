@@ -6,6 +6,7 @@ import "package:cleanly_app/firebase_file/firebase_options.dart";
 import "package:firebase_core/firebase_core.dart";
 import "package:firebase_messaging/firebase_messaging.dart";
 import "package:flutter/foundation.dart";
+import "package:flutter/widgets.dart";
 import "package:flutter_local_notifications/flutter_local_notifications.dart";
 import "package:http/http.dart" as http;
 import "package:shared_preferences/shared_preferences.dart";
@@ -29,127 +30,15 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print("Data: ${json.encode(message.data)}");
   print("===============================================");
 
-  final FlutterLocalNotificationsPlugin localNotifications =
-      FlutterLocalNotificationsPlugin();
-
-  const AndroidInitializationSettings androidSettings =
-      AndroidInitializationSettings('ic_launcher_icon');
-
-  const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
-    requestAlertPermission: true,
-    requestBadgePermission: true,
-    requestSoundPermission: true,
-  );
-
-  const InitializationSettings initSettings = InitializationSettings(
-    android: androidSettings,
-    iOS: iosSettings,
-  );
-
-  await localNotifications.initialize(initSettings);
-
-  const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'high_importance_channel',
-    'High Importance Notifications',
-    description: 'This channel is used for important notifications.',
-    importance: Importance.high,
-    playSound: true,
-  );
-
-  await localNotifications
-      .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin
-      >()
-      ?.createNotificationChannel(channel);
-
-  String? getImageUrl(RemoteMessage message) {
-    if (message.data.containsKey('image')) {
-      return message.data['image'] as String?;
-    }
-    if (message.data.containsKey('image_url')) {
-      return message.data['image_url'] as String?;
-    }
-    if (message.data.containsKey('imageUrl')) {
-      return message.data['imageUrl'] as String?;
-    }
-    if (message.notification?.android?.imageUrl != null) {
-      return message.notification!.android!.imageUrl;
-    }
-    return null;
-  }
-
-  Future<ByteArrayAndroidBitmap?> downloadImage(String imageUrl) async {
-    try {
-      final response = await http.get(Uri.parse(imageUrl));
-      if (response.statusCode == 200) {
-        return ByteArrayAndroidBitmap(response.bodyBytes);
-      } else {
-        debugPrint('Failed to download image: ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      debugPrint('Error downloading image: $e');
-      return null;
-    }
-  }
-
   try {
-    if (message.notification != null) {
-      String? imageUrl = getImageUrl(message);
-      ByteArrayAndroidBitmap? bigPicture;
-
-      if (imageUrl != null && imageUrl.isNotEmpty) {
-        debugPrint('Background: Image URL found: $imageUrl');
-        bigPicture = await downloadImage(imageUrl);
-      }
-
-      final androidDetails = AndroidNotificationDetails(
-        'high_importance_channel',
-        'High Importance Notifications',
-        channelDescription: 'This channel is used for important notifications.',
-        importance: Importance.high,
-        priority: Priority.high,
-        showWhen: true,
-        icon: 'ic_launcher_icon',
-        largeIcon: bigPicture,
-        styleInformation: bigPicture != null
-            ? BigPictureStyleInformation(
-                bigPicture,
-                contentTitle: message.notification?.title ?? '',
-                summaryText: message.notification?.body ?? '',
-              )
-            : null,
-      );
-
-      await localNotifications.show(
-        message.hashCode,
-        message.notification?.title ?? '',
-        message.notification?.body ?? "",
-        NotificationDetails(
-          android: androidDetails,
-          iOS: const DarwinNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true,
-          ),
-        ),
-        payload: json.encode(message.data),
-      );
-
-      await NotificationService._storeNotificationLocallyStatic(
-        message.notification?.title ?? '',
-        message.notification?.body ?? "",
-        message.data,
-      );
-
-      debugPrint("Background notification shown successfully");
-    } else {
-      debugPrint(
-        'No notification payload in message, only data: ${message.data}',
-      );
-    }
+    await NotificationService._storeNotificationLocallyStatic(
+      message.notification?.title ?? '',
+      message.notification?.body ?? "",
+      message.data,
+    );
+    debugPrint("Background notification processed successfully");
   } catch (e) {
-    debugPrint('Error showing background notification: $e');
+    debugPrint('Error processing background notification: $e');
   }
 }
 
@@ -194,6 +83,12 @@ class NotificationService {
       }
 
       await _initializeLocalNotifications();
+
+      await _firebaseMessaging.setForegroundNotificationPresentationOptions(
+        alert: false,
+        badge: true,
+        sound: true,
+      );
 
       await _getFCMToken();
 
@@ -339,6 +234,10 @@ class NotificationService {
       final Map<String, dynamic> payloadMap = Map<String, dynamic>.from(message.data);
       if (notification.title != null) {
         payloadMap["_notification_title"] = notification.title;
+        payloadMap["title"] = notification.title;
+      }
+      if (notification.body != null) {
+        payloadMap["body"] = notification.body;
       }
 
       await _localNotifications.show(
@@ -476,84 +375,112 @@ class NotificationService {
     }
   }
 
-  void _navigateToNotificationDetails(Map<String, dynamic> data, {String? title}) {
+  static Map<String, dynamic>? _pendingNotificationData;
+  static String? _pendingNotificationTitle;
+
+  static void checkAndHandlePendingNotification() {
+    if (_pendingNotificationData != null) {
+      final data = Map<String, dynamic>.from(_pendingNotificationData!);
+      final title = _pendingNotificationTitle;
+      _pendingNotificationData = null;
+      _pendingNotificationTitle = null;
+      debugPrint("🚀 Executing pending notification navigation...");
+      NotificationService().navigateToNotificationDetails(data, title: title);
+    }
+  }
+
+  void navigateToNotificationDetails(Map<String, dynamic> rawData, {String? title}) {
     print("========== 🚀 NAVIGATING FROM NOTIFICATION ==========");
-    print("Payload Data: ${json.encode(data)}");
+    print("Payload Data: ${json.encode(rawData)}");
     if (title != null) print("Notification Title: $title");
 
-    final String type = (data["type"]?.toString() ?? "").toLowerCase();
+    if (Get.key.currentState == null || Get.context == null) {
+      print("⚠️ Navigator context is not ready yet. Storing pending notification.");
+      _pendingNotificationData = rawData;
+      _pendingNotificationTitle = title;
+      return;
+    }
+
+    Map<String, dynamic> data = Map<String, dynamic>.from(rawData);
+    if (data.containsKey("data")) {
+      if (data["data"] is Map) {
+        data.addAll(Map<String, dynamic>.from(data["data"] as Map));
+      } else if (data["data"] is String) {
+        try {
+          final decoded = json.decode(data["data"] as String);
+          if (decoded is Map<String, dynamic>) {
+            data.addAll(decoded);
+          }
+        } catch (_) {}
+      }
+    }
+
+    final String type = (data["type"]?.toString() ?? data["notification_type"]?.toString() ?? "").toLowerCase();
     final String titleLower = (title ?? data["_notification_title"]?.toString() ?? data["title"]?.toString() ?? "").toLowerCase();
     final String route = (data["route"]?.toString() ?? "").toLowerCase();
 
     final String? appointmentId = data["appointmentId"]?.toString() ??
         data["appointment_id"]?.toString() ??
+        data["appointmentID"]?.toString() ??
+        data["booking_id"]?.toString() ??
+        data["bookingId"]?.toString() ??
         data["id"]?.toString();
+
     final String? jobId = data["jobId"]?.toString() ??
         data["job_id"]?.toString() ??
+        data["jobID"]?.toString() ??
+        data["job"]?.toString() ??
         data["id"]?.toString();
 
-    // 1. APPOINTMENT Notification: Checks type or title containing "appointment" or route
-    final bool isAppointment = type.contains("appointment") ||
-        titleLower.contains("appointment") ||
-        route == "/appointment-details";
+    final String? occurrenceId = data["occurrenceId"]?.toString() ?? data["occurrence_id"]?.toString();
 
-    if (isAppointment) {
-      final String? targetId = (appointmentId != null && appointmentId.isNotEmpty)
-          ? appointmentId
-          : jobId;
+    bool isJob = false;
 
-      if (targetId != null && targetId.isNotEmpty) {
-        final Map<String, dynamic> appointmentData = {
-          "appointment_id": targetId,
-          "id": targetId,
-          "occurrenceId": data["occurrenceId"]?.toString() ?? data["occurrence_id"]?.toString(),
-          "type": data["type"]?.toString() ?? "appointment_assigned",
-        };
+    // Prioritize title and type to distinguish between Appointment API and Job API:
+    if (titleLower.contains("appointment") || type.contains("appointment")) {
+      isJob = false;
+    } else if (titleLower.contains("job") || type.contains("job") || type == "new_job_available") {
+      isJob = true;
+    } else if (data["is_appointment"] == "true" || data["isAppointment"] == true) {
+      isJob = false;
+    } else if (data["is_job"] == "true" || data["isJob"] == true) {
+      isJob = true;
+    } else if (route == "/appointment-details") {
+      isJob = false;
+    } else if (route == "/job-details") {
+      isJob = true;
+    } else if (data.containsKey("appointment_id") || data.containsKey("appointmentId")) {
+      isJob = false;
+    } else if (data.containsKey("job_id") || data.containsKey("jobId")) {
+      isJob = true;
+    }
 
-        print("Type: APPOINTMENT NOTIFICATION | ID: $targetId | isJob: false");
-        print("=====================================================");
+    final String? targetId = isJob
+        ? (jobId != null && jobId.isNotEmpty ? jobId : appointmentId)
+        : (appointmentId != null && appointmentId.isNotEmpty ? appointmentId : jobId);
 
-        Get.to(() => AppointmentDetailPage(appointmentData: appointmentData, isJob: false));
-        return;
+    if (targetId != null && targetId.isNotEmpty) {
+      final Map<String, dynamic> targetData = {
+        "appointment_id": targetId,
+        "job_id": targetId,
+        "id": targetId,
+        if (occurrenceId != null) "occurrenceId": occurrenceId,
+        "type": data["type"]?.toString() ?? (isJob ? "new_job_available" : "appointment_assigned"),
+        "date": data["date"]?.toString() ?? "",
+      };
+
+      print("Type: ${isJob ? "JOB" : "APPOINTMENT"} NOTIFICATION | Target ID: $targetId | isJob: $isJob");
+      print("=====================================================");
+
+      void performNavigation() {
+        Get.to(() => AppointmentDetailPage(appointmentData: targetData, isJob: isJob));
       }
-    }
 
-    // 2. JOB Notification: Checks type, title containing "job", or route
-    final bool isJob = type == "new_job_available" ||
-        type.contains("job") ||
-        titleLower.contains("job") ||
-        route == "/job-details";
-
-    if (isJob && jobId != null && jobId.isNotEmpty) {
-      final Map<String, dynamic> jobData = {
-        "job_id": jobId,
-        "id": jobId,
-        "occurrenceId": data["occurrenceId"]?.toString() ?? data["occurrence_id"]?.toString(),
-        "type": data["type"]?.toString() ?? "new_job_available",
-      };
-
-      print("Type: JOB NOTIFICATION | Job ID: $jobId | isJob: true");
-      print("=====================================================");
-
-      Get.to(() => AppointmentDetailPage(appointmentData: jobData, isJob: true));
-      return;
-    }
-
-    // 3. Fallback
-    final String? fallbackId = jobId ?? appointmentId;
-    if (fallbackId != null && fallbackId.isNotEmpty) {
-      final Map<String, dynamic> fallbackData = {
-        "appointment_id": fallbackId,
-        "job_id": fallbackId,
-        "id": fallbackId,
-        "occurrenceId": data["occurrenceId"]?.toString() ?? data["occurrence_id"]?.toString(),
-        "type": data["type"]?.toString() ?? "",
-      };
-
-      print("Type: FALLBACK NOTIFICATION | ID: $fallbackId | isJob: false");
-      print("=====================================================");
-
-      Get.to(() => AppointmentDetailPage(appointmentData: fallbackData, isJob: false));
+      if (Get.context != null) {
+        performNavigation();
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) => performNavigation());
+      }
       return;
     }
 
@@ -567,7 +494,7 @@ class NotificationService {
     print("Title: ${message.notification?.title}");
     print("Data: ${json.encode(message.data)}");
     print("==================================================");
-    _navigateToNotificationDetails(message.data, title: message.notification?.title);
+    navigateToNotificationDetails(message.data, title: message.notification?.title);
   }
 
   void _onNotificationTapped(NotificationResponse response) {
@@ -578,7 +505,8 @@ class NotificationService {
       try {
         final Map<String, dynamic> data =
             json.decode(response.payload!) as Map<String, dynamic>;
-        _navigateToNotificationDetails(data);
+        final String? title = data["_notification_title"]?.toString() ?? data["title"]?.toString();
+        navigateToNotificationDetails(data, title: title);
       } catch (e) {
         debugPrint('Error decoding notification payload: $e');
       }

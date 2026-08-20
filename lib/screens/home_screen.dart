@@ -19,7 +19,8 @@ import '../features/home/presentation/pages/upcoming_agenda_page.dart';
 import '../features/jobs/pages/jobs_page.dart';
 import '../features/notifications/pages/notification_page.dart';
 import '../features/more/pages/more_page.dart';
-import "package:http/http.dart" as http;
+import '../services/notification_service.dart';
+import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   final String? token;
@@ -83,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToToday();
+      NotificationService.checkAndHandlePendingNotification();
     });
   }
 

@@ -36,20 +36,18 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBDdPtGVH4g8bv1i-B-xu3LtD9SVpbIb98',
-    appId: '1:479709829805:android:c97e4faf7ea5a308ee0424',
-    messagingSenderId: '479709829805',
-    projectId: 'cleanlyflow',
-    databaseURL: 'https://cleanlyflow-default-rtdb.firebaseio.com/',
-    storageBucket: 'cleanlyflow.firebasestorage.app',
+    apiKey: 'AIzaSyArzYP4k_tLPiqOxKtChpba3qJYtLJrupA',
+    appId: '1:515872402480:android:a056b202d97337da4751f5',
+    messagingSenderId: '515872402480',
+    projectId: 'ddevcleanerapp',
+    storageBucket: 'ddevcleanerapp.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBawM1qvPFenrWgJzaAC3eO9-nvsKoyUdM',
-    appId: '1:479709829805:ios:f4ab880e8c3d9447ee0424',
+    appId: '1:479709829805:ios:b150844223529d3aee0424',
     messagingSenderId: '479709829805',
     projectId: 'cleanlyflow',
-    databaseURL: 'https://cleanlyflow-default-rtdb.firebaseio.com/',
     storageBucket: 'cleanlyflow.firebasestorage.app',
     iosBundleId: 'com.cleanly.task.app2026',
   );
