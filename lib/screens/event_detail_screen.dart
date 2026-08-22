@@ -1,5 +1,6 @@
 import "dart:convert";
 import "../core/utils/date_time_utils.dart";
+import "../widgets/app_button.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import "dart:io";
@@ -832,11 +833,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-                  ElevatedButton(
+                  AppButton(
+                    label: LocalizationService().translate("common.retry"),
                     onPressed: _fetchEventDetail,
-                    child: Text(
-                      LocalizationService().translate("common.retry"),
-                    ),
+                    variant: AppButtonVariant.primary,
                   ),
                 ],
               ),

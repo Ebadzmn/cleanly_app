@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../widgets/app_button.dart';
 import '../../../../services/localization_service.dart';
 import '../../../../core/utils/date_time_utils.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -933,68 +934,27 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
             children: [
               Expanded(
                 flex: 2,
-                child: ElevatedButton.icon(
-                  onPressed: () => controller.acceptAppointment(),
-                  icon: const Icon(Icons.check_circle_outline, size: 20),
-                  label: Obx(
-                    () => controller.acceptingAppointmentId.value != null
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Color(0xFF5A4D3D),
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            LocalizationService().translate("jobs.acceptJob") ?? "Accept Job",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF4C535),
-                    foregroundColor: const Color(0xFF5A4D3D),
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                child: Obx(
+                  () => AppButton(
+                    label: LocalizationService().translate("jobs.acceptJob") ?? "Accept Job",
+                    onPressed: () => controller.acceptAppointment(),
+                    variant: AppButtonVariant.primary,
+                    icon: Icons.check_circle_outline,
+                    isLoading: controller.acceptingAppointmentId.value != null,
+                    fullWidth: true,
                   ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 flex: 1,
-                child: OutlinedButton(
-                  onPressed: () => _showDeclineConfirmationDialog(context, controller),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF4B5563),
-                    side: const BorderSide(color: Color(0xFF9CA3AF)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Obx(
-                    () => controller.cancellingAppointmentId.value != null
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Color(0xFF4B5563),
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            LocalizationService().translate("common.decline") ?? "Decline",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                child: Obx(
+                  () => AppButton(
+                    label: LocalizationService().translate("common.decline") ?? "Decline",
+                    onPressed: () => _showDeclineConfirmationDialog(context, controller),
+                    variant: AppButtonVariant.outline,
+                    isLoading: controller.cancellingAppointmentId.value != null,
+                    fullWidth: true,
                   ),
                 ),
               ),
@@ -1206,28 +1166,18 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
             LocalizationService().translate("jobs.confirmDeclineMessage") ?? "Are you sure you want to reject this job request?",
           ),
           actions: [
-            TextButton(
+            AppButton(
+              label: LocalizationService().translate("common.cancel") ?? "Cancel",
+              variant: AppButtonVariant.outline,
               onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                LocalizationService().translate("common.cancel") ?? "Cancel",
-                style: const TextStyle(color: Colors.grey),
-              ),
             ),
-            ElevatedButton(
+            AppButton(
+              label: LocalizationService().translate("common.confirm") ?? "Confirm",
+              variant: AppButtonVariant.danger,
               onPressed: () {
                 Navigator.of(context).pop();
                 controller.cancelAppointment();
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                LocalizationService().translate("common.confirm") ?? "Confirm",
-                style: const TextStyle(color: Colors.white),
-              ),
             ),
           ],
         );

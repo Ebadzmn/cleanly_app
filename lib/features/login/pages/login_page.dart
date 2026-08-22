@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../widgets/app_button.dart';
 import '../../../screens/forget_password_screen.dart';
 import '../../signup/pages/signup_page.dart';
 import '../../../services/localization_service.dart';
@@ -284,55 +285,12 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildLoginButton(LoginController controller) {
     return Obx(
-      () => Container(
-        height: 56,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: const Color(0xFFF4C535),
-        ),
-        child: ElevatedButton(
-          onPressed: controller.isLoading.value ? null : controller.loginUser,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            shadowColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: controller.isLoading.value
-              ? const SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFF5A4D3D),
-                    ),
-                  ),
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      LocalizationService().translate("login.signIn") ??
-                          "Sign In",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF5A4D3D),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(
-                      Icons.arrow_forward,
-                      color: Color(0xFF5A4D3D),
-                      size: 20,
-                    ),
-                  ],
-                ),
-        ),
+      () => AppButton(
+        label: LocalizationService().translate("login.signIn") ?? "Sign In",
+        onPressed: controller.isLoading.value ? null : controller.loginUser,
+        variant: AppButtonVariant.primary,
+        isLoading: controller.isLoading.value,
+        fullWidth: true,
       ),
     );
   }

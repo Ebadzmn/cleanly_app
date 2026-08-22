@@ -28,6 +28,47 @@ class SignupController extends GetxController {
   var obscurePassword = true.obs;
   var obscureReEnterPassword = true.obs;
   var isLoading = false.obs;
+  var addressPredictions = <String>[].obs;
+  var isFetchingAddress = false.obs;
+
+  void fetchAddressPredictions(String query) async {
+    if (query.trim().length < 3) {
+      addressPredictions.clear();
+      return;
+    }
+    isFetchingAddress.value = true;
+    try {
+      final uri = Uri.parse(
+        "https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(query)}&format=json&addressdetails=1&limit=5",
+      );
+      final response = await NetworkCaller.get(
+        uri,
+        headers: {
+          "User-Agent": "CleanlyApp/1.0",
+        },
+      );
+      if (response.isSuccess && response.data is List) {
+        final List list = response.data;
+        final results = list
+            .map((item) => item["display_name"]?.toString() ?? "")
+            .where((str) => str.isNotEmpty)
+            .toList();
+        addressPredictions.assignAll(results);
+      } else {
+        addressPredictions.clear();
+      }
+    } catch (e) {
+      debugPrint("Error fetching address predictions: $e");
+      addressPredictions.clear();
+    } finally {
+      isFetchingAddress.value = false;
+    }
+  }
+
+  void selectAddress(String address) {
+    addressController.text = address;
+    addressPredictions.clear();
+  }
 
   @override
   void onClose() {

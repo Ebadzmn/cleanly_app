@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../widgets/app_button.dart';
 
 import '../config/api_config.dart';
 import '../services/localization_service.dart';
@@ -189,40 +190,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 },
               ),
               const SizedBox(height: 40),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _changePassword,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1E1E1E),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    elevation: 0,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Change Password",
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
-                      if (_isLoading) ...[
-                        const SizedBox(width: 10),
-                        const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.0,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        ),
-                      ]
-                    ],
-                  ),
-                ),
+              AppButton(
+                label: "Change Password",
+                onPressed: _isLoading ? null : _changePassword,
+                variant: AppButtonVariant.primary,
+                isLoading: _isLoading,
+                fullWidth: true,
               ),
             ],
           ),

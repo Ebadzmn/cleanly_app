@@ -1,6 +1,7 @@
 import "dart:convert";
 import "dart:io";
 import "package:flutter/material.dart";
+import "../widgets/app_button.dart";
 import "package:shared_preferences/shared_preferences.dart";
 import "package:url_launcher/url_launcher.dart";
 import "../config/api_config.dart";
@@ -650,48 +651,12 @@ class _ArrivalNotificationScreenState extends State<ArrivalNotificationScreen> {
                   top: BorderSide(color: Color(0xFFE0E0E0), width: 0.5),
                 ),
               ),
-              child: GestureDetector(
-                onTap: _isOnMyWayButtonEnabled ? _updateOnMyWayStatus : null,
-                child: Container(
-                  width: double.infinity,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: _isOnMyWayButtonEnabled
-                        ? const Color(0xFF1e1e1e)
-                        : const Color(0xFFE0E0E0),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        LocalizationService().translate("arrivalNotification.onMyWay"),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: _isOnMyWayButtonEnabled
-                              ? Colors.white
-                              : const Color(0xFF999999),
-                        ),
-                      ),
-                      if (_isUpdating) ...[
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              _isOnMyWayButtonEnabled
-                                  ? Colors.white
-                                  : const Color(0xFF999999),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
+              child: AppButton(
+                label: LocalizationService().translate("arrivalNotification.onMyWay"),
+                onPressed: _isOnMyWayButtonEnabled ? _updateOnMyWayStatus : null,
+                variant: AppButtonVariant.primary,
+                isLoading: _isUpdating,
+                fullWidth: true,
               ),
             ),
           ],

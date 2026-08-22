@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../widgets/app_button.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../services/localization_service.dart';
 import '../../../../core/utils/date_time_utils.dart';
@@ -246,101 +247,61 @@ class JobCardWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: SizedBox(
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      final String? jobId = jobData["job_id"]?.toString();
-                      if (jobId != null) {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                child: AppButton(
+                  label: LocalizationService().translate("common.reject") ?? "Reject",
+                  variant: AppButtonVariant.danger,
+                  onPressed: () {
+                    final String? jobId = jobData["job_id"]?.toString();
+                    if (jobId != null) {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            title: Text(
+                              LocalizationService().translate("jobs.confirmDeclineTitle") ?? "Confirm Rejection",
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            content: Text(
+                              LocalizationService().translate("jobs.confirmDeclineMessage") ?? "Are you sure you want to reject this job request?",
+                            ),
+                            actions: [
+                              AppButton(
+                                label: LocalizationService().translate("common.cancel") ?? "Cancel",
+                                variant: AppButtonVariant.outline,
+                                onPressed: () => Navigator.of(context).pop(),
                               ),
-                              title: Text(
-                                LocalizationService().translate("jobs.confirmDeclineTitle") ?? "Confirm Rejection",
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              AppButton(
+                                label: LocalizationService().translate("common.confirm") ?? "Confirm",
+                                variant: AppButtonVariant.danger,
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  Get.find<JobsController>().cancelAppointment(jobId);
+                                },
                               ),
-                              content: Text(
-                                LocalizationService().translate("jobs.confirmDeclineMessage") ?? "Are you sure you want to reject this job request?",
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: Text(
-                                    LocalizationService().translate("common.cancel") ?? "Cancel",
-                                    style: const TextStyle(color: Colors.grey),
-                                  ),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    Get.find<JobsController>().cancelAppointment(jobId);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    LocalizationService().translate("common.confirm") ?? "Confirm",
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFEE2E2),
-                      foregroundColor: const Color(0xFF991B1B),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      LocalizationService().translate("common.reject") ?? "Reject",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                            ],
+                          );
+                        },
+                      );
+                    }
+                  },
+                  fullWidth: true,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: SizedBox(
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      final String? jobId = jobData["job_id"]?.toString();
-                      if (jobId != null) {
-                        Get.find<JobsController>().acceptAppointment(jobId);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF4C535),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      LocalizationService().translate("common.accept") ?? "Accept",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF5A4D3D),
-                      ),
-                    ),
-                  ),
+                child: AppButton(
+                  label: LocalizationService().translate("common.accept") ?? "Accept",
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () {
+                    final String? jobId = jobData["job_id"]?.toString();
+                    if (jobId != null) {
+                      Get.find<JobsController>().acceptAppointment(jobId);
+                    }
+                  },
+                  fullWidth: true,
                 ),
               ),
             ],
@@ -777,27 +738,11 @@ class JobCardWidget extends StatelessWidget {
                       ],
 
                       const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF4C535),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: Text(
-                            LocalizationService().translate("common.close") ?? "Close",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF5A4D3D),
-                            ),
-                          ),
-                        ),
+                      AppButton(
+                        label: LocalizationService().translate("common.close") ?? "Close",
+                        variant: AppButtonVariant.outline,
+                        onPressed: () => Navigator.of(context).pop(),
+                        fullWidth: true,
                       ),
                       const SizedBox(height: 16),
                     ],

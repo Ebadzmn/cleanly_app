@@ -1,6 +1,7 @@
 import "dart:convert";
 
 import "package:flutter/material.dart";
+import "../widgets/app_button.dart";
 
 import "../config/api_config.dart";
 import "../services/localization_service.dart";
@@ -332,40 +333,12 @@ class _ResetPasswordState extends State<ResetPassword> {
 
 
   Widget _buildGetStartedButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _resetPassword,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1E1E1E),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          elevation: 0,
-        ),
-        child: Row(
-          mainAxisAlignment:MainAxisAlignment.center,
-          crossAxisAlignment:CrossAxisAlignment.center,
-          children: [
-            Text(
-              LocalizationService().translate("common.submit"),
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            if(_isLoading)...[
-              SizedBox(width:10),
-              SizedBox(
-                height: 18,
-                width: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.0,
-                  backgroundColor: Color(0xFF06E0FB),
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-                ),
-              ),
-            ]
-          ],
-        ),
-      ),
+    return AppButton(
+      label: LocalizationService().translate("common.submit"),
+      onPressed: _isLoading ? null : _resetPassword,
+      variant: AppButtonVariant.primary,
+      isLoading: _isLoading,
+      fullWidth: true,
     );
   }
 

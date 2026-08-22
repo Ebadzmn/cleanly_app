@@ -2,6 +2,7 @@ import "dart:convert";
 import "dart:developer";
 
 import "package:cleanly_app/screens/reset_password.dart";
+import "package:cleanly_app/widgets/app_button.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:shared_preferences/shared_preferences.dart";
@@ -46,51 +47,84 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFEEFBFC),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: [0.0, 0.4, 0.7, 1.0],
+            colors: [
+              Color(0xFFC7F0F9), // Light sky blue
+              Color(0xFFEDF8FA), // Light transition
+              Color(0xFFFCE18D), // Soft yellow transition
+              Color(0xFFF4C535), // Golden yellow
+            ],
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight:
-                  MediaQuery.of(context).size.height -
-                  MediaQuery.of(context).padding.top,
-            ),
-            child: IntrinsicHeight(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 60),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight:
+                    size.height - MediaQuery.of(context).padding.top,
+              ),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back, color: Color(0xFF1F2937)),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
 
-                    _buildLogoSection(),
+                      _buildLogoSection(),
 
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 10),
 
-                    _buildForgetPasswordLink(),
+                      Center(child: _buildForgetPasswordLink()),
 
-                    const SizedBox(height: 40),
+                      const SizedBox(height: 30),
 
-                    _buildEmailSection(),
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.60),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildEmailSection(),
+                            if (_showOTPFields) ...[
+                              const SizedBox(height: 24),
+                              _buildOTPSection(),
+                            ],
+                          ],
+                        ),
+                      ),
 
-                    const SizedBox(height: 30),
+                      const Spacer(),
 
-                    if (_showOTPFields) _buildOTPSection(),
+                      if (_showOTPFields) ...[
+                        _buildSubmitButton(),
+                        const SizedBox(height: 20),
+                      ],
 
-                    const Spacer(),
-
-                    if (_showOTPFields) _buildSubmitButton(),
-
-                    const SizedBox(height: 60),
-                  ],
+                      const SizedBox(height: 30),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -103,22 +137,36 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   Widget _buildLogoSection() {
     return Column(
       children: [
-        Center(
-          child: Image.asset(
-            "assets/images/Cleanly_Logo.jpg",
-            width: 100,
-            height: 100,
-            alignment: Alignment.center,
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: Image.asset(
+              "assets/images/Cleanly_Logo.jpg",
+              width: 80,
+              height: 80,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
-        SizedBox(height: 5),
+        const SizedBox(height: 20),
         Text(
-          LocalizationService().translate("forgotPassword.appName"),
+          LocalizationService().translate("forgotPassword.appName") ?? "Cleanly",
           style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Color(0xff4A5565),
-            letterSpacing: 0,
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1F2937),
+            letterSpacing: -0.5,
           ),
         ),
       ],
@@ -127,11 +175,11 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
 
   Widget _buildForgetPasswordLink() {
     return Text(
-      LocalizationService().translate("forgotPassword.title"),
+      LocalizationService().translate("forgotPassword.title") ?? "Forgot Password",
       style: const TextStyle(
         fontSize: 16,
-        color: Color(0xff77CCD9),
-        fontWeight: FontWeight.w600,
+        color: Color(0xFF6B7280),
+        fontWeight: FontWeight.w400,
       ),
     );
   }
@@ -143,91 +191,74 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
         Row(
           children: [
             Text(
-              LocalizationService().translate("forgotPassword.email"),
+              LocalizationService().translate("forgotPassword.email") ?? "Email Address",
               style: const TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF2C2C2C),
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF5A4D3D),
               ),
             ),
-            SizedBox(width: 3),
-            Text(
+            const SizedBox(width: 3),
+            const Text(
               "*",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w700,
                 color: Color(0xFFC70036),
               ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 1),
-              ),
-            ],
+            color: const Color(0xFFF6F5ED),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: TextField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             style: const TextStyle(
               fontSize: 16,
-              color: Color(0xFF2C2C2C),
-              fontWeight: FontWeight.w500,
+              color: Color(0xFF5A4D3D),
             ),
-
             decoration: InputDecoration(
               hintText: LocalizationService().translate(
                 "forgotPassword.emailPlaceholder",
-              ),
+              ) ?? "name@company.com",
               hintStyle: const TextStyle(
-                color: Color(0xFF4A5565),
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
+                color: Color(0xFFA19C93),
+                fontSize: 15,
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
+              prefixIcon: const Icon(
+                Icons.mail_outline,
+                color: Color(0xFFA19C93),
+                size: 22,
               ),
+              border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 16,
               ),
-
               suffixIcon: Padding(
                 padding: const EdgeInsets.only(right: 8.0),
                 child: Container(
-                  width: 45,
-                  height: 35,
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF77CCD9),
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                    color: const Color(0xFF0B1F3A),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                       onTap: _isLoading ? null : _recoverPassword,
                       child: Center(
                         child: _isLoading
                             ? const SizedBox(
-                                width: 20,
-                                height: 20,
+                                width: 18,
+                                height: 18,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
@@ -237,8 +268,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                               )
                             : const Icon(
                                 Icons.arrow_forward,
-                                color: Colors.black,
-                                size: 20,
+                                color: Colors.white,
+                                size: 18,
                               ),
                       ),
                     ),
@@ -277,22 +308,11 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
 
   Widget _buildOTPField(int index) {
     return Container(
-      width: 60,
-      height: 60,
+      width: 54,
+      height: 54,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFFE5E7EB),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        color: const Color(0xFFF6F5ED),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
         controller: _otpControllers[index],
@@ -302,16 +322,16 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
         keyboardType: TextInputType.number,
         maxLength: 1,
         style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF2C2C2C),
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF5A4D3D),
         ),
         decoration: const InputDecoration(
           counterText: "",
           border: InputBorder.none,
           hintText: "-",
-          hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 18),
-          contentPadding: EdgeInsets.symmetric(vertical: 5),
+          hintStyle: TextStyle(color: Color(0xFFA19C93), fontSize: 20),
+          contentPadding: EdgeInsets.symmetric(vertical: 8),
         ),
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         onChanged: (value) {
@@ -338,42 +358,12 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   }
 
   Widget _buildSubmitButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: _isVerifyLoading ? null : _handleSubmit,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1E1E1E),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          elevation: 0,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-            LocalizationService().translate("common.submit"),
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            if (_isVerifyLoading) ...[
-              SizedBox(width: 10),
-              SizedBox(
-                height: 18,
-                width: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.0,
-                  backgroundColor: Color(0xFF06E0FB),
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
+    return AppButton(
+      label: LocalizationService().translate("common.submit"),
+      onPressed: _isVerifyLoading ? null : _handleSubmit,
+      variant: AppButtonVariant.primary,
+      isLoading: _isVerifyLoading,
+      fullWidth: true,
     );
   }
 

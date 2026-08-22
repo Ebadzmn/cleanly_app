@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import '../../../../widgets/app_button.dart';
 import '../../../../core/utils/ssn_input_formatter.dart';
 import '../../../../services/localization_service.dart';
 import '../../login/pages/login_page.dart';
@@ -202,13 +203,7 @@ class _SignupPageState extends State<SignupPage> {
           isRequired: true,
         ),
         const SizedBox(height: 20),
-        _buildTextField(
-          controller: controller.addressController,
-          label: LocalizationService().translate("signup.address") ?? "Address",
-          hint: LocalizationService().translate("signup.addressPlaceholder") ?? "123 Main St",
-          icon: Icons.location_on_outlined,
-          isRequired: true,
-        ),
+        _buildAddressField(controller),
         const SizedBox(height: 20),
         _buildTextField(
           controller: controller.ssnController,
@@ -253,6 +248,139 @@ class _SignupPageState extends State<SignupPage> {
         ),
         const SizedBox(height: 32),
         _buildSignupButton(controller),
+      ],
+    );
+  }
+
+  Widget _buildAddressField(SignupController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              LocalizationService().translate("signup.address") ?? "Address",
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF5A4D3D),
+              ),
+            ),
+            const Text(
+              " *",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFFC70036),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF6F5ED),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: TextField(
+            controller: controller.addressController,
+            onChanged: (val) => controller.fetchAddressPredictions(val),
+            style: const TextStyle(fontSize: 16, color: Color(0xFF5A4D3D)),
+            decoration: InputDecoration(
+              hintText: LocalizationService().translate("signup.addressPlaceholder") ?? "123 Main St",
+              hintStyle: const TextStyle(
+                color: Color(0xFFA19C93),
+                fontSize: 15,
+              ),
+              prefixIcon: const Icon(
+                Icons.location_on_outlined,
+                color: Color(0xFFA19C93),
+                size: 22,
+              ),
+              suffixIcon: Obx(
+                () => controller.isFetchingAddress.value
+                    ? const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5A4D3D)),
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+          ),
+        ),
+        Obx(() {
+          if (controller.addressPredictions.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          return Container(
+            margin: const EdgeInsets.only(top: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: controller.addressPredictions.length,
+              separatorBuilder: (context, index) => const Divider(
+                height: 1,
+                color: Color(0xFFE5E7EB),
+              ),
+              itemBuilder: (context, index) {
+                final prediction = controller.addressPredictions[index];
+                return InkWell(
+                  onTap: () => controller.selectAddress(prediction),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on,
+                          size: 18,
+                          color: Color(0xFF0B1F3A),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            prediction,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF1F2937),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        }),
       ],
     );
   }
@@ -468,57 +596,12 @@ class _SignupPageState extends State<SignupPage> {
 
   Widget _buildSignupButton(SignupController controller) {
     return Obx(
-      () => Container(
-        height: 56,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: const Color(0xFFF4C535),
-        ),
-        child: ElevatedButton(
-          onPressed: controller.isLoading.value
-              ? null
-              : controller.handleGetStarted,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            shadowColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: controller.isLoading.value
-              ? const SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFF5A4D3D),
-                    ),
-                  ),
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      LocalizationService().translate("signup.getStarted") ??
-                          "Get Started",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF5A4D3D),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(
-                      Icons.arrow_forward,
-                      color: Color(0xFF5A4D3D),
-                      size: 20,
-                    ),
-                  ],
-                ),
-        ),
+      () => AppButton(
+        label: LocalizationService().translate("signup.getStarted") ?? "Get Started",
+        onPressed: controller.isLoading.value ? null : controller.handleGetStarted,
+        variant: AppButtonVariant.primary,
+        isLoading: controller.isLoading.value,
+        fullWidth: true,
       ),
     );
   }

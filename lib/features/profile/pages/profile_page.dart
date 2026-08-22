@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../widgets/app_button.dart';
 import '../../../core/utils/ssn_input_formatter.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/profile_form_field_widget.dart';
@@ -254,50 +255,12 @@ class ProfilePage extends StatelessWidget {
     ProfileController controller,
     LocalizationService localization,
   ) {
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton(
-        onPressed: controller.isUpdatingProfile.value
-            ? null
-            : controller.updateProfile,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.amber,
-          foregroundColor: Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          elevation: 0,
-          disabledBackgroundColor: Colors.black.withOpacity(0.6),
-        ),
-        child: controller.isUpdatingProfile.value
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    localization.translate("profile.saveChanges"),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.0,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  ),
-                ],
-              )
-            : Text(
-                localization.translate("profile.saveChanges"),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-      ),
+    return AppButton(
+      label: localization.translate("profile.saveChanges"),
+      onPressed: controller.isUpdatingProfile.value ? null : controller.updateProfile,
+      variant: AppButtonVariant.primary,
+      isLoading: controller.isUpdatingProfile.value,
+      fullWidth: true,
     );
   }
 }
