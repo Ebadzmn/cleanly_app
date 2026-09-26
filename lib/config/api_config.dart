@@ -1,6 +1,6 @@
 class ApiConfig {
   static const String baseUrl = "https://api.cleanly.sbs";
-  // static const String baseUrl = "http://10.10.26.199:5000";
+  // static const String baseUrl = "http://10.10.26.200:5005";
 
   static const String previousBaseUrl = "";
   static String buildUrl(String endpoint) {
@@ -67,27 +67,24 @@ class ApiConfig {
   }) {
     final bool hasValidCoordinates =
         lat != null &&
-        lat.isNotEmpty &&
-        lat != "0" &&
-        lat != "0.0" &&
+        lat.trim().isNotEmpty &&
+        lat.trim() != "0" &&
+        lat.trim() != "0.0" &&
         lng != null &&
-        lng.isNotEmpty &&
-        lng != "0" &&
-        lng != "0.0";
+        lng.trim().isNotEmpty &&
+        lng.trim() != "0" &&
+        lng.trim() != "0.0";
 
     if (hasValidCoordinates) {
       try {
-        final double latValue = double.parse(lat!);
-        final double lngValue = double.parse(lng!);
-        return "https://maps.googleapis.com/maps/api/staticmap?center=$latValue,$lngValue&zoom=$zoom&size=${width}x${height}&maptype=roadmap&markers=color:red%7C$latValue,$lngValue&key=$googleMapsApiKey";
+        final double latValue = double.parse(lat!.trim());
+        final double lngValue = double.parse(lng!.trim());
+        // OpenStreetMap raster render API
+        return "https://static-maps.yandex.ru/1.x/?ll=$lngValue,$latValue&size=${width > 650 ? 650 : width},${height > 450 ? 450 : height}&z=$zoom&l=map";
       } catch (e) {
         return null;
       }
-    } else if (address != null && address.isNotEmpty) {
-      final encodedAddress = Uri.encodeComponent(address);
-      return "https://maps.googleapis.com/maps/api/staticmap?center=$encodedAddress&zoom=$zoom&size=${width}x${height}&maptype=roadmap&markers=color:red%7C$encodedAddress&key=$googleMapsApiKey";
     }
-
     return null;
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../widgets/app_button.dart';
 import '../../../../services/localization_service.dart';
@@ -561,53 +562,108 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Map Placeholder Image
-          Container(
-            height: 120,
-            decoration: const BoxDecoration(
-              color: Color(0xFFE5E7EB),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-              ),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Simulating a map background
-                Opacity(
-                  opacity: 0.5,
-                  child: Builder(
-                    builder: (context) {
-                      final staticMapUrl = ApiConfig.buildStaticMapUrl(
-                        detail.lat,
-                        detail.lng,
-                        detail.fullAddress,
-                        width: 600,
-                        height: 300,
-                      );
-                      
-                      if (staticMapUrl == null) {
-                        return Container(color: const Color(0xFFD1D5DB));
-                      }
+          // Map Header
+          GestureDetector(
+            onTap: () async {
+              final lat = detail.lat.trim();
+              final lng = detail.lng.trim();
+              final hasValidCoords = lat.isNotEmpty &&
+                  lng.isNotEmpty &&
+                  lat != "0" &&
+                  lat != "0.0" &&
+                  lng != "0" &&
+                  lng != "0.0";
 
-                      return Image.network(
-                        staticMapUrl,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(color: const Color(0xFFD1D5DB));
-                        },
-                      );
-                    },
-                  ),
+              final query = hasValidCoords
+                  ? "$lat,$lng"
+                  : Uri.encodeComponent(detail.fullAddress);
+
+              final googleMapsUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$query");
+              if (await canLaunchUrl(googleMapsUri)) {
+                await launchUrl(googleMapsUri, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: Container(
+              height: 140,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE5E7EB),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
                 ),
-                const Icon(
-                  Icons.location_on,
-                  color: Color(0xFFC70036),
-                  size: 40,
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
                 ),
-              ],
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Builder(
+                      builder: (context) {
+                        final staticMapUrl = ApiConfig.buildStaticMapUrl(
+                          detail.lat,
+                          detail.lng,
+                          detail.fullAddress,
+                          width: 600,
+                          height: 300,
+                        );
+
+                        if (staticMapUrl == null) {
+                          return Container(color: const Color(0xFFE5E7EB));
+                        }
+
+                        return Image.network(
+                          staticMapUrl,
+                          headers: const {
+                            "User-Agent": "CleanlyApp/1.0.0 (flutter_app)",
+                          },
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: const Color(0xFFE5E7EB),
+                              child: const Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            debugPrint("Static Map image loading error: $error");
+                            return Container(color: const Color(0xFFE5E7EB));
+                          },
+                        );
+                      },
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.location_on,
+                        color: Color(0xFFC70036),
+                        size: 32,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
           Padding(
@@ -637,43 +693,41 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 40,
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final lat = detail.lat;
-                      final lng = detail.lng;
-                      Uri uri;
-                      if (lat.isNotEmpty &&
-                          lng.isNotEmpty &&
-                          lat != "0" &&
-                          lng != "0" &&
-                          lat != "0.0" &&
-                          lng != "0.0") {
-                        uri = Uri.parse(
-                          "https://www.google.com/maps/search/?api=1&query=$lat,$lng",
-                        );
-                      } else {
-                        uri = Uri.parse(
-                          "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(detail.fullAddress)}",
-                        );
-                      }
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(
-                          uri,
-                          mode: LaunchMode.externalApplication,
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.map_outlined, size: 18),
-                    label: Text(LocalizationService().translate("jobs.openInMaps") ?? "Open in Maps"),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF266185),
-                      side: const BorderSide(color: Color(0xFF266185)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final lat = detail.lat.trim();
+                    final lng = detail.lng.trim();
+                    final hasValidCoords = lat.isNotEmpty &&
+                        lng.isNotEmpty &&
+                        lat != "0" &&
+                        lat != "0.0" &&
+                        lng != "0" &&
+                        lng != "0.0";
+
+                    final query = hasValidCoords
+                        ? "$lat,$lng"
+                        : Uri.encodeComponent(detail.fullAddress);
+
+                    final googleMapsUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$query");
+                    if (await canLaunchUrl(googleMapsUri)) {
+                      await launchUrl(googleMapsUri, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  icon: const Icon(Icons.map_outlined, size: 20),
+                  label: Text(
+                    LocalizationService().translate("jobs.openInMaps") ?? "Open in Maps",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF266185),
+                    side: const BorderSide(color: Color(0xFF266185), width: 1.2),
+                    minimumSize: const Size.fromHeight(46),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),
