@@ -547,6 +547,36 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
   }
 
   Widget _buildLocationCard(AppointmentDetailData detail) {
+    final lat = detail.lat.trim();
+    final lng = detail.lng.trim();
+    final hasValidCoords = lat.isNotEmpty &&
+        lng.isNotEmpty &&
+        lat != "0" &&
+        lat != "0.0" &&
+        lng != "0" &&
+        lng != "0.0";
+
+    final displayAddress = detail.fullAddress.isNotEmpty ? detail.fullAddress : detail.address;
+
+    Future<void> openMapApp() async {
+      final query = hasValidCoords
+          ? "$lat,$lng"
+          : Uri.encodeComponent(displayAddress);
+
+      final googleMapsUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$query");
+      if (await canLaunchUrl(googleMapsUri)) {
+        await launchUrl(googleMapsUri, mode: LaunchMode.externalApplication);
+      }
+    }
+
+    final staticMapUrl = ApiConfig.buildStaticMapUrl(
+      detail.lat,
+      detail.lng,
+      displayAddress,
+      width: 600,
+      height: 300,
+    );
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -564,25 +594,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
         children: [
           // Map Header
           GestureDetector(
-            onTap: () async {
-              final lat = detail.lat.trim();
-              final lng = detail.lng.trim();
-              final hasValidCoords = lat.isNotEmpty &&
-                  lng.isNotEmpty &&
-                  lat != "0" &&
-                  lat != "0.0" &&
-                  lng != "0" &&
-                  lng != "0.0";
-
-              final query = hasValidCoords
-                  ? "$lat,$lng"
-                  : Uri.encodeComponent(detail.fullAddress);
-
-              final googleMapsUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$query");
-              if (await canLaunchUrl(googleMapsUri)) {
-                await launchUrl(googleMapsUri, mode: LaunchMode.externalApplication);
-              }
-            },
+            onTap: openMapApp,
             child: Container(
               height: 140,
               decoration: const BoxDecoration(
@@ -600,48 +612,73 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    Builder(
-                      builder: (context) {
-                        final staticMapUrl = ApiConfig.buildStaticMapUrl(
-                          detail.lat,
-                          detail.lng,
-                          detail.fullAddress,
-                          width: 600,
-                          height: 300,
-                        );
-
-                        if (staticMapUrl == null) {
-                          return Container(color: const Color(0xFFE5E7EB));
-                        }
-
-                        return Image.network(
-                          staticMapUrl,
-                          headers: const {
-                            "User-Agent": "CleanlyApp/1.0.0 (flutter_app)",
-                          },
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              color: const Color(0xFFE5E7EB),
-                              child: const Center(
-                                child: SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                    if (staticMapUrl != null)
+                      Image.network(
+                        staticMapUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: const Color(0xFFE5E7EB),
+                            child: const Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Color(0xFF8B6C13),
                                 ),
                               ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            debugPrint("Static Map image loading error: $error");
-                            return Container(color: const Color(0xFFE5E7EB));
-                          },
-                        );
-                      },
-                    ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          debugPrint("Static Map image loading error: $error");
+                          return Container(
+                            color: const Color(0xFFF0F4F8),
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.map_outlined, size: 36, color: Colors.blueGrey.shade300),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    LocalizationService().translate("jobs.openInMaps") ?? "Tap to view on Google Maps",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.blueGrey.shade600,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    else
+                      Container(
+                        color: const Color(0xFFF0F4F8),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.map_outlined, size: 36, color: Colors.blueGrey.shade300),
+                              const SizedBox(height: 4),
+                              Text(
+                                LocalizationService().translate("jobs.openInMaps") ?? "Tap to view on Google Maps",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.blueGrey.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
@@ -694,25 +731,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                 ),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
-                  onPressed: () async {
-                    final lat = detail.lat.trim();
-                    final lng = detail.lng.trim();
-                    final hasValidCoords = lat.isNotEmpty &&
-                        lng.isNotEmpty &&
-                        lat != "0" &&
-                        lat != "0.0" &&
-                        lng != "0" &&
-                        lng != "0.0";
-
-                    final query = hasValidCoords
-                        ? "$lat,$lng"
-                        : Uri.encodeComponent(detail.fullAddress);
-
-                    final googleMapsUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$query");
-                    if (await canLaunchUrl(googleMapsUri)) {
-                      await launchUrl(googleMapsUri, mode: LaunchMode.externalApplication);
-                    }
-                  },
+                  onPressed: openMapApp,
                   icon: const Icon(Icons.map_outlined, size: 20),
                   label: Text(
                     LocalizationService().translate("jobs.openInMaps") ?? "Open in Maps",

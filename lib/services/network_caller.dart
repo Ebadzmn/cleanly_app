@@ -34,23 +34,26 @@ class NetworkCaller {
     }
 
     if (queryParams != null && queryParams.isNotEmpty) {
-      final Map<String, String> stringParams = queryParams.map((key, value) => MapEntry(key, value.toString()));
-      uri = uri.replace(queryParameters: {
-        ...uri.queryParameters,
-        ...stringParams,
-      });
+      final Map<String, String> stringParams = queryParams.map(
+        (key, value) => MapEntry(key, value.toString()),
+      );
+      uri = uri.replace(
+        queryParameters: {...uri.queryParameters, ...stringParams},
+      );
     }
     return uri;
   }
 
-  static Future<Map<String, String>> _getHeadersWithAuth(Map<String, String>? headers) async {
+  static Future<Map<String, String>> _getHeadersWithAuth(
+    Map<String, String>? headers,
+  ) async {
     final finalHeaders = <String, String>{};
     if (headers != null) {
       finalHeaders.addAll(headers);
     }
     const secureStorage = FlutterSecureStorage();
     String? token = await secureStorage.read(key: 'auth_token');
-    
+
     if (token == null || token.isEmpty) {
       final prefs = await SharedPreferences.getInstance();
       token = prefs.getString('token');
@@ -59,10 +62,12 @@ class NetworkCaller {
     if (token != null && token.isNotEmpty) {
       finalHeaders['Authorization'] = 'Bearer $token';
     }
-    if (!finalHeaders.containsKey('Content-Type') && !finalHeaders.containsKey('content-type')) {
+    if (!finalHeaders.containsKey('Content-Type') &&
+        !finalHeaders.containsKey('content-type')) {
       finalHeaders['Content-Type'] = 'application/json';
     }
-    if (!finalHeaders.containsKey('Accept') && !finalHeaders.containsKey('accept')) {
+    if (!finalHeaders.containsKey('Accept') &&
+        !finalHeaders.containsKey('accept')) {
       finalHeaders['Accept'] = 'application/json';
     }
     return finalHeaders;
@@ -102,7 +107,10 @@ class NetworkCaller {
       buffer.writeln('BODY:');
       if (body is Map) {
         body.forEach((key, value) {
-          final displayValue = (key.toString().toLowerCase().contains('password')) ? '********' : value;
+          final displayValue =
+              (key.toString().toLowerCase().contains('password'))
+              ? '********'
+              : value;
           buffer.writeln('  $key: $displayValue');
         });
       } else if (body is String) {
@@ -151,7 +159,9 @@ class NetworkCaller {
       final prettyJson = encoder.convert(decoded);
       buffer.writeln(prettyJson);
     } catch (_) {
-      buffer.writeln(body.length > 500 ? '${body.substring(0, 500)}... (truncated)' : body);
+      buffer.writeln(
+        body.length > 500 ? '${body.substring(0, 500)}... (truncated)' : body,
+      );
     }
     buffer.writeln('────────────────────────────────────────');
 
@@ -197,20 +207,38 @@ class NetworkCaller {
         data: data,
         message: data is Map ? data['message'] : null,
       );
-    } else if (response.statusCode == 403 && data is Map && data['message'] == "You must change your temporary password before continuing.") {
+    } else if (response.statusCode == 403 &&
+        data is Map &&
+        data['message'] ==
+            "You must change your temporary password before continuing.") {
       Get.offAll(() => const ChangePasswordScreen());
-      throw exceptions.UnauthorizedException(data['message']?.toString() ?? "Temporary password change required");
+      throw exceptions.UnauthorizedException(
+        data['message']?.toString() ?? "Temporary password change required",
+      );
     } else if (response.statusCode == 401 || response.statusCode == 404) {
       handleLogout();
-      throw exceptions.UnauthorizedException(data is Map ? data['message']?.toString() ?? "Unauthorized" : "Unauthorized");
+      throw exceptions.UnauthorizedException(
+        data is Map
+            ? data['message']?.toString() ?? "Unauthorized"
+            : "Unauthorized",
+      );
     } else if (response.statusCode >= 500) {
-      throw exceptions.ServerException(data is Map ? data['message']?.toString() ?? "Server error" : "Server error", response.statusCode);
+      throw exceptions.ServerException(
+        data is Map
+            ? data['message']?.toString() ?? "Server error"
+            : "Server error",
+        response.statusCode,
+      );
     } else {
       return NetworkResponse(
         isSuccess: false,
         statusCode: response.statusCode,
         data: data,
-        message: data is Map ? (data['message'] ?? data['error']?.toString() ?? data['errors']?.toString()) : null,
+        message: data is Map
+            ? (data['message'] ??
+                  data['error']?.toString() ??
+                  data['errors']?.toString())
+            : null,
       );
     }
   }
@@ -237,15 +265,33 @@ class NetworkCaller {
       return _processResponse(response);
     } on SocketException catch (e, stack) {
       final duration = DateTime.now().difference(startTime);
-      _logError(method: method, url: url, error: e, stackTrace: stack, duration: duration);
+      _logError(
+        method: method,
+        url: url,
+        error: e,
+        stackTrace: stack,
+        duration: duration,
+      );
       throw exceptions.NoInternetException();
     } on TimeoutException catch (e, stack) {
       final duration = DateTime.now().difference(startTime);
-      _logError(method: method, url: url, error: e, stackTrace: stack, duration: duration);
+      _logError(
+        method: method,
+        url: url,
+        error: e,
+        stackTrace: stack,
+        duration: duration,
+      );
       throw exceptions.TimeoutException();
     } catch (e, stack) {
       final duration = DateTime.now().difference(startTime);
-      _logError(method: method, url: url, error: e, stackTrace: stack, duration: duration);
+      _logError(
+        method: method,
+        url: url,
+        error: e,
+        stackTrace: stack,
+        duration: duration,
+      );
       if (e is exceptions.NetworkException) {
         rethrow;
       }
@@ -261,9 +307,18 @@ class NetworkCaller {
   }) async {
     final parsedUrl = _parseUri(url, queryParams);
     final authHeaders = await _getHeadersWithAuth(headers);
-    _logRequest(method: 'GET', url: parsedUrl, headers: authHeaders, body: null);
+    _logRequest(
+      method: 'GET',
+      url: parsedUrl,
+      headers: authHeaders,
+      body: null,
+    );
 
-    return _handleRequest(() => http.get(parsedUrl, headers: authHeaders), 'GET', parsedUrl);
+    return _handleRequest(
+      () => http.get(parsedUrl, headers: authHeaders),
+      'GET',
+      parsedUrl,
+    );
   }
 
   // POST Request
@@ -276,10 +331,20 @@ class NetworkCaller {
   }) async {
     final parsedUrl = _parseUri(url, queryParams);
     final authHeaders = await _getHeadersWithAuth(headers);
-    _logRequest(method: 'POST', url: parsedUrl, headers: authHeaders, body: body);
+    _logRequest(
+      method: 'POST',
+      url: parsedUrl,
+      headers: authHeaders,
+      body: body,
+    );
 
     return _handleRequest(
-      () => http.post(parsedUrl, headers: authHeaders, body: body, encoding: encoding),
+      () => http.post(
+        parsedUrl,
+        headers: authHeaders,
+        body: body,
+        encoding: encoding,
+      ),
       'POST',
       parsedUrl,
     );
@@ -295,10 +360,20 @@ class NetworkCaller {
   }) async {
     final parsedUrl = _parseUri(url, queryParams);
     final authHeaders = await _getHeadersWithAuth(headers);
-    _logRequest(method: 'PUT', url: parsedUrl, headers: authHeaders, body: body);
+    _logRequest(
+      method: 'PUT',
+      url: parsedUrl,
+      headers: authHeaders,
+      body: body,
+    );
 
     return _handleRequest(
-      () => http.put(parsedUrl, headers: authHeaders, body: body, encoding: encoding),
+      () => http.put(
+        parsedUrl,
+        headers: authHeaders,
+        body: body,
+        encoding: encoding,
+      ),
       'PUT',
       parsedUrl,
     );
@@ -314,10 +389,20 @@ class NetworkCaller {
   }) async {
     final parsedUrl = _parseUri(url, queryParams);
     final authHeaders = await _getHeadersWithAuth(headers);
-    _logRequest(method: 'PATCH', url: parsedUrl, headers: authHeaders, body: body);
+    _logRequest(
+      method: 'PATCH',
+      url: parsedUrl,
+      headers: authHeaders,
+      body: body,
+    );
 
     return _handleRequest(
-      () => http.patch(parsedUrl, headers: authHeaders, body: body, encoding: encoding),
+      () => http.patch(
+        parsedUrl,
+        headers: authHeaders,
+        body: body,
+        encoding: encoding,
+      ),
       'PATCH',
       parsedUrl,
     );
@@ -333,17 +418,29 @@ class NetworkCaller {
   }) async {
     final parsedUrl = _parseUri(url, queryParams);
     final authHeaders = await _getHeadersWithAuth(headers);
-    _logRequest(method: 'DELETE', url: parsedUrl, headers: authHeaders, body: body);
+    _logRequest(
+      method: 'DELETE',
+      url: parsedUrl,
+      headers: authHeaders,
+      body: body,
+    );
 
     return _handleRequest(
-      () => http.delete(parsedUrl, headers: authHeaders, body: body, encoding: encoding),
+      () => http.delete(
+        parsedUrl,
+        headers: authHeaders,
+        body: body,
+        encoding: encoding,
+      ),
       'DELETE',
       parsedUrl,
     );
   }
 
   // Send Multipart Request
-  static Future<NetworkResponse<dynamic>> sendMultipart(http.MultipartRequest request) async {
+  static Future<NetworkResponse<dynamic>> sendMultipart(
+    http.MultipartRequest request,
+  ) async {
     final authHeaders = await _getHeadersWithAuth(request.headers);
     request.headers.addAll(authHeaders);
 
@@ -370,7 +467,9 @@ class NetworkCaller {
     if (request.fields.isNotEmpty) {
       requestBuffer.writeln('FIELDS:');
       request.fields.forEach((key, value) {
-        final displayValue = (key.toLowerCase().contains('password')) ? '********' : value;
+        final displayValue = (key.toLowerCase().contains('password'))
+            ? '********'
+            : value;
         requestBuffer.writeln('  $key: $displayValue');
       });
     }
@@ -378,16 +477,22 @@ class NetworkCaller {
     if (request.files.isNotEmpty) {
       requestBuffer.writeln('FILES:');
       for (var file in request.files) {
-        requestBuffer.writeln('  ${file.field}: ${file.filename} (${file.length} bytes)');
+        requestBuffer.writeln(
+          '  ${file.field}: ${file.filename} (${file.length} bytes)',
+        );
       }
     }
     requestBuffer.writeln('────────────────────────────────────────');
     _logger.i(requestBuffer.toString());
 
-    return _handleRequest(() async {
-      final streamedResponse = await request.send();
-      return await http.Response.fromStream(streamedResponse);
-    }, method, url);
+    return _handleRequest(
+      () async {
+        final streamedResponse = await request.send();
+        return await http.Response.fromStream(streamedResponse);
+      },
+      method,
+      url,
+    );
   }
 
   static Future<void> handleLogout() async {

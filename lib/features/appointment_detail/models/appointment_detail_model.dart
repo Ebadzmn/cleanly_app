@@ -212,6 +212,55 @@ class AppointmentDetailData {
       cleanerInstructions = json["cleanerInstructions"]?.toString() ?? json["cleaner_instructions"]?.toString();
     }
 
+    String parsedLat = json["lat"]?.toString() ?? json["latitude"]?.toString() ?? "";
+    String parsedLng = json["lng"]?.toString() ?? json["longitude"]?.toString() ?? json["long"]?.toString() ?? json["lon"]?.toString() ?? "";
+
+    if (parsedLat.isEmpty || parsedLng.isEmpty) {
+      if (addressRaw is Map<String, dynamic>) {
+        if (parsedLat.isEmpty) {
+          parsedLat = addressRaw["lat"]?.toString() ?? addressRaw["latitude"]?.toString() ?? "";
+        }
+        if (parsedLng.isEmpty) {
+          parsedLng = addressRaw["lng"]?.toString() ?? addressRaw["longitude"]?.toString() ?? addressRaw["long"]?.toString() ?? addressRaw["lon"]?.toString() ?? "";
+        }
+      }
+    }
+
+    if (parsedLat.isEmpty || parsedLng.isEmpty) {
+      if (customerObj != null) {
+        if (parsedLat.isEmpty) {
+          parsedLat = customerObj["lat"]?.toString() ?? customerObj["latitude"]?.toString() ?? "";
+        }
+        if (parsedLng.isEmpty) {
+          parsedLng = customerObj["lng"]?.toString() ?? customerObj["longitude"]?.toString() ?? customerObj["long"]?.toString() ?? customerObj["lon"]?.toString() ?? "";
+        }
+      }
+    }
+
+    if (parsedLat.isEmpty || parsedLng.isEmpty) {
+      if (json["location"] is Map<String, dynamic>) {
+        final loc = json["location"] as Map<String, dynamic>;
+        if (parsedLat.isEmpty) {
+          parsedLat = loc["lat"]?.toString() ?? loc["latitude"]?.toString() ?? "";
+        }
+        if (parsedLng.isEmpty) {
+          parsedLng = loc["lng"]?.toString() ?? loc["longitude"]?.toString() ?? loc["long"]?.toString() ?? loc["lon"]?.toString() ?? "";
+        }
+      }
+    }
+
+    if (parsedLat.isEmpty || parsedLng.isEmpty) {
+      if (json["job"] is Map<String, dynamic>) {
+        final jobObj = json["job"] as Map<String, dynamic>;
+        if (parsedLat.isEmpty) {
+          parsedLat = jobObj["lat"]?.toString() ?? jobObj["latitude"]?.toString() ?? "";
+        }
+        if (parsedLng.isEmpty) {
+          parsedLng = jobObj["lng"]?.toString() ?? jobObj["longitude"]?.toString() ?? jobObj["long"]?.toString() ?? jobObj["lon"]?.toString() ?? "";
+        }
+      }
+    }
+
     return AppointmentDetailData(
       appointmentId: parsedId,
       type: json["type"]?.toString() ?? "",
@@ -243,8 +292,8 @@ class AppointmentDetailData {
       date: json["date"]?.toString() ?? "",
       startTime: json["startTime"]?.toString() ?? json["start_time"]?.toString() ?? "",
       endTime: json["endTime"]?.toString() ?? json["end_time"]?.toString() ?? "",
-      lat: json["lat"]?.toString() ?? json["latitude"]?.toString() ?? "",
-      lng: json["lng"]?.toString() ?? json["longitude"]?.toString() ?? "",
+      lat: parsedLat,
+      lng: parsedLng,
       email: parsedEmail,
       phoneNumber: parsedPhone,
       notesCleaner: json["notes_cleaner"]?.toString(),

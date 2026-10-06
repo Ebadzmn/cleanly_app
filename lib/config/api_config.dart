@@ -61,7 +61,7 @@ class ApiConfig {
     String? lat,
     String? lng,
     String? address, {
-    int width = 400,
+    int width = 600,
     int height = 300,
     int zoom = 15,
   }) {
@@ -77,14 +77,19 @@ class ApiConfig {
 
     if (hasValidCoordinates) {
       try {
-        final double latValue = double.parse(lat!.trim());
-        final double lngValue = double.parse(lng!.trim());
-        // OpenStreetMap raster render API
-        return "https://static-maps.yandex.ru/1.x/?ll=$lngValue,$latValue&size=${width > 650 ? 650 : width},${height > 450 ? 450 : height}&z=$zoom&l=map";
+        final double latValue = double.parse(lat.trim());
+        final double lngValue = double.parse(lng.trim());
+        return "https://maps.googleapis.com/maps/api/staticmap?center=$latValue,$lngValue&zoom=$zoom&size=${width}x${height}&scale=2&markers=color:red%7C$latValue,$lngValue&key=$googleMapsApiKey";
       } catch (e) {
-        return null;
+        // Fallback to address if coordinate parsing fails
       }
     }
+
+    if (address != null && address.trim().isNotEmpty) {
+      final encodedAddress = Uri.encodeComponent(address.trim());
+      return "https://maps.googleapis.com/maps/api/staticmap?center=$encodedAddress&zoom=$zoom&size=${width}x${height}&scale=2&markers=color:red%7C$encodedAddress&key=$googleMapsApiKey";
+    }
+
     return null;
   }
 }
