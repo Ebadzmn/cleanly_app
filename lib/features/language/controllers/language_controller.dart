@@ -24,14 +24,34 @@ class LanguageController extends GetxController {
 
   Future<void> selectLanguage(String languageCode) async {
     if (currentLanguage.value == languageCode) {
+      Get.back();
       return;
     }
 
+    // 1. Immediately load local language strings in memory
     await LocalizationService().loadLanguage(languageCode);
-    
     currentLanguage.value = languageCode;
 
-    // Update backend
+    // 2. Sync to backend asynchronously in background (non-blocking)
+    _syncLanguageWithBackend(languageCode);
+
+    // 3. Immediately close language screen without waiting
+    Get.back();
+
+    // 4. Show success snackbar on the destination screen
+    Get.snackbar(
+      LocalizationService().translate("common.success") ?? "Success",
+      languageCode == "en"
+          ? "Language changed to English"
+          : "Idioma cambiado a Español",
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+    );
+  }
+
+  void _syncLanguageWithBackend(String languageCode) async {
     try {
       const secureStorage = FlutterSecureStorage();
       String? token = await secureStorage.read(key: "auth_token");
@@ -54,19 +74,5 @@ class LanguageController extends GetxController {
     } catch (e) {
       debugPrint("Error updating language on backend: $e");
     }
-    
-    Get.snackbar(
-      LocalizationService().translate("common.success") ?? "Success",
-      languageCode == "en"
-          ? "Language changed to English"
-          : "Idioma cambiado a Español",
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 1),
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-    );
-    
-    await Future.delayed(const Duration(milliseconds: 1500));
-    Get.back(); // Just go back to the previous screen instead of restarting
   }
 }

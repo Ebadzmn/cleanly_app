@@ -56,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    LocalizationService().addListener(_onLanguageChanged);
     selectedTabIndex = widget.initialIndex;
 
     _pageController = PageController(initialPage: widget.initialIndex);
@@ -233,8 +234,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
+  void _onLanguageChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
+    LocalizationService().removeListener(_onLanguageChanged);
     _pageController.dispose();
     _tabController.dispose();
     _calendarScrollController.dispose();
@@ -384,11 +392,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             case 0:
               return _buildCalendarScreen();
             case 1:
-              return const JobsPage();
+              return JobsPage();
             case 2:
-              return const NotificationPage();
+              return NotificationPage();
             case 3:
-              return const MorePage();
+              return MorePage();
             default:
               return _buildCalendarScreen();
           }

@@ -1,7 +1,10 @@
 import "dart:convert";
+import "dart:ui";
 import "package:flutter/foundation.dart";
 import "package:flutter/services.dart";
 import "package:shared_preferences/shared_preferences.dart";
+import "package:get/get.dart";
+import "on_device_translation_service.dart";
 
 class LocalizationService {
   static const String _languageKey = "selected_language";
@@ -9,11 +12,22 @@ class LocalizationService {
   
   Map<String, dynamic> _localizedStrings = {};
   String _currentLanguage = _defaultLanguage;
+  final List<VoidCallback> _listeners = [];
   VoidCallback? _onLanguageChanged;
   
   static final LocalizationService _instance = LocalizationService._internal();
   factory LocalizationService() => _instance;
   LocalizationService._internal();
+
+  void addListener(VoidCallback listener) {
+    if (!_listeners.contains(listener)) {
+      _listeners.add(listener);
+    }
+  }
+
+  void removeListener(VoidCallback listener) {
+    _listeners.remove(listener);
+  }
 
   void setOnLanguageChangedCallback(VoidCallback? callback) {
     _onLanguageChanged = callback;
@@ -43,6 +57,16 @@ class LocalizationService {
       
       if (_onLanguageChanged != null) {
         _onLanguageChanged!();
+      }
+      for (final listener in List<VoidCallback>.from(_listeners)) {
+        listener();
+      }
+      try {
+        Get.updateLocale(Locale(languageCode));
+      } catch (_) {}
+
+      if (languageCode == "es") {
+        OnDeviceTranslationService().preloadSpanishModel();
       }
     } catch (e) {
       debugPrint("Error loading language file: $e");

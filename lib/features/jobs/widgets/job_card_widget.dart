@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../widgets/app_button.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../services/localization_service.dart';
+import '../../../../widgets/auto_translate_text.dart';
 import '../../../../core/utils/date_time_utils.dart';
 import '../models/appointment_model.dart';
 import '../controllers/jobs_controller.dart';
@@ -135,14 +136,17 @@ class JobCardWidget extends StatelessWidget {
                     const Icon(Icons.cleaning_services_outlined, color: Color(0xFF266185), size: 20),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        (jobData["type"] == "recurring" ? (LocalizationService().translate("jobs.recurringCleaning") ?? "RECURRING CLEANING") : (LocalizationService().translate("jobs.deepCleaning") ?? "DEEP CLEANING")).toUpperCase(),
+                      child: AutoTranslateText(
+                        text: (jobData["type"] != null && jobData["type"].toString().isNotEmpty)
+                            ? jobData["type"]
+                            : (LocalizationService().translate("jobs.deepCleaning") ?? "DEEP CLEANING"),
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF266185),
                           letterSpacing: 0.5,
                         ),
+                        toUpperCase: true,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -168,8 +172,10 @@ class JobCardWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            jobData["type"].toString().isNotEmpty ? jobData["type"] : (LocalizationService().translate("jobs.serviceAppointment") ?? "Service Appointment"),
+          AutoTranslateText(
+            text: jobData["type"].toString().isNotEmpty
+                ? jobData["type"]
+                : (LocalizationService().translate("jobs.serviceAppointment") ?? "Service Appointment"),
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -178,8 +184,8 @@ class JobCardWidget extends StatelessWidget {
           ),
           if (jobData["description"] != null && jobData["description"].toString().isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(
-              jobData["description"],
+            AutoTranslateText(
+              text: jobData["description"],
               style: const TextStyle(
                 fontSize: 14,
                 color: Color(0xFF6B7280),
@@ -365,8 +371,8 @@ class JobCardWidget extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              jobData["type"].toString().isNotEmpty ? jobData["type"] : (LocalizationService().translate("jobs.serviceAppointment") ?? "Service Appointment"),
+                            AutoTranslateText(
+                              text: jobData["type"].toString().isNotEmpty ? jobData["type"] : (LocalizationService().translate("jobs.serviceAppointment") ?? "Service Appointment"),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -377,8 +383,8 @@ class JobCardWidget extends StatelessWidget {
                             ),
                             if (jobData["description"] != null && jobData["description"].toString().isNotEmpty) ...[
                               const SizedBox(height: 2),
-                              Text(
-                                jobData["description"],
+                              AutoTranslateText(
+                                text: jobData["description"],
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: Color(0xFF6B7280),

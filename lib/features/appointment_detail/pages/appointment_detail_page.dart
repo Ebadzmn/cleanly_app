@@ -9,6 +9,7 @@ import '../controllers/appointment_detail_controller.dart';
 import '../models/appointment_detail_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../config/api_config.dart';
+import '../widgets/job_info_card_widget.dart';
 
 class AppointmentDetailPage extends StatefulWidget {
   final Map<String, dynamic> appointmentData;
@@ -28,6 +29,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
   @override
   void initState() {
     super.initState();
+    LocalizationService().addListener(_onLanguageChanged);
     appointmentId = widget.isJob
         ? (widget.appointmentData["job_id"]?.toString() ??
            widget.appointmentData["id"]?.toString() ??
@@ -48,8 +50,15 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     );
   }
 
+  void _onLanguageChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
+    LocalizationService().removeListener(_onLanguageChanged);
     Get.delete<AppointmentDetailController>(tag: appointmentId.toString());
     super.dispose();
   }
@@ -224,6 +233,80 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     );
   }
 
+  String _getLocalizedStatus(String status) {
+    final clean = status.trim().toLowerCase().replaceAll('-', '_');
+    if (clean.isEmpty) {
+      return LocalizationService().translate("jobs.active") ?? "Active";
+    }
+
+    // Active statuses
+    if (clean == "cleaner_assigned" ||
+        clean == "active" ||
+        clean == "activo" ||
+        clean == "active_tab") {
+      return LocalizationService().translate("jobs.active") ?? "Active";
+    }
+
+    // Pending
+    if (clean == "pending" || clean == "pendiente" || clean == "pending_tab" || clean == "cleaner_requested") {
+      return LocalizationService().translate("jobs.pending") ?? "Pending";
+    }
+
+    // Accepted
+    if (clean == "accepted" || clean == "aceptado" || clean == "accepted_tab") {
+      return LocalizationService().translate("jobs.accepted") ?? "Accepted";
+    }
+
+    // Assigned
+    if (clean == "assigned" || clean == "asignado") {
+      return LocalizationService().translate("jobs.assigned") ?? "Assigned";
+    }
+
+    // Completed
+    if (clean == "completed" || clean == "complete" || clean == "completado" || clean == "terminado") {
+      return LocalizationService().translate("jobs.completed") ?? "Completed";
+    }
+
+    // Cancelled
+    if (clean == "cancelled" || clean == "cancel" || clean == "cancelado") {
+      return LocalizationService().translate("jobs.cancelled") ?? "Cancelled";
+    }
+
+    // Rejected / Declined
+    if (clean == "rejected" || clean == "declined" || clean == "rechazado" || clean == "rejected_tab") {
+      return LocalizationService().translate("jobs.rejected") ?? "Rejected";
+    }
+
+    // On my way
+    if (clean == "on_my_way" || clean == "onmyway") {
+      return LocalizationService().translate("jobs.onMyWay") ?? "On My Way";
+    }
+
+    // Checked in / In progress
+    if (clean == "checked_in" || clean == "checkin" || clean == "in_progress") {
+      return LocalizationService().translate("jobs.checkIn") ?? "Check In";
+    }
+
+    // Checked out
+    if (clean == "checked_out" || clean == "checkout") {
+      return LocalizationService().translate("jobs.checkOut") ?? "Check Out";
+    }
+
+    // Generic lookup in jobs.<clean>
+    final jobsTr = LocalizationService().translate("jobs.$clean");
+    if (jobsTr != "jobs.$clean") {
+      return jobsTr;
+    }
+
+    // Generic lookup in events.<clean>
+    final eventsTr = LocalizationService().translate("events.$clean");
+    if (eventsTr != "events.$clean") {
+      return eventsTr;
+    }
+
+    return status;
+  }
+
   Widget _buildCustomerProfileCard(String headerName, String firstName, String lastName, String status) {
     final String fullName = [
       firstName,
@@ -279,7 +362,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                   border: Border.all(color: const Color(0xFFF4C535), width: 1),
                 ),
                 child: Text(
-                  status.toUpperCase(),
+                  _getLocalizedStatus(status).toUpperCase(),
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
@@ -900,65 +983,9 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
   }
 
   Widget _buildJobInfoCard(String title, String description) {
-    if (title.isEmpty && description.isEmpty) return const SizedBox.shrink();
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.info_outline,
-                color: Color(0xFF8B6C13),
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                LocalizationService().translate("jobs.jobInfo") ?? "JOB INFO",
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF8B6C13),
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (title.isNotEmpty) ...[
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1F2937),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-          if (description.isNotEmpty)
-            Text(
-              description,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF4B5563),
-                height: 1.4,
-              ),
-            ),
-        ],
-      ),
+    return JobInfoCardWidget(
+      title: title,
+      description: description,
     );
   }
 
@@ -969,13 +996,23 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     String initialTabStatus,
   ) {
     return Obx(() {
-      final statusLower = status.toLowerCase();
-      final isPending = statusLower == "pending";
+      final statusLower = status.trim().toLowerCase().replaceAll('-', '_');
+      final isPending = statusLower == "pending" ||
+          statusLower == "pendiente" ||
+          statusLower == "cleaner_requested";
 
-      final bool isCheckedOut = statusLower == "checked_out";
-      final bool isCompleted = statusLower == "completed";
+      final bool isCheckedOut = statusLower == "checked_out" || statusLower == "checkout";
+      final bool isCompleted = statusLower == "completed" ||
+          statusLower == "complete" ||
+          statusLower == "completado" ||
+          statusLower == "terminado";
       
-      if (controller.isDeclined.value || statusLower == "declined" || statusLower == "rejected" || statusLower == "cancelled") {
+      if (controller.isDeclined.value ||
+          statusLower == "declined" ||
+          statusLower == "rejected" ||
+          statusLower == "rechazado" ||
+          statusLower == "cancelled" ||
+          statusLower == "cancelado") {
         return const SizedBox.shrink();
       }
       final bool hasCheckedIn = controller.hasCheckedIn.value;
@@ -984,11 +1021,20 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
       final bool checkInEnabled = !isPending && !isCheckedOut && !isCompleted && !hasCheckedIn;
       final bool checkOutEnabled = !isPending && !isCheckedOut && !isCompleted;
 
-    if (widget.isJob && (initialTabStatus == "accepted" || initialTabStatus == "assigned" || initialTabStatus == "completed")) {
-      return const SizedBox.shrink();
-    }
+      final cleanInitialTab = initialTabStatus.trim().toLowerCase().replaceAll('-', '_');
+      final isAlreadyHandledJob = widget.isJob &&
+          (cleanInitialTab == "accepted" ||
+           cleanInitialTab == "aceptado" ||
+           cleanInitialTab == "assigned" ||
+           cleanInitialTab == "asignado" ||
+           cleanInitialTab == "completed" ||
+           cleanInitialTab == "completado");
 
-    if (widget.isJob || isPending) {
+      if (isAlreadyHandledJob) {
+        return const SizedBox.shrink();
+      }
+
+      if (widget.isJob || isPending) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

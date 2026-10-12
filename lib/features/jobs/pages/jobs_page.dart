@@ -8,8 +8,31 @@ import '../../profile/pages/profile_page.dart';
 import '../../profile/bindings/profile_binding.dart';
 import '../../../screens/home_screen.dart';
 
-class JobsPage extends StatelessWidget {
+class JobsPage extends StatefulWidget {
   const JobsPage({super.key});
+
+  @override
+  State<JobsPage> createState() => _JobsPageState();
+}
+
+class _JobsPageState extends State<JobsPage> {
+  @override
+  void initState() {
+    super.initState();
+    LocalizationService().addListener(_onLanguageChanged);
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    LocalizationService().removeListener(_onLanguageChanged);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
